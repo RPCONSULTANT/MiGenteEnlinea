@@ -52,9 +52,23 @@ public interface IIdentityService
     Task<bool> UserExistsAsync(string email);
 
     /// <summary>
-    /// Confirma el email de un usuario (activación de cuenta)
+    /// Confirma el email de un usuario (activación de cuenta) usando token
     /// </summary>
     Task<bool> ConfirmEmailAsync(string userId, string token);
+
+    /// <summary>
+    /// Activa cuenta de usuario sin token (Legacy compatibility)
+    /// Solo valida que el userId y email coincidan, luego activa EmailConfirmed
+    /// </summary>
+    Task<bool> ActivateAccountAsync(string userId, string email);
+
+    /// <summary>
+    /// Cambia la contraseña de un usuario
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="currentPassword">Contraseña actual</param>
+    /// <param name="newPassword">Nueva contraseña</param>
+    Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 
     /// <summary>
     /// Genera token para reset de contraseña

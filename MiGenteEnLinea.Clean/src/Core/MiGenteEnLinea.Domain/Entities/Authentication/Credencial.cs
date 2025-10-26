@@ -199,4 +199,17 @@ public sealed class Credencial : AggregateRoot
 
         Email = nuevoEmail;
     }
+
+    /// <summary>
+    /// DOMAIN METHOD: Actualiza la fecha del último login
+    /// Usado por LegacyIdentityService para trackear logins exitosos
+    /// </summary>
+    public void ActualizarUltimoLogin(DateTime fechaLogin, string? ipAddress = null)
+    {
+        UltimoAcceso = fechaLogin;
+        if (ipAddress != null)
+        {
+            UltimaIp = ipAddress;
+        }
+    }
 }

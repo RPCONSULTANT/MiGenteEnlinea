@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
@@ -7,9 +7,6 @@ using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 
 namespace MiGenteEnLinea.Infrastructure.Identity.Services;
 
-/// <summary>
-/// Implementación del servicio de identidad usando ASP.NET Core Identity
-/// </summary>
 public class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -31,7 +28,6 @@ public class IdentityService : IIdentityService
 
     public async Task<AuthenticationResultDto> LoginAsync(string email, string password, string ipAddress)
     {
-        // 1. Buscar usuario por email
         var user = await _userManager.FindByEmailAsync(email);
         
         if (user == null)
@@ -40,37 +36,29 @@ public class IdentityService : IIdentityService
             throw new UnauthorizedAccessException("Credenciales inválidas");
         }
 
-        // 2. Verificar contraseña
         var passwordValid = await _userManager.CheckPasswordAsync(user, password);
         
         if (!passwordValid)
         {
             _logger.LogWarning("Login failed: Invalid password for user {UserId}", user.Id);
-            
-            // Registrar intento fallido (Identity maneja lockout automáticamente)
             await _userManager.AccessFailedAsync(user);
-            
             throw new UnauthorizedAccessException("Credenciales inválidas");
         }
 
-        // 3. Verificar si la cuenta está confirmada/activa
         if (!user.EmailConfirmed)
         {
             _logger.LogWarning("Login failed: Account not confirmed for user {UserId}", user.Id);
             throw new UnauthorizedAccessException("La cuenta no está activa. Por favor, verifica tu correo electrónico.");
         }
 
-        // 4. Verificar si la cuenta está bloqueada
         if (await _userManager.IsLockedOutAsync(user))
         {
             _logger.LogWarning("Login failed: Account is locked out for user {UserId}", user.Id);
-            throw new UnauthorizedAccessException("La cuenta está bloqueada debido a múltiples intentos fallidos. Intenta nuevamente más tarde.");
+            throw new UnauthorizedAccessException("La cuenta está bloqueada debido a múltiples intentos fallidos.");
         }
 
-        // 5. Obtener roles del usuario
         var roles = await _userManager.GetRolesAsync(user);
 
-        // 6. Generar access token JWT
         var accessToken = _jwtTokenService.GenerateAccessToken(
             userId: user.Id,
             email: user.Email!,
@@ -80,10 +68,8 @@ public class IdentityService : IIdentityService
             roles: roles
         );
 
-        // 7. Generar refresh token
         var refreshTokenData = _jwtTokenService.GenerateRefreshToken(ipAddress);
 
-        // 8. Guardar refresh token en base de datos
         var refreshTokenEntity = new RefreshToken
         {
             UserId = user.Id,
@@ -94,25 +80,17 @@ public class IdentityService : IIdentityService
         };
 
         user.RefreshTokens.Add(refreshTokenEntity);
-
-        // Actualizar último login
         user.UltimoLogin = DateTime.UtcNow;
-
-        // Resetear contador de intentos fallidos
         await _userManager.ResetAccessFailedCountAsync(user);
-
-        // Guardar cambios
         await _userManager.UpdateAsync(user);
 
-        _logger.LogInformation("Login successful for user {UserId} ({Email}) from IP {IpAddress}", 
-            user.Id, user.Email, ipAddress);
+        _logger.LogInformation("Login successful for user {UserId} from IP {IpAddress}", user.Id, ipAddress);
 
-        // 9. Retornar resultado
         return new AuthenticationResultDto
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenData.Token,
-            AccessTokenExpires = DateTime.UtcNow.AddMinutes(15), // TODO: Obtener de JwtSettings
+            AccessTokenExpires = DateTime.UtcNow.AddMinutes(15),
             RefreshTokenExpires = refreshTokenData.Expires,
             User = new UserInfoDto
             {
@@ -129,7 +107,6 @@ public class IdentityService : IIdentityService
 
     public async Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
-        // 1. Buscar refresh token en base de datos
         var tokenEntity = await _context.RefreshTokens
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
@@ -140,7 +117,6 @@ public class IdentityService : IIdentityService
             throw new UnauthorizedAccessException("Refresh token inválido");
         }
 
-        // 2. Verificar si el token está activo
         if (!tokenEntity.IsActive)
         {
             _logger.LogWarning("Refresh token is not active: {Token}", refreshToken);
@@ -148,8 +124,6 @@ public class IdentityService : IIdentityService
         }
 
         var user = tokenEntity.User;
-
-        // 3. Generar nuevo access token
         var roles = await _userManager.GetRolesAsync(user);
 
         var accessToken = _jwtTokenService.GenerateAccessToken(
@@ -161,16 +135,13 @@ public class IdentityService : IIdentityService
             roles: roles
         );
 
-        // 4. Rotar refresh token (invalidar el viejo, crear uno nuevo)
         var newRefreshTokenData = _jwtTokenService.GenerateRefreshToken(ipAddress);
 
-        // Marcar el token viejo como reemplazado
         tokenEntity.Revoked = DateTime.UtcNow;
         tokenEntity.RevokedByIp = ipAddress;
         tokenEntity.ReplacedByToken = newRefreshTokenData.Token;
         tokenEntity.ReasonRevoked = "Replaced by new token";
 
-        // Crear nuevo refresh token
         var newRefreshTokenEntity = new RefreshToken
         {
             UserId = user.Id,
@@ -181,8 +152,6 @@ public class IdentityService : IIdentityService
         };
 
         user.RefreshTokens.Add(newRefreshTokenEntity);
-
-        // Guardar cambios
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Refresh token rotated for user {UserId}", user.Id);
@@ -220,10 +189,9 @@ public class IdentityService : IIdentityService
         if (!tokenEntity.IsActive)
         {
             _logger.LogWarning("Refresh token is already inactive: {Token}", refreshToken);
-            return; // Ya está revocado, no hacer nada
+            return;
         }
 
-        // Revocar token
         tokenEntity.Revoked = DateTime.UtcNow;
         tokenEntity.RevokedByIp = ipAddress;
         tokenEntity.ReasonRevoked = reason ?? "User logout";
@@ -235,22 +203,20 @@ public class IdentityService : IIdentityService
 
     public async Task<string> RegisterAsync(string email, string password, string nombreCompleto, string tipo)
     {
-        // Verificar si el usuario ya existe
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
             throw new InvalidOperationException("El email ya está registrado");
         }
 
-        // Crear nuevo usuario
         var user = new ApplicationUser
         {
             UserName = email,
             Email = email,
-            EmailConfirmed = false, // Requiere confirmación
+            EmailConfirmed = false,
             NombreCompleto = nombreCompleto,
             Tipo = tipo,
-            PlanID = 0, // Sin plan inicialmente
+            PlanID = 0,
             FechaCreacion = DateTime.UtcNow
         };
 
@@ -283,6 +249,77 @@ public class IdentityService : IIdentityService
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded;
+    }
+
+    public async Task<bool> ActivateAccountAsync(string userId, string email)
+    {
+        // Legacy compatibility: Activar cuenta sin token, solo validando userId + email
+        var user = await _userManager.FindByIdAsync(userId);
+        
+        if (user == null)
+        {
+            _logger.LogWarning("ActivateAccount failed: User not found with ID {UserId}", userId);
+            return false;
+        }
+
+        // Validar que el email coincida (case-insensitive)
+        if (!user.Email!.Equals(email, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "ActivateAccount failed: Email mismatch. UserId: {UserId}, Expected: {ExpectedEmail}, Received: {ReceivedEmail}",
+                userId, user.Email, email);
+            return false;
+        }
+
+        // Verificar si ya está activado
+        if (user.EmailConfirmed)
+        {
+            _logger.LogInformation("ActivateAccount: Account already confirmed. UserId: {UserId}", userId);
+            return true; // Ya está activo
+        }
+
+        // Activar cuenta (sin token - Legacy compatibility)
+        user.EmailConfirmed = true;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("Account activated successfully. UserId: {UserId}, Email: {Email}", userId, email);
+        }
+        else
+        {
+            _logger.LogError(
+                "Failed to activate account. UserId: {UserId}, Errors: {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        return result.Succeeded;
+    }
+
+    public async Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        
+        if (user == null)
+        {
+            _logger.LogWarning("ChangePassword failed: User not found with ID {UserId}", userId);
+            return false;
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("Password changed successfully for user {UserId}", userId);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Failed to change password for user {UserId}. Errors: {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
         return result.Succeeded;
     }
 

@@ -108,7 +108,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         
         // Identity Service (abstracción de UserManager para Application layer)
-        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IIdentityService, IdentityService>(); // ✅ ASP.NET Core Identity
         
         // Current User Service (obtiene usuario autenticado desde HttpContext)
         services.AddScoped<ICurrentUserService, CurrentUserService>();

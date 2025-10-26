@@ -453,23 +453,23 @@ public class AuthController : ControllerBase
     /// - 2 = Contratista
     /// </remarks>
     [HttpPost("register")]
-    [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RegisterResult), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<int>> Register([FromBody] RegisterCommand command)
+    public async Task<ActionResult<RegisterResult>> Register([FromBody] RegisterCommand command)
     {
         _logger.LogInformation("POST /api/auth/register - Email: {Email}, Tipo: {Tipo}", command.Email, command.Tipo);
 
         try
         {
-            var perfilId = await _mediator.Send(command);
+            var result = await _mediator.Send(command);
 
-            _logger.LogInformation("Usuario registrado exitosamente - PerfilId: {PerfilId}", perfilId);
+            _logger.LogInformation("Usuario registrado exitosamente - UserId: {UserId}", result.UserId);
 
             return CreatedAtAction(
                 nameof(GetPerfil),
-                new { userId = perfilId.ToString() },
-                new { perfilId, message = "Usuario registrado exitosamente. Por favor revise su correo para activar su cuenta." });
+                new { userId = result.UserId },
+                result);
         }
         catch (InvalidOperationException ex)
         {

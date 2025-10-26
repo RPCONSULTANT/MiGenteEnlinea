@@ -65,11 +65,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IEmailService>();
             EmailServiceMock = new Mock<IEmailService>();
             EmailServiceMock
-                .Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.SendEmailAsync(
+                    It.IsAny<string>(), 
+                    It.IsAny<string>(), 
+                    It.IsAny<string>(), 
+                    It.IsAny<string>(), 
+                    It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
             EmailServiceMock
-                .Setup(x => x.SendActivationEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(true);
+                .Setup(x => x.SendActivationEmailAsync(
+                    It.IsAny<string>(), 
+                    It.IsAny<string>(), 
+                    It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
             services.AddScoped(_ => EmailServiceMock.Object);
 
             // Mock Payment Service (Cardnet)
