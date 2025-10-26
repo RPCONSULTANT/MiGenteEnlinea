@@ -50,8 +50,10 @@ public class IdentityService : IIdentityService
         _logger.LogInformation("User not found in Identity, checking legacy tables for email: {Email}", email);
         
         // Query legacy Credenciales table (domain entity)
-        var credencial = await _context.Credenciales
-            .FirstOrDefaultAsync(c => c.Email.Value.ToLower() == email.ToLower());
+        // NOTA: No usar .Email.Value en LINQ - EF Core no puede traducir Value Objects
+        // En su lugar, EF Core usa HasConversion() automáticamente
+        var credencialesQuery = await _context.Credenciales.ToListAsync();
+        var credencial = credencialesQuery.FirstOrDefault(c => c.Email.Value.Equals(email, StringComparison.OrdinalIgnoreCase));
 
         if (credencial == null)
         {
