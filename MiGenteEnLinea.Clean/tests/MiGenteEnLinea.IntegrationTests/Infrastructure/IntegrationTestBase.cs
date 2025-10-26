@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
@@ -35,6 +36,25 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var scope = factory.Services.CreateScope();
         DbContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         AppDbContext = DbContext; // MiGenteDbContext implementa IApplicationDbContext
+        
+        // Seedear datos de prueba automáticamente
+        SeedTestData().GetAwaiter().GetResult();
+    }
+    
+    /// <summary>
+    /// Seedea datos de prueba en la base de datos SQL Server
+    /// </summary>
+    private async Task SeedTestData()
+    {
+        // Verificar si ya hay datos (para evitar duplicados entre tests)
+        var hasData = await DbContext.Credenciales.AnyAsync();
+        if (hasData)
+        {
+            return; // Ya hay datos seeded
+        }
+        
+        // Ejecutar seeder
+        await TestDataSeeder.SeedAsync(DbContext);
     }
 
     /// <summary>

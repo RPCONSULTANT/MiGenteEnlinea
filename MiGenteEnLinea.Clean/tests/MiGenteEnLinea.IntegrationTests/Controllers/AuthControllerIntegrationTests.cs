@@ -267,6 +267,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var changePasswordCommand = new ChangePasswordCommand(
             Email: "juan.perez@test.com",
             UserId: credencial.UserId,
+            CurrentPassword: TestDataSeeder.TestPasswordPlainText,
             NewPassword: "NewPassword@123"
         );
 
@@ -291,6 +292,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var changePasswordCommand = new ChangePasswordCommand(
             Email: "juan.perez@test.com",
             UserId: "some-user-id",
+            CurrentPassword: "OldPassword@123",
             NewPassword: "NewPassword@123"
         );
 

@@ -398,6 +398,7 @@ public partial class MiGenteDbContext : IdentityDbContext<ApplicationUser>, IApp
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.PlanesContratista>();
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.PlanesEmpleadore>();
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.Provincia>();
+        modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.Remuneracione>();
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.Sectore>();
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.Servicio>();
         modelBuilder.Ignore<Infrastructure.Persistence.Entities.Generated.Suscripcione>();
