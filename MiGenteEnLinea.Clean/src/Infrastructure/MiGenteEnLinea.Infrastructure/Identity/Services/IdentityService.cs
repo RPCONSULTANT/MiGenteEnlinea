@@ -11,13 +11,13 @@ public class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly MiGenteDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<IdentityService> _logger;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         IJwtTokenService jwtTokenService,
-        MiGenteDbContext context,
+        IApplicationDbContext context,
         ILogger<IdentityService> logger)
     {
         _userManager = userManager;
@@ -28,14 +28,70 @@ public class IdentityService : IIdentityService
 
     public async Task<AuthenticationResultDto> LoginAsync(string email, string password, string ipAddress)
     {
+        // ============================================================
+        // STRATEGY: Identity-First + Legacy Fallback
+        // ============================================================
+        // 1. Try login with Identity (ASP.NET Core Identity - Modern)
+        // 2. If not found, try legacy tables (Credenciales + Perfiles)
+        // 3. If found in legacy, migrate automatically to Identity
+        // 4. Return unified result
+        // ============================================================
+
+        // Step 1: Try Identity login first (modern system)
         var user = await _userManager.FindByEmailAsync(email);
         
-        if (user == null)
+        if (user != null)
         {
-            _logger.LogWarning("Login failed: User not found with email {Email}", email);
+            // User exists in Identity - standard login flow
+            return await LoginWithIdentityAsync(user, password, ipAddress);
+        }
+
+        // Step 2: User not in Identity, check legacy tables
+        _logger.LogInformation("User not found in Identity, checking legacy tables for email: {Email}", email);
+        
+        // Query legacy Credenciales table (domain entity)
+        var credencial = await _context.Credenciales
+            .FirstOrDefaultAsync(c => c.Email.Value.ToLower() == email.ToLower());
+
+        if (credencial == null)
+        {
+            _logger.LogWarning("Login failed: User not found in Identity or Legacy for email {Email}", email);
             throw new UnauthorizedAccessException("Credenciales inválidas");
         }
 
+        // Step 3: Validate password against legacy hash (BCrypt)
+        var passwordValid = BCrypt.Net.BCrypt.Verify(password, credencial.PasswordHash);
+        
+        if (!passwordValid)
+        {
+            _logger.LogWarning("Login failed: Invalid password for legacy user {UserId}", credencial.UserId);
+            throw new UnauthorizedAccessException("Credenciales inválidas");
+        }
+
+        if (!credencial.Activo)
+        {
+            _logger.LogWarning("Login failed: Legacy account not active for user {UserId}", credencial.UserId);
+            throw new UnauthorizedAccessException("La cuenta no está activa. Por favor, verifica tu correo electrónico.");
+        }
+
+        // Query legacy Perfiles table to get additional user info
+        var perfil = await _context.Perfiles
+            .FirstOrDefaultAsync(p => p.UserId == credencial.UserId);
+
+        // Step 4: Migrate legacy user to Identity automatically
+        _logger.LogInformation("Migrating legacy user {UserId} to Identity system", credencial.UserId);
+        
+        var migratedUser = await MigrateLegacyUserToIdentityAsync(credencial, perfil, password);
+        
+        // Step 5: Login with newly migrated Identity user
+        return await LoginWithIdentityAsync(migratedUser, password, ipAddress);
+    }
+
+    /// <summary>
+    /// Standard Identity login flow
+    /// </summary>
+    private async Task<AuthenticationResultDto> LoginWithIdentityAsync(ApplicationUser user, string password, string ipAddress)
+    {
         var passwordValid = await _userManager.CheckPasswordAsync(user, password);
         
         if (!passwordValid)
@@ -105,9 +161,52 @@ public class IdentityService : IIdentityService
         };
     }
 
+    /// <summary>
+    /// Migra un usuario legacy (Credenciales + Perfiles) a Identity (AspNetUsers)
+    /// </summary>
+    private async Task<ApplicationUser> MigrateLegacyUserToIdentityAsync(
+        Domain.Entities.Authentication.Credencial credencial,
+        Domain.Entities.Seguridad.Perfile? perfil,
+        string plainTextPassword)
+    {
+        // Buscar suscripción activa para obtener PlanID y VencimientoPlan
+        var suscripcion = await _context.Suscripciones
+            .Where(s => s.UserId == credencial.UserId && !s.Cancelada)
+            .OrderByDescending(s => s.FechaInicio)
+            .FirstOrDefaultAsync();
+
+        var newUser = new ApplicationUser
+        {
+            Id = credencial.UserId, // Mantener mismo ID para compatibilidad
+            UserName = credencial.Email.Value,
+            Email = credencial.Email.Value,
+            EmailConfirmed = credencial.Activo,
+            NombreCompleto = perfil != null ? $"{perfil.Nombre} {perfil.Apellido}" : credencial.Email.Value,
+            Tipo = perfil?.Tipo.ToString() ?? "1", // Default to Empleador if not specified
+            PlanID = suscripcion?.PlanId ?? 0,
+            VencimientoPlan = suscripcion?.Vencimiento.ToDateTime(TimeOnly.MinValue),
+            FechaCreacion = credencial.CreatedAt ?? DateTime.UtcNow,
+            SecurityStamp = Guid.NewGuid().ToString()
+        };
+
+        // Crear usuario en Identity con el mismo password
+        var result = await _userManager.CreateAsync(newUser, plainTextPassword);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            _logger.LogError("Failed to migrate legacy user {UserId} to Identity: {Errors}", credencial.UserId, errors);
+            throw new InvalidOperationException($"Error al migrar usuario a Identity: {errors}");
+        }
+
+        _logger.LogInformation("Successfully migrated legacy user {UserId} to Identity", credencial.UserId);
+        
+        return newUser;
+    }
+
     public async Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
-        var tokenEntity = await _context.RefreshTokens
+        var tokenEntity = await _context.Set<RefreshToken>()
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
@@ -177,7 +276,7 @@ public class IdentityService : IIdentityService
 
     public async Task RevokeTokenAsync(string refreshToken, string ipAddress, string? reason = null)
     {
-        var tokenEntity = await _context.RefreshTokens
+        var tokenEntity = await _context.Set<RefreshToken>()
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
         if (tokenEntity == null)

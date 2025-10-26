@@ -47,14 +47,14 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
     private async Task SeedTestData()
     {
         // Verificar si ya hay datos (para evitar duplicados entre tests)
-        var hasData = await DbContext.Credenciales.AnyAsync();
+        var hasData = await AppDbContext.Credenciales.AnyAsync();
         if (hasData)
         {
             return; // Ya hay datos seeded
         }
         
         // Ejecutar seeder
-        await TestDataSeeder.SeedAsync(DbContext);
+        await TestDataSeeder.SeedAllAsync(AppDbContext);
     }
 
     /// <summary>
