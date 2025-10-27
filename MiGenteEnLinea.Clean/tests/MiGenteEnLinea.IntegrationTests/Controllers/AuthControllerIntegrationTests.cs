@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.ActivateAccount;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.ChangePassword;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.Login;
@@ -10,6 +11,7 @@ using MiGenteEnLinea.Application.Features.Authentication.Commands.RefreshToken;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.Register;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.RevokeToken;
 using MiGenteEnLinea.Application.Features.Authentication.DTOs;
+using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.IntegrationTests.Infrastructure;
 using Xunit;
 
@@ -87,9 +89,17 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var result = await response.Content.ReadFromJsonAsync<RegisterResult>();
         result.Should().NotBeNull();
 
-        var credencial = await AppDbContext.Credenciales
-            .FirstOrDefaultAsync(c => c.Email.Value == email);
-        var contratista = await AppDbContext.Contratistas
+        // ✅ Use fresh DbContext to avoid caching issues
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        
+        // ✅ Use ToListAsync first then filter in memory to avoid EF translation issues with value objects
+        var allCredenciales = await freshContext.CredencialesRefactored.AsNoTracking().ToListAsync();
+        var credencial = allCredenciales.FirstOrDefault(c => c.Email.Value == email);
+        credencial.Should().NotBeNull();
+        
+        var contratista = await freshContext.Contratistas
+            .AsNoTracking()
             .FirstOrDefaultAsync(c => c.UserId == credencial!.UserId);
         
         contratista.Should().NotBeNull();
@@ -219,8 +229,13 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         };
         await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
         
-        var credencial = await AppDbContext.Credenciales
-            .FirstAsync(c => c.Email.Value == email);
+        // ✅ Use fresh DbContext to avoid caching issues
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        
+        // ✅ Use ToListAsync first then filter in memory to avoid EF translation issues
+        var allCredenciales = await freshContext.CredencialesRefactored.AsNoTracking().ToListAsync();
+        var credencial = allCredenciales.First(c => c.Email.Value == email);
         credencial.Activo.Should().BeFalse();
 
         var activateCommand = new ActivateAccountCommand
@@ -261,8 +276,13 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var token = await LoginAsync("juan.perez@test.com", TestDataSeeder.TestPasswordPlainText);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        var credencial = await AppDbContext.Credenciales
-            .FirstAsync(c => c.Email.Value == "juan.perez@test.com");
+        // ✅ Use fresh DbContext to avoid caching issues
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        
+        // ✅ Use ToListAsync first then filter in memory to avoid EF translation issues
+        var allCredenciales = await freshContext.CredencialesRefactored.AsNoTracking().ToListAsync();
+        var credencial = allCredenciales.First(c => c.Email.Value == "juan.perez@test.com");
 
         var changePasswordCommand = new ChangePasswordCommand(
             Email: "juan.perez@test.com",

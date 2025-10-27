@@ -83,14 +83,15 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var loginRequest = new
         {
             email,
-            password
+            password,
+            ipAddress = "127.0.0.1" // Required by LoginCommand
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/login", loginRequest);
         response.EnsureSuccessStatusCode();
 
         var loginResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var token = loginResponse.GetProperty("accessToken").GetString();
+        var token = loginResponse.GetProperty("token").GetString(); // ✅ Fixed: property is "token" not "accessToken"
         
         token.Should().NotBeNullOrEmpty("El login debe devolver un access token");
         
@@ -109,14 +110,18 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         string tipo = "Empleador", // o "Contratista"
         string? identificacion = null)
     {
+        // ✅ FIX: RegisterCommand expects Tipo as int (1=Empleador, 2=Contratista) and Host property
+        int tipoInt = tipo.Equals("Contratista", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
+        
         var registerRequest = new
         {
             email,
             password,
             nombre,
             apellido,
-            tipo,
-            identificacion = identificacion ?? GenerateRandomIdentification()
+            tipo = tipoInt, // ✅ Changed from string to int
+            host = "https://localhost:5015" // ✅ Added required Host property
+            // ✅ Removed identificacion - not used by RegisterCommand
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/register", registerRequest);
