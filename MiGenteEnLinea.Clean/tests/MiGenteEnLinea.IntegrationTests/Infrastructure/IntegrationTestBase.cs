@@ -83,15 +83,14 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var loginRequest = new
         {
             email,
-            password,
-            ipAddress = "127.0.0.1" // Required by LoginCommand
+            password
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/login", loginRequest);
         response.EnsureSuccessStatusCode();
 
         var loginResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var token = loginResponse.GetProperty("token").GetString(); // ✅ Fixed: property is "token" not "accessToken"
+        var token = loginResponse.GetProperty("accessToken").GetString();
         
         token.Should().NotBeNullOrEmpty("El login debe devolver un access token");
         
