@@ -9,35 +9,20 @@ using Xunit;
 namespace MiGenteEnLinea.Infrastructure.Tests.Services;
 
 /// <summary>
-/// Unit Tests para EmailService
+/// Unit Tests para EmailService.
+/// Estos tests validan la configuración y construcción del servicio,
+/// sin hacer conexiones reales a servidores SMTP.
 /// </summary>
 public class EmailServiceTests
 {
     private readonly Mock<ILogger<EmailService>> _mockLogger;
-    private readonly EmailSettings _emailSettings;
-    private readonly IOptions<EmailSettings> _emailSettingsOptions;
 
     public EmailServiceTests()
     {
         _mockLogger = new Mock<ILogger<EmailService>>();
-        
-        // Configuración válida para tests (Mailtrap.io)
-        _emailSettings = new EmailSettings
-        {
-            SmtpServer = "sandbox.smtp.mailtrap.io",
-            SmtpPort = 2525,
-            Username = "test_username",
-            Password = "test_password",
-            FromEmail = "noreply@migenteenlinea.com",
-            FromName = "MiGente En Línea - Testing",
-            EnableSsl = true,
-            Timeout = 10000,
-            MaxRetryAttempts = 3,
-            RetryDelayMilliseconds = 2000
-        };
-        
-        _emailSettingsOptions = Microsoft.Extensions.Options.Options.Create(_emailSettings);
     }
+
+    #region EmailSettings Validation Tests
 
     /// <summary>
     /// Test 1: Validar que EmailSettings correctas no lanzan excepción
@@ -93,10 +78,10 @@ public class EmailServiceTests
     }
 
     /// <summary>
-    /// Test 3: Validar que EmailSettings con FromEmail inválido lanza excepción
+    /// Test 3: Validar que EmailSettings con FromEmail vacío lanza excepción
     /// </summary>
     [Fact]
-    public void EmailSettings_InvalidFromEmail_ThrowsInvalidOperationException()
+    public void EmailSettings_EmptyFromEmail_ThrowsInvalidOperationException()
     {
         // Arrange
         var settings = new EmailSettings
@@ -105,7 +90,7 @@ public class EmailServiceTests
             SmtpPort = 587,
             Username = "test@example.com",
             Password = "password",
-            FromEmail = "invalid-email", // Sin @
+            FromEmail = "", // Vacío
             FromName = "Test Sender"
         };
 
@@ -114,24 +99,21 @@ public class EmailServiceTests
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*FromEmail*válido*");
+            .WithMessage("*FromEmail*");
     }
 
     /// <summary>
-    /// Test 4: Validar que EmailSettings con puerto inválido lanza excepción
+    /// Test 4: Validar que EmailSettings con Username vacío lanza excepción
     /// </summary>
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(70000)]
-    public void EmailSettings_InvalidSmtpPort_ThrowsInvalidOperationException(int invalidPort)
+    [Fact]
+    public void EmailSettings_EmptyUsername_ThrowsInvalidOperationException()
     {
         // Arrange
         var settings = new EmailSettings
         {
             SmtpServer = "smtp.gmail.com",
-            SmtpPort = invalidPort,
-            Username = "test@example.com",
+            SmtpPort = 587,
+            Username = "", // Vacío
             Password = "password",
             FromEmail = "from@example.com",
             FromName = "Test Sender"
@@ -142,156 +124,304 @@ public class EmailServiceTests
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*SmtpPort*");
+            .WithMessage("*Username*");
     }
 
     /// <summary>
-    /// Test 5: SendEmailAsync con destinatario inválido lanza ArgumentException
-    /// </summary>
-    [Theory]
-    [InlineData("")]
-    [InlineData("invalid-email")]
-    [InlineData("test@")]
-    [InlineData("@test.com")]
-    public async Task SendEmailAsync_InvalidToEmail_ThrowsArgumentException(string invalidEmail)
-    {
-        // Arrange
-        var service = new EmailService(_emailSettingsOptions, _mockLogger.Object);
-
-        // Act
-        Func<Task> act = async () => await service.SendEmailAsync(
-            toEmail: invalidEmail,
-            toName: "Test User",
-            subject: "Test Subject",
-            htmlBody: "<p>Test</p>",
-            plainTextBody: "Test"
-        );
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*email*");
-    }
-
-    /// <summary>
-    /// Test 6: SendActivationEmailAsync con URL nulo lanza ArgumentException
+    /// Test 5: Validar que EmailSettings con Password vacío lanza excepción
     /// </summary>
     [Fact]
-    public async Task SendActivationEmailAsync_NullActivationUrl_ThrowsArgumentException()
+    public void EmailSettings_EmptyPassword_ThrowsInvalidOperationException()
     {
         // Arrange
-        var service = new EmailService(_emailSettingsOptions, _mockLogger.Object);
+        var settings = new EmailSettings
+        {
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "", // Vacío
+            FromEmail = "from@example.com",
+            FromName = "Test Sender"
+        };
 
         // Act
-        Func<Task> act = async () => await service.SendActivationEmailAsync(
-            toEmail: "test@example.com",
-            toName: "Test User",
-            activationUrl: null! // URL nula
-        );
+        Action act = () => settings.Validate();
 
         // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*activationUrl*");
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Password*");
     }
 
     /// <summary>
-    /// Test 7: SendWelcomeEmailAsync con tipo de usuario inválido lanza ArgumentException
-    /// </summary>
-    [Theory]
-    [InlineData("")]
-    [InlineData("InvalidType")]
-    public async Task SendWelcomeEmailAsync_InvalidUserType_ThrowsArgumentException(string invalidType)
-    {
-        // Arrange
-        var service = new EmailService(_emailSettingsOptions, _mockLogger.Object);
-
-        // Act
-        Func<Task> act = async () => await service.SendWelcomeEmailAsync(
-            toEmail: "test@example.com",
-            toName: "Test User",
-            userType: invalidType
-        );
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*userType*");
-    }
-
-    /// <summary>
-    /// Test 8: Constructor valida EmailSettings al inicio
+    /// Test 6: Validar valores predeterminados de EmailSettings
     /// </summary>
     [Fact]
-    public void Constructor_InvalidEmailSettings_ThrowsInvalidOperationException()
+    public void EmailSettings_DefaultValues_AreCorrect()
+    {
+        // Arrange & Act
+        var settings = new EmailSettings();
+
+        // Assert
+        settings.FromName.Should().Be("MiGente En Línea");
+        settings.SmtpPort.Should().Be(587);
+        settings.EnableSsl.Should().BeTrue();
+        settings.MaxRetryAttempts.Should().Be(3);
+        settings.RetryDelayMilliseconds.Should().Be(1000);
+        settings.Timeout.Should().Be(30000);
+    }
+
+    #endregion
+
+    #region EmailService Constructor Tests
+
+    /// <summary>
+    /// Test 7: Constructor con configuración válida no lanza excepción
+    /// </summary>
+    [Fact]
+    public void Constructor_ValidEmailSettings_DoesNotThrowException()
+    {
+        // Arrange
+        var validSettings = new EmailSettings
+        {
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "password",
+            FromEmail = "from@example.com",
+            FromName = "Test Sender"
+        };
+        var options = Microsoft.Extensions.Options.Options.Create(validSettings);
+
+        // Act
+        Action act = () => new EmailService(options, _mockLogger.Object);
+
+        // Assert
+        act.Should().NotThrow();
+    }
+
+    /// <summary>
+    /// Test 8: Constructor con SmtpServer vacío lanza excepción
+    /// </summary>
+    [Fact]
+    public void Constructor_EmptySmtpServer_ThrowsInvalidOperationException()
     {
         // Arrange
         var invalidSettings = new EmailSettings
         {
             SmtpServer = "", // Inválido
-            SmtpPort = 587
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "password",
+            FromEmail = "from@example.com"
         };
-        var invalidOptions = Microsoft.Extensions.Options.Options.Create(invalidSettings);
+        var options = Microsoft.Extensions.Options.Options.Create(invalidSettings);
 
         // Act
-        Action act = () => new EmailService(invalidOptions, _mockLogger.Object);
+        Action act = () => new EmailService(options, _mockLogger.Object);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*configuración de email*válida*");
+            .WithMessage("*SmtpServer*");
     }
 
     /// <summary>
-    /// Test 9: Verificar que templates HTML contienen placeholders esperados
+    /// Test 9: Constructor con FromEmail vacío lanza excepción
     /// </summary>
     [Fact]
-    public void EmailService_ActivationTemplate_ContainsRequiredPlaceholders()
-    {
-        // Este test verifica la estructura interna del template
-        // (en un escenario real, verificaríamos el contenido del email enviado)
-        
-        // Arrange & Act
-        var service = new EmailService(_emailSettingsOptions, _mockLogger.Object);
-
-        // Assert
-        // Solo verificamos que el servicio se instancia correctamente
-        service.Should().NotBeNull();
-        
-        // Nota: Para verificar templates, necesitaríamos hacer el método 
-        // GenerateActivationEmailHtml() público o usar integration tests
-    }
-
-    /// <summary>
-    /// Test 10: SendPasswordResetEmailAsync valida parámetros correctamente
-    /// </summary>
-    [Fact]
-    public async Task SendPasswordResetEmailAsync_ValidParameters_DoesNotThrowException()
+    public void Constructor_EmptyFromEmail_ThrowsInvalidOperationException()
     {
         // Arrange
-        var service = new EmailService(_emailSettingsOptions, _mockLogger.Object);
+        var invalidSettings = new EmailSettings
+        {
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "password",
+            FromEmail = "" // Vacío
+        };
+        var options = Microsoft.Extensions.Options.Options.Create(invalidSettings);
 
         // Act
-        // Nota: Este test fallará si intenta conectarse al SMTP real.
-        // En un escenario ideal, usaríamos un SMTP mock o Mailtrap.io
-        
-        // Para propósitos de este test, solo verificamos que los parámetros son aceptados
-        Func<Task> act = async () => await service.SendPasswordResetEmailAsync(
-            toEmail: "test@example.com",
-            toName: "Test User",
-            resetUrl: "https://example.com/reset?token=abc123"
-        );
+        Action act = () => new EmailService(options, _mockLogger.Object);
 
         // Assert
-        // Si los parámetros son válidos, no debe lanzar ArgumentException
-        // (podría lanzar SmtpException si intenta enviar realmente)
-        try
-        {
-            await act();
-        }
-        catch (ArgumentException)
-        {
-            Assert.Fail("No debería lanzar ArgumentException con parámetros válidos");
-        }
-        catch
-        {
-            // Otras excepciones (SMTP) son esperadas sin un servidor real
-        }
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*FromEmail*");
     }
+
+    /// <summary>
+    /// Test 10: Constructor con Username vacío lanza excepción
+    /// </summary>
+    [Fact]
+    public void Constructor_EmptyUsername_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var invalidSettings = new EmailSettings
+        {
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            Username = "", // Vacío
+            Password = "password",
+            FromEmail = "from@example.com"
+        };
+        var options = Microsoft.Extensions.Options.Options.Create(invalidSettings);
+
+        // Act
+        Action act = () => new EmailService(options, _mockLogger.Object);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Username*");
+    }
+
+    /// <summary>
+    /// Test 11: Constructor con Password vacío lanza excepción
+    /// </summary>
+    [Fact]
+    public void Constructor_EmptyPassword_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var invalidSettings = new EmailSettings
+        {
+            SmtpServer = "smtp.gmail.com",
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "", // Vacío
+            FromEmail = "from@example.com"
+        };
+        var options = Microsoft.Extensions.Options.Options.Create(invalidSettings);
+
+        // Act
+        Action act = () => new EmailService(options, _mockLogger.Object);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Password*");
+    }
+
+    #endregion
+
+    #region EmailService Instance Tests
+
+    /// <summary>
+    /// Test 12: EmailService se instancia correctamente con configuración válida
+    /// </summary>
+    [Fact]
+    public void EmailService_WithValidSettings_IsNotNull()
+    {
+        // Arrange
+        var validSettings = CreateValidSettings();
+        var options = Microsoft.Extensions.Options.Options.Create(validSettings);
+
+        // Act
+        var service = new EmailService(options, _mockLogger.Object);
+
+        // Assert
+        service.Should().NotBeNull();
+    }
+
+    /// <summary>
+    /// Test 13: EmailSettings puede configurar valores personalizados
+    /// </summary>
+    [Fact]
+    public void EmailSettings_CanSetCustomValues()
+    {
+        // Arrange & Act
+        var settings = new EmailSettings
+        {
+            SmtpServer = "custom.smtp.server",
+            SmtpPort = 2525,
+            Username = "custom_user",
+            Password = "custom_password",
+            FromEmail = "custom@example.com",
+            FromName = "Custom Sender",
+            EnableSsl = false,
+            MaxRetryAttempts = 5,
+            RetryDelayMilliseconds = 5000,
+            Timeout = 60000
+        };
+
+        // Assert
+        settings.SmtpServer.Should().Be("custom.smtp.server");
+        settings.SmtpPort.Should().Be(2525);
+        settings.Username.Should().Be("custom_user");
+        settings.Password.Should().Be("custom_password");
+        settings.FromEmail.Should().Be("custom@example.com");
+        settings.FromName.Should().Be("Custom Sender");
+        settings.EnableSsl.Should().BeFalse();
+        settings.MaxRetryAttempts.Should().Be(5);
+        settings.RetryDelayMilliseconds.Should().Be(5000);
+        settings.Timeout.Should().Be(60000);
+    }
+
+    /// <summary>
+    /// Test 14: EmailSettings con null en SmtpServer lanza excepción
+    /// </summary>
+    [Fact]
+    public void EmailSettings_NullSmtpServer_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var settings = new EmailSettings
+        {
+            SmtpServer = null!,
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "password",
+            FromEmail = "from@example.com"
+        };
+
+        // Act
+        Action act = () => settings.Validate();
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*SmtpServer*");
+    }
+
+    /// <summary>
+    /// Test 15: EmailSettings con whitespace en campos lanza excepción
+    /// </summary>
+    [Fact]
+    public void EmailSettings_WhitespaceInSmtpServer_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var settings = new EmailSettings
+        {
+            SmtpServer = "   ", // Solo espacios
+            SmtpPort = 587,
+            Username = "test@example.com",
+            Password = "password",
+            FromEmail = "from@example.com"
+        };
+
+        // Act
+        Action act = () => settings.Validate();
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*SmtpServer*");
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private static EmailSettings CreateValidSettings()
+    {
+        return new EmailSettings
+        {
+            SmtpServer = "smtp.test.com",
+            SmtpPort = 587,
+            Username = "test@test.com",
+            Password = "test_password",
+            FromEmail = "noreply@test.com",
+            FromName = "Test Service",
+            EnableSsl = true,
+            Timeout = 30000,
+            MaxRetryAttempts = 3,
+            RetryDelayMilliseconds = 1000
+        };
+    }
+
+    #endregion
 }

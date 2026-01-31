@@ -279,8 +279,11 @@ public static class DependencyInjection
         // ⚠️ TODO: Reemplazar con implementaciones reales cuando estén disponibles
         // =====================================================================
         
-        // ✅ LOTE 1 COMPLETADO: CardnetPaymentService implementado
-        services.AddScoped<IPaymentService, CardnetPaymentService>();
+        // ⚠️ MODO DESARROLLO: Usando MockPaymentService para emular pagos sin Cardnet
+        // Esto permite que el sistema funcione completamente sin requerir pagos reales.
+        // Para habilitar Cardnet real, cambiar a: CardnetPaymentService
+        // ✅ NOTA: En producción actual hay un bug de Cardnet y se usa emulación
+        services.AddScoped<IPaymentService, MockPaymentService>();
         
         services.AddScoped<INominaCalculatorService, MockNominaCalculatorService>();
 

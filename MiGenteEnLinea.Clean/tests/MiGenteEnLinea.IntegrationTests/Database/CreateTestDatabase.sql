@@ -3,8 +3,8 @@
 -- MiGente En Línea - Clean Architecture
 -- ================================================================================
 -- Propósito: Crear SQL Server real para tests (reemplaza InMemory Database)
--- Fecha: 2025-10-26
--- Docker: localhost,1433 | User: Sa | Password: Volumen#1
+-- Fecha: 2026-01-31
+-- Docker: sqlcontainerwsl,1433 | User: sa | Password: Pevertiman00!
 -- ================================================================================
 
 USE master;
