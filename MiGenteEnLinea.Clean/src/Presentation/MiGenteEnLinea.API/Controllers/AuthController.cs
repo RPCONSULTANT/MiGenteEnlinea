@@ -468,10 +468,8 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("Usuario registrado exitosamente - UserId: {UserId}", result.UserId);
 
-            return CreatedAtAction(
-                nameof(GetPerfil),
-                new { userId = result.UserId },
-                result);
+            // ✅ FIX: Usar Created con URL directa en vez de CreatedAtAction que puede fallar
+            return Created($"/api/auth/perfil/{result.UserId}", result);
         }
         catch (InvalidOperationException ex)
         {

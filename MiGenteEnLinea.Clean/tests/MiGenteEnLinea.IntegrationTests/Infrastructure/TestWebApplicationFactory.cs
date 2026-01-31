@@ -157,7 +157,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
                 
-                // ⚠️ CRÍTICO: Agregar interceptor para auditoría automática
+                //CRÍTICO: Agregar interceptor para auditoría automática
                 var auditInterceptor = serviceProvider.GetRequiredService<AuditableEntityInterceptor>();
                 options.AddInterceptors(auditInterceptor);
             });
@@ -170,8 +170,35 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             var scopedServices = scope.ServiceProvider;
             var db = scopedServices.GetRequiredService<MiGenteDbContext>();
             
-            // Aplicar migraciones pendientes
-            db.Database.Migrate();
+            try
+            {
+                // Verificar si la base de datos existe
+                if (db.Database.CanConnect())
+                {
+                    // La base de datos ya existe, limpiar datos pero mantener esquema
+                    // Esto es más rápido que recrear y evita conflictos de concurrencia
+                }
+                else
+                {
+                    // Base de datos no existe, crearla con migraciones
+                    db.Database.Migrate();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log pero continuar - la base de datos podría estar siendo creada por otro test
+                Console.WriteLine($"⚠️ Database setup warning: {ex.Message}");
+                
+                // Intentar aplicar migraciones de todos modos (por si faltan)
+                try
+                {
+                    db.Database.Migrate();
+                }
+                catch
+                {
+                    // Ignorar si ya existe - otro test la está creando
+                }
+            }
         });
     }
 

@@ -22,13 +22,14 @@
 **Purpose:** **CURRENTLY DEPLOYED IN PRODUCTION** - This is what users see
 **CRITICAL:** All frontend development MUST replicate this EXACT visual design
 **Contains:**
+
 - Production CSS/Styles (`Styles/Custom.css`, `Styles/animated.css`)
 - Production Assets (`Images/`, `Fonts/`, `Template/assets/`)
 - Production Layouts (Master pages, HTML structure)
 - Production Email Templates (`MailTemplates/`)
 - Production Print Templates (`Empleador/Impresion/`)
-**DO NOT:** Modify - this is read-only production reference
-**DO:** Copy all CSS, assets, fonts, images, and visual elements from here
+  **DO NOT:** Modify - this is read-only production reference
+  **DO:** Copy all CSS, assets, fonts, images, and visual elements from here
 
 ### 🚀 PROJECT 3: Clean Architecture Backend (100% COMPLETE)
 
@@ -78,20 +79,19 @@ This workspace provides specialized prompts for different AI agents:
 └── ddd-migration-agent.md                  # DDD migration workflow (coming soon)
 ```
 
-**🚀 CURRENT FOCUS:** Frontend Development - Replicating FRONT_Publicado in Clean Architecture
-**📄 Estado Actual:** Backend 100% completo (123 endpoints), Frontend migration iniciando
-**📊 Progress:** Backend ✅ 100% | Frontend 🔄 Phase 1 (Assets/CSS Migration)
-**🎯 Frontend Strategy:** Replicate EXACTLY the visual design from FRONT_Publicado
-**🔧 Branch Activo:** `main` (frontend development)
-**📋 Frontend Development Phases:**
+**🚀 CURRENT FOCUS:** Integration Tests - Corrigiendo RegisterUserAsync type mismatch
+**📄 Estado Actual:** Backend 100% completo (123 endpoints), Tests de Integración EN DESARROLLO
+**📊 Progress:** Backend ✅ 100% | Tests 🔄 30/85 pasando (35%)
+**🎯 Testing Strategy:** Real database integration tests, fix RegisterUserAsync first
+**🔧 Branch Activo:** `main` (integration tests development)
+**📋 Integration Tests Status (Enero 31, 2026):**
 
-- 🔄 Phase 1: Migrate ALL CSS, Assets, Fonts, Images from FRONT_Publicado - IN PROGRESS
-- ⏳ Phase 2: Replicate Master Page layouts (Landing, Empleador, Contratista)
-- ⏳ Phase 3: Implement authentication pages (Login, Register, Activate)
-- ⏳ Phase 4: Implement Empleador dashboard and features
-- ⏳ Phase 5: Implement Contratista dashboard and features
-- ⏳ Phase 6: Implement common pages (Planes, FAQ, etc.)
-  **📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
+- ✅ Compilación: EXITOSA (0 errores, 6 warnings)
+- 🔴 Tests: 85 totales, 30 pasando (35%), 54 fallando (64%)
+- 🔴 CRÍTICO: RegisterUserAsync espera userId como int, pero API devuelve string
+- 🔄 Próximo paso: Corregir IntegrationTestBase.cs línea 130
+- ⏳ Después: Corregir DeleteUser_SoftDelete test
+**📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
 
 ---
 
@@ -214,8 +214,8 @@ ProyectoMigente/ (WORKSPACE ROOT = REPOSITORY ROOT)
 - When asked about **"migration"** or **"refactoring"** → Reference legacy, implement in clean
 - When asked about **"business logic"** → Check legacy first to understand, then implement properly in clean
 
-**🎨 FRONTEND DEVELOPMENT RULE:** 
-ALL visual elements (CSS, images, fonts, layouts) MUST come from `FRONT_Publicado/`. 
+**🎨 FRONTEND DEVELOPMENT RULE:**
+ALL visual elements (CSS, images, fonts, layouts) MUST come from `FRONT_Publicado/`.
 The Clean Architecture frontend MUST be visually IDENTICAL to what is currently in production.
 
 ---
@@ -698,19 +698,63 @@ ReadModels/      → VistaPerfil, VistaEmpleado, VistaContratista, etc.
 
 #### 🔄 Phase 7: Testing & Quality - 🚧 EN DESARROLLO ACTIVO
 
-**Reportes:**
-
-- `INTEGRATION_TESTS_FINAL_STATUS_REPORT.md` - Estado actual (218 errores identificados, estrategia ajustada)
-- `GAPS_AUDIT_COMPLETO_FINAL.md` - 28 GAPS auditados (19 completos, 68%)
-
-**Estado Actual (Branch: feature/integration-tests-rewrite):**
+**📊 ESTADO ACTUAL (Enero 31, 2026):**
 
 ```
-Branch: feature/integration-tests-rewrite (activo)
-Strategy: Real Database Integration Tests (no mocks)
-Current Focus: AuthController complete flow testing
-Database: db_a9f8ff_migente (REAL database connection)
-Approach: Test → Find Bugs → Fix in Application Layer
+✅ Compilación: EXITOSA (0 errores, 6 warnings non-blocking)
+📊 Tests Totales: 85
+   ✅ Pasando: 30 (35%)
+   ❌ Fallando: 54 (64%)
+   ⏭️ Omitido: 1 (1%)
+🎯 Foco Actual: Corregir RegisterUserAsync y tests de autenticación
+```
+
+**🔴 PROBLEMA PRINCIPAL IDENTIFICADO:**
+
+El método `RegisterUserAsync` en `IntegrationTestBase.cs` línea 130 tiene un **type mismatch**:
+
+```csharp
+// ❌ INCORRECTO (lo que hace el test actualmente)
+var userId = registerResponse.GetProperty("userId").GetInt32();  // Espera INT
+
+// ✅ CORRECTO (lo que el API realmente devuelve)
+// RegisterResult devuelve UserId como STRING (GUID), no INT
+public class RegisterResult
+{
+    public bool Success { get; set; }
+    public string Message { get; set; }
+    public string? UserId { get; set; }  // ← STRING, no INT
+    public string? Email { get; set; }
+}
+```
+
+**Archivos a Corregir:**
+
+1. `tests/MiGenteEnLinea.IntegrationTests/Infrastructure/IntegrationTestBase.cs` línea 130
+   - Cambiar `GetInt32()` → `GetString()`
+   - O cambiar el return type del helper a `string`
+
+**📁 Estructura de Tests de Integración:**
+
+```
+tests/MiGenteEnLinea.IntegrationTests/
+├── Infrastructure/
+│   ├── IntegrationTestBase.cs      ← 🔴 CORREGIR RegisterUserAsync
+│   ├── IntegrationTestHelper.cs    ← ✅ OK
+│   ├── TestDataSeeder.cs           ← ⚠️ 4 warnings nullable
+│   └── TestWebApplicationFactory.cs ← ✅ OK
+├── Controllers/
+│   ├── AuthControllerIntegrationTests.cs
+│   ├── AuthenticationCommandsTests.cs
+│   ├── AuthFlowTests.cs
+│   ├── BusinessLogicTests.cs
+│   ├── ContratistasControllerTests.cs
+│   ├── EmpleadoresControllerTests.cs
+│   ├── EmpleadosControllerTests.cs
+│   └── SuscripcionesControllerTests.cs
+├── Database/
+├── Backup_Old_Tests/               ← Tests antiguos excluidos de compilación
+└── appsettings.Testing.json
 ```
 
 **🎯 Testing Philosophy:**
@@ -725,201 +769,118 @@ Approach: Test → Find Bugs → Fix in Application Layer
 
 ✅ **INFRASTRUCTURE COMPLETADO:**
 
-1. **Real Database Connection** ✅
+1. **Compilación Tests** ✅
+   - Proyecto compila sin errores (0 errores)
+   - Solo 6 warnings de nullable reference types (non-blocking)
+   - TestWebApplicationFactory configurado correctamente
+   - Backup_Old_Tests excluido de compilación
 
-   - Integration tests connect to `db_a9f8ff_migente` (production database schema)
-   - TestWebApplicationFactory configured with real DbContext
-   - No mocks for database layer - catch real EF Core/SQL issues
+2. **Test Infrastructure** ✅
+   - `IntegrationTestBase.cs` - Base class con helpers de auth
+   - `TestDataSeeder.cs` - Seed de datos de prueba
+   - `TestWebApplicationFactory.cs` - Factory para WebApplicationFactory
+   - Conexión a base de datos real configurada
 
-2. **Legacy Tables Created** ✅
-   - Background work: Creating legacy tables needed for business logic
-   - AspNetUsers, AspNetRoles, AspNetUserRoles (Identity)
-   - Maintains compatibility with existing Credenciales/Perfiles tables
+**🔴 BUGS ACTIVOS A CORREGIR:**
 
-**🔄 IN PROGRESS:**
+1. **RegisterUserAsync Type Mismatch** (CRÍTICO - 54 tests afectados)
+   - **Archivo:** `IntegrationTestBase.cs:130`
+   - **Error:** `GetProperty("userId").GetInt32()` falla porque `userId` es string
+   - **Fix:** Cambiar a `GetString()` o actualizar helper signature
 
-3. **AuthController Flow Tests** - ACTIVE DEVELOPMENT
+2. **DeleteUser_SoftDelete Test** (1 test fallando)
+   - **Archivo:** `AuthenticationCommandsTests.cs:499`
+   - **Error:** Expected boolean to be False, but found True
+   - **Posible causa:** Soft delete no previene login correctamente
 
-   - Complete user registration flow with real data
-   - Login/Logout with JWT token validation
-   - Account activation flow
-   - Password reset/change flows
-   - Profile creation (Empleador/Contratista)
+**⏳ NEXT STEPS (Prioridad):**
 
-4. **Identity Service Integration** - ONGOING
-   - Dual-write pattern: Identity tables (primary) + Legacy tables (compatibility)
-   - Auto-migration from Legacy users to Identity on first login
-   - Claims-based authorization with JWT tokens
+1. **Corregir RegisterUserAsync** (INMEDIATO)
 
-**⏳ NEXT PHASES:**
+   ```csharp
+   // Opción A: Cambiar a string
+   var userId = registerResponse.GetProperty("userId").GetString();
+   return userId ?? throw new Exception("UserId is null");
 
-5. **Empleadores Feature Tests** - TODO
+   // Opción B: Parse int si el API cambia
+   var userIdStr = registerResponse.GetProperty("userId").GetString();
+   return int.Parse(userIdStr ?? "0");
+   ```
 
-   - CRUD operations with authentication
-   - Business logic validation
-   - Database constraints testing
+2. **Re-ejecutar tests** después del fix
+3. **Analizar tests restantes** que aún fallen
+4. **Corregir soft delete logic** si es necesario
 
-6. **Contratistas Feature Tests** - TODO
+**📊 Testing Status (Enero 31, 2026):**
 
-   - Similar to Empleadores pattern
-   - Services relationship testing
-
-7. **Complete Feature Coverage** - TODO
-   - Empleados, Nominas, Contrataciones, Suscripciones
-   - End-to-end user workflows
-   - Performance testing with real data
-
-**📊 Testing Status (Active Development - Oct 26, 2025):**
-
-- **Strategy:** Real database integration tests with complete user flows
-- **Current Module:** AuthController (all auth features: register, login, activate, reset password, profile creation)
-- **Database:** `db_a9f8ff_migente` (real connection, not in-memory)
-- **Focus:** Robust tests that identify application-level bugs, not test-level bugs
-- **Compilation:** In progress (refining command/query structures)
-
-**🎯 Current Testing Approach:**
-
-```csharp
-// Real Database + Real Services (no mocks unless necessary)
-public class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
-{
-    private readonly HttpClient _client;
-    private readonly IApplicationDbContext _dbContext;
-
-    // Test complete user journeys:
-    // 1. Register → Activate → Login → Get Profile
-    // 2. Register → Login (inactive) → ResendActivation → Activate → Login
-    // 3. Register → ForgotPassword → ResetPassword → Login
-}
-```
-
-**✅ Benefits of Real Database Testing:**
-
-1. **Catches EF Core Issues:** Relationship mappings, cascade deletes, constraints
-2. **Identifies Command/Query Bugs:** Wrong property names, missing DTOs, incorrect business logic
-3. **Validates Identity Integration:** Real AspNetUsers tables, real claims, real tokens
-4. **Performance Testing:** Actual query performance, N+1 queries, indexing issues
-5. **Data Integrity:** Foreign keys, unique constraints, check constraints
-
-**🔧 Issues Being Resolved Through Testing:**
-
-- Command structure mismatches (primary constructors vs property initializers)
-- DTO property naming inconsistencies
-- Entity navigation properties issues
-- Value object creation patterns
-- Identity/Legacy dual-write synchronization
-
-**📋 Current Work Plan (Active Sprint):**
-
-**� PHASE 1: Auth Module Complete Coverage (Current - 2-3 days):**
-
-1. **Complete AuthController Flow Tests**
-
-   - ✅ Basic registration flow (Empleador/Contratista)
-   - 🔄 Account activation with email tokens
-   - 🔄 Login with JWT token validation
-   - 🔄 Password reset complete flow
-   - 🔄 Change password flow
-   - 🔄 Profile creation/update
-
-2. **Identity Integration Validation**
-
-   - Verify dual-write to Identity + Legacy tables
-   - Confirm claims are correctly populated
-   - Test auto-migration from Legacy users
-   - Validate JWT token generation/validation
-
-3. **Fix Application Bugs Discovered**
-   - Command/Query structure corrections
-   - DTO property mismatches
-   - Business logic validations
-   - Database constraint violations
-
-**🎯 PHASE 2: Empleadores Module (Next - 2-3 days):**
-
-4. **Empleadores CRUD Tests**
-
-   - Create with authentication
-   - Read by ID and by criteria
-   - Update profile data
-   - Soft delete validation
-
-5. **Business Logic Tests**
-   - Plan subscription enforcement
-   - Employee limits per plan
-   - Payment processing flows
-
-**🟢 PHASE 3: Complete Feature Coverage (1-2 weeks):**
-
-6. **Remaining Modules**
-
-   - Contratistas (similar to Empleadores)
-   - Empleados (payroll, TSS deductions)
-   - Nominas (salary processing)
-   - Contrataciones (temporary contracts)
-   - Suscripciones (subscription management)
-
-7. **End-to-End Workflows**
-   - Complete employer journey: Register → Subscribe → Add Employee → Process Payroll
-   - Complete contractor journey: Register → Add Services → Get Hired → Get Paid → Get Rated
-
-**Estado Testing (26 Octubre 2025):**
-
-- **Integration Tests:** 🔄 EN DESARROLLO ACTIVO (AuthController flow tests con DB real)
-- **Database:** ✅ Real connection to `db_a9f8ff_migente` configured
-- **Identity Integration:** 🔄 EN PROGRESO (dual-write pattern implementation)
-- **Current Focus:** AuthController complete flows (register → activate → login → profile)
-- **Testing Strategy:** Flow-based with real database (no mocks) to catch application bugs
-- **Unit Tests:** ⏳ PENDIENTE (after integration tests validate application layer)
-- **Coverage:** ⏳ TBD (focus on correctness before coverage metrics)
+- **Compilación:** ✅ EXITOSA (0 errores, 6 warnings)
+- **Tests Ejecutables:** ✅ 85 tests discovered
+- **Tests Pasando:** 30/85 (35%)
+- **Tests Fallando:** 54/85 (64%)
+- **Problema Crítico:** Type mismatch en RegisterUserAsync (userId string vs int)
+- **Base de Datos:** Real connection to `db_a9f8ff_migente`
+- **Strategy:** Fix helper → Re-run tests → Analyze remaining failures
 
 ---
 
-### 🎯 CURRENT SPRINT PRIORITIES
+### 🎯 CURRENT SPRINT PRIORITIES (Enero 31, 2026)
 
-**� ACTIVE NOW - AuthController Complete Testing (Current Week):**
+**🔴 TAREA INMEDIATA - Corregir Tests de Integración:**
 
-1. **Finish Auth Flow Tests** (In Progress)
+1. **Fix RegisterUserAsync (CRÍTICO - BLOQUEANTE)**
+   - **Archivo:** `tests/MiGenteEnLinea.IntegrationTests/Infrastructure/IntegrationTestBase.cs`
+   - **Línea:** 130
+   - **Problema:** `GetProperty("userId").GetInt32()` falla porque `RegisterResult.UserId` es `string`
+   - **Impacto:** 54 de 85 tests fallan por este bug
+   - **Solución:**
 
-   - Complete registration flow tests (Empleador + Contratista)
-   - Account activation with real email tokens in database
-   - Login/Logout with JWT validation
-   - Password reset complete flow
-   - Profile creation and updates
-   - **Goal:** All Auth features tested with real database
+     ```csharp
+     // CAMBIAR DE:
+     var userId = registerResponse.GetProperty("userId").GetInt32();
 
-2. **Identity Integration Refinement**
+     // A:
+     var userIdStr = registerResponse.GetProperty("userId").GetString();
+     // Y cambiar return type a string, o convertir si realmente es int
+     ```
 
-   - Dual-write to Identity + Legacy tables working correctly
-   - Auto-migration from Legacy users on first login
-   - Claims population and JWT token generation validated
-   - Error handling and edge cases covered
+2. **Re-ejecutar Tests Después del Fix**
 
-3. **Fix Application Bugs as Discovered**
-   - Command/Query structure issues
-   - DTO mapping problems
-   - Business logic bugs
-   - Database relationship issues
-   - **Philosophy:** Test finds bug → Fix in application code, not test
+   ```powershell
+   cd "c:\Users\Ray\Documents\MiGenteEnlinea\MiGenteEnLinea.Clean"
+   dotnet test tests/MiGenteEnLinea.IntegrationTests --no-build --verbosity normal
+   ```
 
-**🎯 NEXT SPRINT - Empleadores Module (Next Week):**
+3. **Analizar Tests Restantes que Fallen**
+   - `DeleteUser_SoftDelete_ShouldPreventLogin` - Verificar lógica de soft delete
+   - Otros tests que fallen por motivos diferentes
 
-4. **Empleadores Feature Tests**
+**🎯 PRÓXIMOS PASOS (Después del Fix):**
 
-   - CRUD operations with authentication
-   - Plan subscription validation
-   - Employee management flows
-   - Business rules testing
+4. **Corregir DeleteUser_SoftDelete Test**
+   - **Archivo:** `AuthenticationCommandsTests.cs:499`
+   - **Error:** Expected boolean to be False, but found True
+   - **Causa probable:** El soft delete no previene login correctamente
 
-5. **Expand Test Coverage Incrementally**
-   - One feature at a time (Auth → Empleadores → Contratistas → Empleados...)
-   - Focus on complete flows, not isolated operations
-   - Real database ensures real-world scenarios
+5. **Verificar Todos los Auth Tests Pasen**
+   - RegisterEmpleador → Login → Activate → Logout
+   - RegisterContratista → Login → Profile
+   - ForgotPassword → ResetPassword → Login
+
+6. **Expandir a Empleadores Tests** (Después de Auth estable)
+
+**📊 ESTADO ACTUAL DE TESTS:**
+
+| Categoría     | Pasando | Fallando | Total  |
+| ------------- | ------- | -------- | ------ |
+| Auth          | ~10     | ~40      | ~50    |
+| Empleadores   | ~5      | ~8       | ~13    |
+| Contratistas  | ~5      | ~4       | ~9     |
+| Suscripciones | ~10     | ~2       | ~12    |
+| **TOTAL**     | **30**  | **54**   | **85** |
 
 **🟢 FUTURE WORK - Complete Coverage (2-3 weeks):**
 
 6. **All Features Tested**
-
    - Contratistas, Empleados, Nominas, Contrataciones, Suscripciones
    - End-to-end user workflows
    - Performance testing with realistic data volumes
@@ -932,25 +893,21 @@ public class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
 **🎯 KEY TESTING PRINCIPLES FOR THIS PROJECT:**
 
 1. **Real Database First**
-
    - Tests use actual SQL Server database (`db_a9f8ff_migente`)
    - Catches real EF Core issues, relationship problems, constraint violations
    - Validates actual query performance and data integrity
 
 2. **Flow-Based Testing**
-
    - Test complete user journeys, not isolated units
    - Example: Register → Activate → Login → Create Profile → Update Profile
    - Mimics real user behavior and catches integration issues
 
 3. **Identity Integration Testing**
-
    - Dual-write pattern: AspNetIdentity (primary) + Legacy tables (compatibility)
    - Auto-migration from Legacy users
    - Claims-based authorization validation
 
 4. **Error-Driven Development**
-
    - Tests identify bugs in application layer
    - Fix bugs in Commands/Queries/Handlers, not in tests
    - Tests should remain simple and focused on real scenarios
@@ -963,7 +920,6 @@ public class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
 **🟢 FUTURE PHASES (After Testing Complete):**
 
 6. **Frontend Migration (Blazor)**
-
    - MiGenteEnLinea.Web project (already exists)
    - After backend is fully validated with tests
    - Consume tested API endpoints
@@ -979,14 +935,16 @@ public class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
 
 ### 📌 CRITICAL FRONTEND DEVELOPMENT RULES
 
-**⚠️ VISUAL REPLICATION MANDATE:** The Clean Architecture frontend MUST be **100% visually identical** to `FRONT_Publicado/`. 
+**⚠️ VISUAL REPLICATION MANDATE:** The Clean Architecture frontend MUST be **100% visually identical** to `FRONT_Publicado/`.
 
 **Source of Truth:**
+
 - `FRONT_Publicado/` = What users see TODAY in production
 - This is the ONLY acceptable visual reference
 - No design changes, no "improvements" - exact replication only
 
 **Target Project:**
+
 - `MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLinea.Web/`
 - ASP.NET Core 8.0 MVC
 - Consumes REST API from `MiGenteEnLinea.API` (port 5015)
@@ -1008,32 +966,33 @@ Remove-Item -Recurse -Force "MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLine
 
 **Copy ALL assets from FRONT_Publicado to wwwroot:**
 
-| Source (FRONT_Publicado)       | Target (MiGenteEnLinea.Web/wwwroot) |
-|-------------------------------|-------------------------------------|
-| `Styles/Custom.css`           | `css/Custom.css`                   |
-| `Styles/animated.css`         | `css/animated.css`                 |
-| `Fonts/*`                     | `fonts/*`                          |
-| `Images/*`                    | `images/*`                         |
-| `Scripts/Custom.js`           | `js/Custom.js`                     |
-| `Template/assets/css/*`       | `lib/argon-dashboard/css/*`        |
-| `Template/assets/fonts/*`     | `lib/argon-dashboard/fonts/*`      |
-| `Template/assets/img/*`       | `lib/argon-dashboard/img/*`        |
-| `Template/assets/js/*`        | `lib/argon-dashboard/js/*`         |
-| `MailTemplates/*`             | `templates/email/*`                |
-| `Empleador/Impresion/*`       | `templates/print/*`                |
+| Source (FRONT_Publicado)  | Target (MiGenteEnLinea.Web/wwwroot) |
+| ------------------------- | ----------------------------------- |
+| `Styles/Custom.css`       | `css/Custom.css`                    |
+| `Styles/animated.css`     | `css/animated.css`                  |
+| `Fonts/*`                 | `fonts/*`                           |
+| `Images/*`                | `images/*`                          |
+| `Scripts/Custom.js`       | `js/Custom.js`                      |
+| `Template/assets/css/*`   | `lib/argon-dashboard/css/*`         |
+| `Template/assets/fonts/*` | `lib/argon-dashboard/fonts/*`       |
+| `Template/assets/img/*`   | `lib/argon-dashboard/img/*`         |
+| `Template/assets/js/*`    | `lib/argon-dashboard/js/*`          |
+| `MailTemplates/*`         | `templates/email/*`                 |
+| `Empleador/Impresion/*`   | `templates/print/*`                 |
 
 #### Step 3: Layout Migration (Phase 2)
 
 **Convert Master Pages to Razor Layouts:**
 
-| FRONT_Publicado Master Page | → | Clean Architecture Layout |
-|-----------------------------|---|---------------------------|
-| `Landing/landing.Master`    | → | `Views/Shared/_LayoutLanding.cshtml` |
-| `Empleador/comunity.Master` | → | `Views/Shared/_LayoutEmpleador.cshtml` |
-| `Contratista/ContratistasM.Master` | → | `Views/Shared/_LayoutContratista.cshtml` |
-| `Platform/platform.Master`  | → | `Views/Shared/_Layout.cshtml` (base) |
+| FRONT_Publicado Master Page        | →   | Clean Architecture Layout                |
+| ---------------------------------- | --- | ---------------------------------------- |
+| `Landing/landing.Master`           | →   | `Views/Shared/_LayoutLanding.cshtml`     |
+| `Empleador/comunity.Master`        | →   | `Views/Shared/_LayoutEmpleador.cshtml`   |
+| `Contratista/ContratistasM.Master` | →   | `Views/Shared/_LayoutContratista.cshtml` |
+| `Platform/platform.Master`         | →   | `Views/Shared/_Layout.cshtml` (base)     |
 
 **Layout Conversion Rules:**
+
 1. Copy HTML structure exactly from `.Master` files
 2. Replace `<asp:ContentPlaceHolder>` with `@RenderBody()`
 3. Replace `runat="server"` controls with Razor equivalents
@@ -1043,6 +1002,7 @@ Remove-Item -Recurse -Force "MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLine
 #### Step 4: Page Migration (Phases 3-6)
 
 **Priority Order:**
+
 1. **Auth Pages:** Login, Registrar, ActivarPerfil
 2. **Landing Pages:** Index, Planes
 3. **Empleador Dashboard:** index_empleador, empleados, fichaEmpleado, Nomina
@@ -1055,6 +1015,7 @@ Remove-Item -Recurse -Force "MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLine
 ### 📁 PRODUCTION ASSETS REFERENCE (FRONT_Publicado)
 
 #### CSS Files (MUST COPY)
+
 ```
 FRONT_Publicado/
 ├── Styles/
@@ -1070,6 +1031,7 @@ FRONT_Publicado/
 ```
 
 #### Fonts (MUST COPY)
+
 ```
 FRONT_Publicado/
 ├── Fonts/
@@ -1079,6 +1041,7 @@ FRONT_Publicado/
 ```
 
 #### Images (MUST COPY)
+
 ```
 FRONT_Publicado/Images/
 ├── logoMiGene.png              # ⭐ Main logo (navbar)
@@ -1094,6 +1057,7 @@ FRONT_Publicado/Images/
 ```
 
 #### JavaScript (MUST COPY)
+
 ```
 FRONT_Publicado/
 ├── Scripts/
@@ -1103,6 +1067,7 @@ FRONT_Publicado/
 ```
 
 #### Templates (MUST COPY)
+
 ```
 FRONT_Publicado/
 ├── MailTemplates/              # Email HTML templates
@@ -1128,16 +1093,16 @@ FRONT_Publicado/
 
 **Available Controllers (123 endpoints total):**
 
-| Controller | Endpoints | Base Route |
-|------------|-----------|------------|
-| AuthController | 11 | `/api/auth` |
-| EmpleadosController | 37 | `/api/empleados` |
-| EmpleadoresController | 20 | `/api/empleadores` |
-| ContratistasController | 18 | `/api/contratistas` |
-| SuscripcionesController | 19 | `/api/suscripciones` |
-| CalificacionesController | 5 | `/api/calificaciones` |
-| PlanesController | 10 | `/api/planes` |
-| EmailController | 3 | `/api/email` |
+| Controller               | Endpoints | Base Route            |
+| ------------------------ | --------- | --------------------- |
+| AuthController           | 11        | `/api/auth`           |
+| EmpleadosController      | 37        | `/api/empleados`      |
+| EmpleadoresController    | 20        | `/api/empleadores`    |
+| ContratistasController   | 18        | `/api/contratistas`   |
+| SuscripcionesController  | 19        | `/api/suscripciones`  |
+| CalificacionesController | 5         | `/api/calificaciones` |
+| PlanesController         | 10        | `/api/planes`         |
+| EmailController          | 3         | `/api/email`          |
 
 **API Testing:** Swagger UI at `http://localhost:5015/swagger`
 
@@ -1146,6 +1111,7 @@ FRONT_Publicado/
 ### 🛠️ FRONTEND TECHNICAL STACK
 
 **Clean Architecture Web Project:**
+
 ```
 MiGenteEnLinea.Web/
 ├── Controllers/                 # MVC Controllers (thin, call API)
@@ -1179,6 +1145,7 @@ MiGenteEnLinea.Web/
 ### ✅ FRONTEND DEVELOPMENT CHECKLIST
 
 **Phase 1: Assets Migration (CURRENT)**
+
 - [ ] Delete existing wwwroot content
 - [ ] Copy `Styles/Custom.css` → `wwwroot/css/Custom.css`
 - [ ] Copy `Styles/animated.css` → `wwwroot/css/animated.css`
@@ -1193,6 +1160,7 @@ MiGenteEnLinea.Web/
 - [ ] Verify all images display correctly
 
 **Phase 2: Layouts**
+
 - [ ] Create `_LayoutLanding.cshtml` from `landing.Master`
 - [ ] Create `_LayoutEmpleador.cshtml` from `comunity.Master`
 - [ ] Create `_LayoutContratista.cshtml` from `ContratistasM.Master`
@@ -1200,6 +1168,7 @@ MiGenteEnLinea.Web/
 - [ ] Test navigation links
 
 **Phase 3: Authentication Pages**
+
 - [ ] Login page (exact visual match)
 - [ ] Register page (Empleador/Contratista selection)
 - [ ] Account activation page
@@ -1207,6 +1176,7 @@ MiGenteEnLinea.Web/
 - [ ] Connect to AuthController API
 
 **Phase 4: Empleador Module**
+
 - [ ] Dashboard (index_empleador)
 - [ ] Empleados list and management
 - [ ] Ficha Empleado (employee details)
@@ -1215,12 +1185,14 @@ MiGenteEnLinea.Web/
 - [ ] Perfil Empleador
 
 **Phase 5: Contratista Module**
+
 - [ ] Dashboard (index_contratista)
 - [ ] Mis Calificaciones
 - [ ] Perfil Contratista
 - [ ] Services management
 
 **Phase 6: Common Pages**
+
 - [ ] Planes (subscription plans)
 - [ ] Checkout (payment)
 - [ ] FAQ
@@ -1264,7 +1236,7 @@ MiGenteEnLinea.Web/
 public class ApiService
 {
     private readonly HttpClient _httpClient;
-    
+
     public async Task<EmpleadorDto> GetEmpleadorAsync(int id)
     {
         return await _httpClient.GetFromJsonAsync<EmpleadorDto>($"api/empleadores/{id}");
@@ -2572,14 +2544,12 @@ app.UseIpRateLimiting();
 ### Sprint 1 (Week 1-2): Critical Security Fixes
 
 1. **Password Security**
-
    - Install BCrypt.Net-Next NuGet package
    - Implement IPasswordHasher service
    - Create migration script to hash existing passwords
    - Update all registration/password change logic
 
 2. **SQL Injection Prevention**
-
    - Audit all Services/\*.cs files for SQL concatenation
    - Replace with Entity Framework LINQ queries
    - Add code analysis rule to prevent future violations
@@ -2593,7 +2563,6 @@ app.UseIpRateLimiting();
 ### Sprint 2 (Week 3-4): Architecture Foundation
 
 1. **Project Structure**
-
    - Create Clean Architecture solution
    - Setup Domain, Application, Infrastructure, API projects
    - Configure project dependencies
@@ -2607,7 +2576,6 @@ app.UseIpRateLimiting();
 ### Sprint 3 (Week 5-6): Advanced Features & Testing
 
 1. **CQRS Implementation**
-
    - Install MediatR
    - Create Commands and Queries
    - Implement handlers
@@ -2619,6 +2587,6 @@ app.UseIpRateLimiting();
 
 ---
 
-_Last updated: 2025-10-12_
+_Last updated: 2026-01-31_
 _Based on Security Audit: September 2025_
 _For questions about business logic or specific features, consult the project owner before making assumptions._

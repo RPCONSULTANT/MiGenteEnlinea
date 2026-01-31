@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Application.Features.Authentication.DTOs;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using Xunit;
 
@@ -100,8 +101,9 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
 
     /// <summary>
     /// Helper para registrar un usuario de prueba
+    /// Retorna el UserId como string (GUID de Identity)
     /// </summary>
-    protected async Task<int> RegisterUserAsync(
+    protected async Task<string> RegisterUserAsync(
         string email, 
         string password, 
         string nombre, 
@@ -126,12 +128,14 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var response = await Client.PostAsJsonAsync("/api/auth/register", registerRequest);
         response.EnsureSuccessStatusCode();
 
-        var registerResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var userId = registerResponse.GetProperty("userId").GetInt32();
+        // ✅ FIX: Deserializar a RegisterResult directamente (más seguro que JsonElement)
+        var registerResult = await response.Content.ReadFromJsonAsync<RegisterResult>();
         
-        userId.Should().BeGreaterThan(0, "El registro debe devolver un userId válido");
+        registerResult.Should().NotBeNull("El registro debe devolver un RegisterResult");
+        registerResult!.Success.Should().BeTrue("El registro debe ser exitoso");
+        registerResult.UserId.Should().NotBeNullOrEmpty("El registro debe devolver un UserId válido (GUID)");
         
-        return userId;
+        return registerResult.UserId!;
     }
 
     /// <summary>
