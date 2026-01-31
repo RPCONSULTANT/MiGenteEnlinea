@@ -1,14 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using MiGenteEnLinea.Application.Common.Interfaces;
-using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
-using MiGenteEnLinea.Infrastructure.Persistence.Interceptors;
-
 namespace MiGenteEnLinea.IntegrationTests.Infrastructure;
 
 /// <summary>

@@ -91,7 +91,7 @@ This workspace provides specialized prompts for different AI agents:
 - 🔴 CRÍTICO: RegisterUserAsync espera userId como int, pero API devuelve string
 - 🔄 Próximo paso: Corregir IntegrationTestBase.cs línea 130
 - ⏳ Después: Corregir DeleteUser_SoftDelete test
-**📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
+  **📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
 
 ---
 

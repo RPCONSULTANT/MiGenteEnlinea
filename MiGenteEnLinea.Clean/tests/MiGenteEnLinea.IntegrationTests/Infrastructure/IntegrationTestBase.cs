@@ -1,13 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using MiGenteEnLinea.Application.Common.Interfaces;
-using MiGenteEnLinea.Application.Features.Authentication.DTOs;
-using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
-using Xunit;
 
 namespace MiGenteEnLinea.IntegrationTests.Infrastructure;
 
@@ -134,6 +127,15 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         registerResult.Should().NotBeNull("El registro debe devolver un RegisterResult");
         registerResult!.Success.Should().BeTrue("El registro debe ser exitoso");
         registerResult.UserId.Should().NotBeNullOrEmpty("El registro debe devolver un UserId válido (GUID)");
+        
+        // ✅ AUTO-ACTIVATE: Activar la cuenta inmediatamente después del registro para tests
+        var activateRequest = new
+        {
+            userId = registerResult.UserId,
+            email = email
+        };
+        var activateResponse = await Client.PostAsJsonAsync("/api/auth/activate", activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
         
         return registerResult.UserId!;
     }
