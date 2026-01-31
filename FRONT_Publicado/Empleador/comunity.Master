@@ -1,0 +1,358 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="comunity.Master.cs" Inherits="MiGente_Web.Landing.comunity" %>
+
+<%@ Register Assembly="DevExpress.Web.Bootstrap.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" Namespace="DevExpress.Web.Bootstrap" TagPrefix="dx" %>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="../Styles/animated.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="../Styles/Custom.css" rel="stylesheet" />
+    <style>
+        @font-face {
+            font-family: "Gurajada";
+            src: url(../Fonts/Gurajada-Regular.ttf);
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer {
+            margin-top: auto;
+        }
+
+        .headerText {
+            font-family: "Gurajada", Gurajada;
+        }
+
+        /* Estilos adicionales personalizados */
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar {
+            /*        background: url("../Images/bannerADM1.jpg");*/
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .navbar-brand img {
+            height: 50px;
+            margin-left: 10px;
+        }
+
+        .navbar-nav ml-auto {
+            margin-right: 10px;
+        }
+
+        .banner {
+            position: relative;
+            height: 500px;
+            background: url("../Images/banner_Foto1.jpg");
+            background-size: cover;
+            background-position: left;
+            background-color: rgba(0, 0, 0, 0.5); /* Añade un overlay semitransparente */
+        }
+
+        .banner2 {
+            position: center;
+            height: 300px;
+            background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .banner-content {
+            /*    position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;*/
+        }
+
+            .banner-content h1 {
+                font-size: 40px;
+            }
+
+        .link {
+            color: darkgrey;
+        }
+
+            .link:hover {
+                box-shadow: inset 30px 30px 30px 30px #007BFF;
+                color: darkgrey;
+            }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .no-border {
+            border: none;
+        }
+    </style>
+    <style media="all" id="fa-v4-font-face">
+        /*!
+ * Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com
+ * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+ */ @font-face {
+            font-family: "FontAwesome";
+            font-display: block;
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.eot);
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.eot?#iefix) format("embedded-opentype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.woff2) format("woff2"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.woff) format("woff"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.ttf) format("truetype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-solid-900.svg#fontawesome) format("svg")
+        }
+
+        @font-face {
+            font-family: "FontAwesome";
+            font-display: block;
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.eot);
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.eot?#iefix) format("embedded-opentype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.woff2) format("woff2"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.woff) format("woff"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.ttf) format("truetype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-brands-400.svg#fontawesome) format("svg")
+        }
+
+        @font-face {
+            font-family: "FontAwesome";
+            font-display: block;
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.eot);
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.eot?#iefix) format("embedded-opentype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.woff2) format("woff2"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.woff) format("woff"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.ttf) format("truetype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-regular-400.svg#fontawesome) format("svg");
+            unicode-range: U+f004-f005,U+f007,U+f017,U+f022,U+f024,U+f02e,U+f03e,U+f044,U+f057-f059,U+f06e,U+f070,U+f075,U+f07b-f07c,U+f080,U+f086,U+f089,U+f094,U+f09d,U+f0a0,U+f0a4-f0a7,U+f0c5,U+f0c7-f0c8,U+f0e0,U+f0eb,U+f0f3,U+f0f8,U+f0fe,U+f111,U+f118-f11a,U+f11c,U+f133,U+f144,U+f146,U+f14a,U+f14d-f14e,U+f150-f152,U+f15b-f15c,U+f164-f165,U+f185-f186,U+f191-f192,U+f1ad,U+f1c1-f1c9,U+f1cd,U+f1d8,U+f1e3,U+f1ea,U+f1f6,U+f1f9,U+f20a,U+f247-f249,U+f24d,U+f254-f25b,U+f25d,U+f271-f274,U+f279,U+f28b,U+f28d,U+f2b5-f2b6,U+f2b9,U+f2bb,U+f2bd,U+f2c1-f2c2,U+f2d0,U+f2d2,U+f2dc,U+f2ed,U+f3a5,U+f3d1,U+f410
+        }
+
+        @font-face {
+            font-family: "FontAwesome";
+            font-display: block;
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.eot);
+            src: url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.eot?#iefix) format("embedded-opentype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.woff2) format("woff2"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.woff) format("woff"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.ttf) format("truetype"),url(https://ka-f.fontawesome.com/releases/v5.15.4/webfonts/free-fa-v4deprecations.svg#fontawesome) format("svg");
+            unicode-range: U+f003,U+f006,U+f014,U+f016,U+f01a-f01b,U+f01d,U+f040,U+f045-f047,U+f05c-f05d,U+f07d-f07e,U+f087-f088,U+f08a-f08b,U+f08e,U+f090,U+f096-f097,U+f0a2,U+f0e4-f0e6,U+f0ec-f0ee,U+f0f5-f0f7,U+f10c,U+f112,U+f114-f115,U+f11d,U+f123,U+f132,U+f145,U+f147-f149,U+f14c,U+f166,U+f16a,U+f172,U+f175-f178,U+f18e,U+f190,U+f196,U+f1b1,U+f1d9,U+f1db,U+f1f7,U+f20c,U+f219,U+f230,U+f24a,U+f250,U+f278,U+f27b,U+f283,U+f28c,U+f28e,U+f29b-f29c,U+f2b7,U+f2ba,U+f2bc,U+f2be,U+f2c0,U+f2c3,U+f2d3-f2d4
+        }
+    </style>
+    <style media="all" id="fa-v4-shims">
+        /*!
+ * Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com
+ * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
+ */ .fa.fa-glass:before {
+            content: "\f000"
+        }
+
+        .fa.fa-meetup {
+            font-family: "Font Awesome 5 Brands";
+            font-weight: 400
+        }
+
+        .fa.fa-star-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-star-o:before {
+                content: "\f005"
+            }
+
+        .fa.fa-close:before, .fa.fa-remove:before {
+            content: "\f00d"
+        }
+
+        .fa.fa-gear:before {
+            content: "\f013"
+        }
+
+        .fa.fa-trash-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-trash-o:before {
+                content: "\f2ed"
+            }
+
+        .fa.fa-file-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-file-o:before {
+                content: "\f15b"
+            }
+
+        .fa.fa-clock-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-clock-o:before {
+                content: "\f017"
+            }
+
+        .fa.fa-arrow-circle-o-down {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-arrow-circle-o-down:before {
+                content: "\f358"
+            }
+
+        .fa.fa-arrow-circle-o-up {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-arrow-circle-o-up:before {
+                content: "\f35b"
+            }
+
+        .fa.fa-play-circle-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+        .fa.fa-star-half-o {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-star-half-o:before {
+                content: "\f089"
+            }
+
+        .fa.fa-star-half-empty {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-star-half-empty:before {
+                content: "\f089"
+            }
+
+        .fa.fa-star-half-full {
+            font-family: "Font Awesome 5 Free";
+            font-weight: 400
+        }
+
+            .fa.fa-star-half-full:before {
+                content: "\f089"
+            }
+    </style>
+    <title>Mi Gente en línea</title>
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="banner" style="position: relative; z-index: 0;">
+
+            <nav class="navbar navbar-expand-lg" style="background-color: transparent; position: absolute; width: 100%; z-index: 1;">
+                <a class="navbar-brand" href="index_empleador.aspx">
+                    <img src="../Images/logoMiGenteBlanco.png" alt="Logo" />
+                </a>
+
+                <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="fa fa-solid fa-bars" style="color: #ffffff;"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="btn btn-transparent text-light" href="dashboardPage.aspx"
+                                style="border-radius: 10px; border-color: white">Mi Gente En Linea</a>
+                            <div class="btn-group">
+                                <button type="button" runat="server" id="btnPerfil" class="btn btn-light  dropdown-toggle" style="border-radius: 10px; border-color: white" data-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa  fa-user"></i>
+                                    Perfil
+                               
+                                </button>
+
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="mask text-light" style="background-color: rgba(0, 0, 0, 0.7); height: 100%">
+
+                <div class="banner-content">
+
+                    <div class="form-inline col col-12 ">
+
+                        <div class="row justify-content-left col col-lg-8" style="margin-top: 150px">
+                            <div class="form-group col col-lg-6">
+                                <h3 class=" animate__animated animate__bounceInUp">Encuentra ese colaborador perfecto</h3>
+
+                                <a class="animate__animated animate__fadeIn animate__slower " style="color: white">Apoyate de una comunidad de profesionales calificados</a>
+                            </div>
+                            <div class="form-control col-md-10" style="padding-top: 10px; padding-bottom: 10px">
+                                <div class="form-row animate__animated animate__backInLeft">
+                                    <div class="col-md-6 col-xs-12">
+                                        <div class="input-group border-0">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text border-0" style="background-color: transparent">
+                                                    <i class="fa fa-search"></i>
+                                                </span>
+                                            </div>
+                                            <asp:TextBox ID="txtBusqueda" BorderStyle="None" placeholder="Criterio de Búsqueda" CssClass="form-control" runat="server"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-xs-12">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text border-0" style="background-color: transparent">
+                                                    <i class="fa fa-map-marker"></i>
+                                                </span>
+                                            </div>
+                                            <asp:DropDownList ID="ddlCiudad" CssClass="form-control border-0" runat="server" DataSourceID="linqCiudades" DataTextField="nombre" DataValueField="nombre"></asp:DropDownList>
+                                            <asp:LinqDataSource runat="server" EntityTypeName="" ID="linqCiudades" ContextTypeName="MiGente_Web.Data.migenteEntities" OrderBy="provinciaID" TableName="Provincias"></asp:LinqDataSource>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 col-xs-12 mt-2 mt-md-0">
+                                        <dx:BootstrapButton ID="btnBuscar" OnClick="btnBuscar_Click" CssClasses-Control="bg-primary col col-sm-12" runat="server" AutoPostBack="false" Text="Encontrar"></dx:BootstrapButton>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container">
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server"></asp:ContentPlaceHolder>
+        </div>
+    </form>
+    <!-- Scripts de Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <footer class="footer">
+        <div class="form-control" style="background-color: dimgray; color: white; text-align: center;">
+            <a href="FAQ.aspx" class="text-white" title="Seccion de Preguntas y Respuestas">
+                <h3>Preguntas y Respuestas</h3>
+            </a>
+            <hr />
+            <a style="font-size: smaller">© Derechos reservados Mi Gente en línea</a>
+            <script>document.write(new Date().getUTCFullYear());</script>
+            <br />
+            <a style="font-size: smaller">Diseño y Desarrollo por IntDoSystem, SRL</a>
+        </div>
+    </footer>
+
+</body>
+</html>

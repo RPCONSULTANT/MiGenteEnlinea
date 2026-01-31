@@ -5,23 +5,47 @@
 
 ---
 
-## 🚨 CRITICAL: Dual-Project Workspace Context
+## 🚨 CRITICAL: Multi-Project Workspace Context
 
-**⚠️ ACTIVE DEVELOPMENT**: This workspace contains TWO projects running simultaneously during migration:
+**⚠️ ACTIVE DEVELOPMENT**: This workspace contains FOUR project areas:
 
-### 🔷 PROJECT 1: Legacy Web Forms (Maintenance Mode)
+### 🔷 PROJECT 1: Legacy Web Forms (Reference Only)
 
 **Location:** `Codigo Fuente Mi Gente/`
-**Purpose:** Production system being phased out
-**DO NOT:** Add new features or major refactoring
-**DO:** Only critical bug fixes and security patches
+**Purpose:** Complete legacy source code for business logic reference
+**DO NOT:** Add new features or modify
+**DO:** Reference for understanding business logic and complete functionality
 
-### 🚀 PROJECT 2: Clean Architecture (Active Development)
+### 🌐 PROJECT 2: FRONT Publicado (Production Reference - VISUAL SOURCE OF TRUTH)
+
+**Location:** `FRONT_Publicado/`
+**Purpose:** **CURRENTLY DEPLOYED IN PRODUCTION** - This is what users see
+**CRITICAL:** All frontend development MUST replicate this EXACT visual design
+**Contains:**
+- Production CSS/Styles (`Styles/Custom.css`, `Styles/animated.css`)
+- Production Assets (`Images/`, `Fonts/`, `Template/assets/`)
+- Production Layouts (Master pages, HTML structure)
+- Production Email Templates (`MailTemplates/`)
+- Production Print Templates (`Empleador/Impresion/`)
+**DO NOT:** Modify - this is read-only production reference
+**DO:** Copy all CSS, assets, fonts, images, and visual elements from here
+
+### 🚀 PROJECT 3: Clean Architecture Backend (100% COMPLETE)
 
 **Location:** `MiGenteEnLinea.Clean/`
-**Purpose:** New modern implementation being built
-**DO:** All new development, DDD refactoring, testing
+**Purpose:** Modern backend with 123 REST API endpoints
+**Status:** ✅ Backend 100% complete - ready for frontend consumption
+**DO:** All new development, testing, frontend implementation
 **DO:** Reference legacy code for business logic understanding
+
+### 🎨 PROJECT 4: Clean Architecture Frontend (ACTIVE DEVELOPMENT)
+
+**Location:** `MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLinea.Web/`
+**Purpose:** ASP.NET Core MVC frontend consuming the REST API
+**Status:** 🔄 IN DEVELOPMENT - Replicating FRONT_Publicado design
+**DO:** Build identical visual experience to FRONT_Publicado
+**DO:** Use all CSS, assets, layouts from FRONT_Publicado
+**DO:** Connect to MiGenteEnLinea.API (port 5015)
 
 ---
 
@@ -54,17 +78,19 @@ This workspace provides specialized prompts for different AI agents:
 └── ddd-migration-agent.md                  # DDD migration workflow (coming soon)
 ```
 
-**🚀 CURRENT FOCUS:** Identity Integration + Robust Integration Testing with Real Database
-**📄 Estado Actual:** Backend 100% completo (123 endpoints), Testing infrastructure configurado con DB real
-**📊 Progress:** 19/28 GAPS completados (68%), Testing: AuthController flow tests en desarrollo activo
-**🎯 Testing Strategy:** Real database integration tests → Identify app errors → Fix directly in application
-**🔧 Branch Activo:** `feature/integration-tests-rewrite`
-**📋 Testing Approach:**
+**🚀 CURRENT FOCUS:** Frontend Development - Replicating FRONT_Publicado in Clean Architecture
+**📄 Estado Actual:** Backend 100% completo (123 endpoints), Frontend migration iniciando
+**📊 Progress:** Backend ✅ 100% | Frontend 🔄 Phase 1 (Assets/CSS Migration)
+**🎯 Frontend Strategy:** Replicate EXACTLY the visual design from FRONT_Publicado
+**🔧 Branch Activo:** `main` (frontend development)
+**📋 Frontend Development Phases:**
 
-- ✅ Phase 1: Configure real database connection in IntegrationTests project
-- 🔄 Phase 2: Create AuthController flow tests (registration, login, activation) - IN PROGRESS
-- ⏳ Phase 3: Expand to all Features (Empleadores, Contratistas, Empleados, etc.)
-- ⏳ Phase 4: Complete end-to-end user flows
+- 🔄 Phase 1: Migrate ALL CSS, Assets, Fonts, Images from FRONT_Publicado - IN PROGRESS
+- ⏳ Phase 2: Replicate Master Page layouts (Landing, Empleador, Contratista)
+- ⏳ Phase 3: Implement authentication pages (Login, Register, Activate)
+- ⏳ Phase 4: Implement Empleador dashboard and features
+- ⏳ Phase 5: Implement Contratista dashboard and features
+- ⏳ Phase 6: Implement common pages (Planes, FAQ, etc.)
   **📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
 
 ---
@@ -118,7 +144,7 @@ ProyectoMigente/ (WORKSPACE ROOT = REPOSITORY ROOT)
 ├── WORKSPACE_README.md                  # ✅ Workspace guide
 ├── MiGenteEnLinea-Workspace.code-workspace  # ✅ VS Code config
 │
-├── 🔷 Codigo Fuente Mi Gente/          # LEGACY PROJECT
+├── 🔷 Codigo Fuente Mi Gente/          # LEGACY PROJECT (Complete Source)
 │   ├── MiGente.sln                      # .NET Framework 4.7.2
 │   ├── MiGente_Front/                   # ASP.NET Web Forms
 │   │   ├── Data/                        # EF6 Database-First (EDMX)
@@ -127,6 +153,33 @@ ProyectoMigente/ (WORKSPACE ROOT = REPOSITORY ROOT)
 │   │   └── Contratista/                 # Contractor module
 │   ├── docs/                            # Migration documentation
 │   └── scripts/                         # Automation scripts
+│
+├── 🌐 FRONT_Publicado/                  # PRODUCTION DEPLOYED (VISUAL SOURCE OF TRUTH)
+│   ├── Styles/                          # ⭐ CSS to copy: Custom.css, animated.css
+│   │   ├── Custom.css                   # Main custom styles
+│   │   └── animated.css                 # Animation styles
+│   ├── Images/                          # ⭐ All production images and logos
+│   │   ├── logoMiGene.png               # Main logo
+│   │   ├── logoMiGenteBlanco.png        # White logo variant
+│   │   └── [banners, icons, etc.]
+│   ├── Fonts/                           # ⭐ Custom fonts (Gurajada, Barlow)
+│   ├── Template/assets/                 # ⭐ Argon Dashboard theme
+│   │   ├── css/argon-dashboard.css      # Dashboard theme CSS
+│   │   ├── css/bootstrap.css            # Bootstrap base
+│   │   ├── css/nucleo-icons.css         # Icon fonts
+│   │   ├── fonts/                       # Theme fonts
+│   │   ├── img/                         # Theme images
+│   │   └── js/                          # Theme JavaScript
+│   ├── Scripts/                         # Custom JavaScript
+│   ├── Landing/                         # Landing pages structure
+│   │   └── landing.Master               # Landing layout reference
+│   ├── Empleador/                       # Empleador pages structure
+│   │   ├── comunity.Master              # Empleador dashboard layout
+│   │   └── Impresion/                   # Print templates (PDF)
+│   ├── Contratista/                     # Contratista pages structure
+│   │   └── ContratistasM.Master         # Contratista dashboard layout
+│   ├── MailTemplates/                   # Email HTML templates
+│   └── Servicios/                       # Service files (reference only)
 │
 └── 🚀 MiGenteEnLinea.Clean/            # CLEAN ARCHITECTURE PROJECT
     ├── MiGenteEnLinea.Clean.sln         # .NET 8.0
@@ -154,10 +207,16 @@ ProyectoMigente/ (WORKSPACE ROOT = REPOSITORY ROOT)
 
 **⚠️ IMPORTANT NAVIGATION RULES:**
 
-- When asked about **"legacy"**, **"Web Forms"**, or **"old project"** → Work in `Codigo Fuente Mi Gente/`
+- When asked about **"legacy"**, **"Web Forms"**, or **"old project"** → Reference `Codigo Fuente Mi Gente/`
+- When asked about **"production"**, **"deployed"**, **"current design"** → Reference `FRONT_Publicado/` (READ-ONLY)
 - When asked about **"clean"**, **"new project"**, or **"API"** → Work in `MiGenteEnLinea.Clean/`
+- When asked about **"frontend"**, **"UI"**, **"design"**, or **"CSS"** → Copy from `FRONT_Publicado/`, implement in `MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLinea.Web/`
 - When asked about **"migration"** or **"refactoring"** → Reference legacy, implement in clean
 - When asked about **"business logic"** → Check legacy first to understand, then implement properly in clean
+
+**🎨 FRONTEND DEVELOPMENT RULE:** 
+ALL visual elements (CSS, images, fonts, layouts) MUST come from `FRONT_Publicado/`. 
+The Clean Architecture frontend MUST be visually IDENTICAL to what is currently in production.
 
 ---
 
@@ -913,6 +972,316 @@ public class AuthFlowTests : IClassFixture<TestWebApplicationFactory>
    - CI/CD pipeline with automated tests
    - Staged rollout with feature flags
    - Monitoring and logging in production
+
+---
+
+## 🎨 PHASE 8: FRONTEND DEVELOPMENT - ACTIVE DEVELOPMENT
+
+### 📌 CRITICAL FRONTEND DEVELOPMENT RULES
+
+**⚠️ VISUAL REPLICATION MANDATE:** The Clean Architecture frontend MUST be **100% visually identical** to `FRONT_Publicado/`. 
+
+**Source of Truth:**
+- `FRONT_Publicado/` = What users see TODAY in production
+- This is the ONLY acceptable visual reference
+- No design changes, no "improvements" - exact replication only
+
+**Target Project:**
+- `MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLinea.Web/`
+- ASP.NET Core 8.0 MVC
+- Consumes REST API from `MiGenteEnLinea.API` (port 5015)
+
+---
+
+### 🎯 FRONTEND MIGRATION STRATEGY
+
+#### Step 1: Delete and Reset (FIRST STEP)
+
+**Before starting:** Delete all existing content in `MiGenteEnLinea.Web/wwwroot/` and start fresh with production assets.
+
+```powershell
+# Clean existing wwwroot content
+Remove-Item -Recurse -Force "MiGenteEnLinea.Clean/src/Presentation/MiGenteEnLinea.Web/wwwroot/*"
+```
+
+#### Step 2: Asset Migration (Phase 1 - CURRENT)
+
+**Copy ALL assets from FRONT_Publicado to wwwroot:**
+
+| Source (FRONT_Publicado)       | Target (MiGenteEnLinea.Web/wwwroot) |
+|-------------------------------|-------------------------------------|
+| `Styles/Custom.css`           | `css/Custom.css`                   |
+| `Styles/animated.css`         | `css/animated.css`                 |
+| `Fonts/*`                     | `fonts/*`                          |
+| `Images/*`                    | `images/*`                         |
+| `Scripts/Custom.js`           | `js/Custom.js`                     |
+| `Template/assets/css/*`       | `lib/argon-dashboard/css/*`        |
+| `Template/assets/fonts/*`     | `lib/argon-dashboard/fonts/*`      |
+| `Template/assets/img/*`       | `lib/argon-dashboard/img/*`        |
+| `Template/assets/js/*`        | `lib/argon-dashboard/js/*`         |
+| `MailTemplates/*`             | `templates/email/*`                |
+| `Empleador/Impresion/*`       | `templates/print/*`                |
+
+#### Step 3: Layout Migration (Phase 2)
+
+**Convert Master Pages to Razor Layouts:**
+
+| FRONT_Publicado Master Page | → | Clean Architecture Layout |
+|-----------------------------|---|---------------------------|
+| `Landing/landing.Master`    | → | `Views/Shared/_LayoutLanding.cshtml` |
+| `Empleador/comunity.Master` | → | `Views/Shared/_LayoutEmpleador.cshtml` |
+| `Contratista/ContratistasM.Master` | → | `Views/Shared/_LayoutContratista.cshtml` |
+| `Platform/platform.Master`  | → | `Views/Shared/_Layout.cshtml` (base) |
+
+**Layout Conversion Rules:**
+1. Copy HTML structure exactly from `.Master` files
+2. Replace `<asp:ContentPlaceHolder>` with `@RenderBody()`
+3. Replace `runat="server"` controls with Razor equivalents
+4. Update asset paths to `~/wwwroot/` structure
+5. Keep ALL CSS classes, IDs, and inline styles unchanged
+
+#### Step 4: Page Migration (Phases 3-6)
+
+**Priority Order:**
+1. **Auth Pages:** Login, Registrar, ActivarPerfil
+2. **Landing Pages:** Index, Planes
+3. **Empleador Dashboard:** index_empleador, empleados, fichaEmpleado, Nomina
+4. **Contratista Dashboard:** index_contratista, MisCalificaciones
+5. **Subscription Pages:** Checkout, AdquirirPlan
+6. **Utility Pages:** FAQ, MiSuscripcion
+
+---
+
+### 📁 PRODUCTION ASSETS REFERENCE (FRONT_Publicado)
+
+#### CSS Files (MUST COPY)
+```
+FRONT_Publicado/
+├── Styles/
+│   ├── Custom.css              # ⭐ Main custom styles (187 lines)
+│   └── animated.css            # Animation utilities
+├── Template/assets/css/
+│   ├── argon-dashboard.css     # ⭐ Dashboard theme (main)
+│   ├── argon-dashboard.min.css # Minified version
+│   ├── bootstrap.css           # Bootstrap 4 base
+│   ├── bootstrap.min.css       # Minified Bootstrap
+│   ├── nucleo-icons.css        # Icon font styles
+│   └── nucleo-svg.css          # SVG icon styles
+```
+
+#### Fonts (MUST COPY)
+```
+FRONT_Publicado/
+├── Fonts/
+│   ├── Gurajada-Regular.ttf    # ⭐ Header font (used in .headerText)
+│   └── Barlow-Black.ttf        # Secondary font
+├── Template/assets/fonts/      # Argon Dashboard fonts
+```
+
+#### Images (MUST COPY)
+```
+FRONT_Publicado/Images/
+├── logoMiGene.png              # ⭐ Main logo (navbar)
+├── logoMiGenteBlanco.png       # White logo variant
+├── back1.jpg                   # Landing page background
+├── banner_Foto1.jpg            # Empleador banner
+├── Cardnet-Web.png             # Payment badge
+├── calculatorIcon.png          # Feature icon
+├── legalDocIcon.png            # Feature icon
+├── moneyIcon.png               # Feature icon
+├── whatsapp.png                # Contact icon
+└── workers.png                 # Landing illustration
+```
+
+#### JavaScript (MUST COPY)
+```
+FRONT_Publicado/
+├── Scripts/
+│   ├── Custom.js               # Custom functionality
+│   └── paypal.js               # Payment scripts
+├── Template/assets/js/         # Argon Dashboard JS
+```
+
+#### Templates (MUST COPY)
+```
+FRONT_Publicado/
+├── MailTemplates/              # Email HTML templates
+│   ├── checkout.html
+│   ├── confirmacionRegistro.html
+│   └── recuperarPass.html
+├── Empleador/Impresion/        # Print/PDF templates
+│   ├── ContratoPersonaFisica.html
+│   ├── ContratoEmpresa.html
+│   ├── ReciboPagoPersonaFisica_Empleador1.html
+│   └── [etc.]
+├── Template/
+│   ├── AutorizacionEmpleadores.html
+│   ├── AutorizacionProveedores.html
+│   └── TerminosMiGente.html
+```
+
+---
+
+### 🔌 API INTEGRATION REFERENCE
+
+**API Base URL:** `http://localhost:5015/api/`
+
+**Available Controllers (123 endpoints total):**
+
+| Controller | Endpoints | Base Route |
+|------------|-----------|------------|
+| AuthController | 11 | `/api/auth` |
+| EmpleadosController | 37 | `/api/empleados` |
+| EmpleadoresController | 20 | `/api/empleadores` |
+| ContratistasController | 18 | `/api/contratistas` |
+| SuscripcionesController | 19 | `/api/suscripciones` |
+| CalificacionesController | 5 | `/api/calificaciones` |
+| PlanesController | 10 | `/api/planes` |
+| EmailController | 3 | `/api/email` |
+
+**API Testing:** Swagger UI at `http://localhost:5015/swagger`
+
+---
+
+### 🛠️ FRONTEND TECHNICAL STACK
+
+**Clean Architecture Web Project:**
+```
+MiGenteEnLinea.Web/
+├── Controllers/                 # MVC Controllers (thin, call API)
+├── Models/                      # View Models (mirror API DTOs)
+├── Views/
+│   ├── Shared/
+│   │   ├── _Layout.cshtml       # Base layout
+│   │   ├── _LayoutLanding.cshtml
+│   │   ├── _LayoutEmpleador.cshtml
+│   │   └── _LayoutContratista.cshtml
+│   ├── Auth/                    # Login, Register, Activate
+│   ├── Home/                    # Landing, Planes
+│   ├── Empleador/               # Employer dashboard
+│   ├── Contratista/             # Contractor dashboard
+│   └── Subscription/            # Payment, Plans
+├── Services/
+│   └── ApiService.cs            # HTTP client to MiGenteEnLinea.API
+├── wwwroot/
+│   ├── css/                     # Custom.css, animated.css
+│   ├── fonts/                   # Gurajada, Barlow
+│   ├── images/                  # All production images
+│   ├── js/                      # Custom.js
+│   ├── lib/
+│   │   └── argon-dashboard/     # Theme assets
+│   └── templates/               # Email, Print templates
+└── Program.cs                   # Configure HttpClient for API
+```
+
+---
+
+### ✅ FRONTEND DEVELOPMENT CHECKLIST
+
+**Phase 1: Assets Migration (CURRENT)**
+- [ ] Delete existing wwwroot content
+- [ ] Copy `Styles/Custom.css` → `wwwroot/css/Custom.css`
+- [ ] Copy `Styles/animated.css` → `wwwroot/css/animated.css`
+- [ ] Copy `Fonts/*` → `wwwroot/fonts/`
+- [ ] Copy `Images/*` → `wwwroot/images/`
+- [ ] Copy `Scripts/Custom.js` → `wwwroot/js/Custom.js`
+- [ ] Copy `Template/assets/*` → `wwwroot/lib/argon-dashboard/`
+- [ ] Copy `MailTemplates/*` → `wwwroot/templates/email/`
+- [ ] Copy `Empleador/Impresion/*` → `wwwroot/templates/print/`
+- [ ] Copy `Template/*.html` → `wwwroot/templates/legal/`
+- [ ] Verify all fonts load correctly
+- [ ] Verify all images display correctly
+
+**Phase 2: Layouts**
+- [ ] Create `_LayoutLanding.cshtml` from `landing.Master`
+- [ ] Create `_LayoutEmpleador.cshtml` from `comunity.Master`
+- [ ] Create `_LayoutContratista.cshtml` from `ContratistasM.Master`
+- [ ] Verify responsive behavior matches production
+- [ ] Test navigation links
+
+**Phase 3: Authentication Pages**
+- [ ] Login page (exact visual match)
+- [ ] Register page (Empleador/Contratista selection)
+- [ ] Account activation page
+- [ ] Password reset pages
+- [ ] Connect to AuthController API
+
+**Phase 4: Empleador Module**
+- [ ] Dashboard (index_empleador)
+- [ ] Empleados list and management
+- [ ] Ficha Empleado (employee details)
+- [ ] Nomina (payroll)
+- [ ] Contrataciones temporales
+- [ ] Perfil Empleador
+
+**Phase 5: Contratista Module**
+- [ ] Dashboard (index_contratista)
+- [ ] Mis Calificaciones
+- [ ] Perfil Contratista
+- [ ] Services management
+
+**Phase 6: Common Pages**
+- [ ] Planes (subscription plans)
+- [ ] Checkout (payment)
+- [ ] FAQ
+- [ ] Mi Suscripcion
+
+---
+
+### 🚫 FRONTEND ANTI-PATTERNS (NEVER DO)
+
+```csharp
+// ❌ NEVER: Modify the visual design
+// The frontend MUST look EXACTLY like FRONT_Publicado
+
+// ❌ NEVER: Skip copying an asset
+// ALL CSS, images, fonts, JS must come from FRONT_Publicado
+
+// ❌ NEVER: "Improve" or "modernize" the CSS
+// Keep the exact same visual appearance
+
+// ❌ NEVER: Change class names or IDs
+// These are referenced in CSS and JS
+
+// ❌ NEVER: Use different Bootstrap version
+// Use the same Bootstrap 4 from FRONT_Publicado
+
+// ❌ NEVER: Call database directly from Web
+// Always call MiGenteEnLinea.API endpoints
+```
+
+### ✅ FRONTEND PATTERNS (ALWAYS DO)
+
+```csharp
+// ✅ ALWAYS: Copy assets exactly from FRONT_Publicado
+// Source: FRONT_Publicado/Styles/Custom.css
+// Target: MiGenteEnLinea.Web/wwwroot/css/Custom.css
+
+// ✅ ALWAYS: Replicate HTML structure exactly
+// Compare with production Master pages
+
+// ✅ ALWAYS: Use HttpClient to call API
+public class ApiService
+{
+    private readonly HttpClient _httpClient;
+    
+    public async Task<EmpleadorDto> GetEmpleadorAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<EmpleadorDto>($"api/empleadores/{id}");
+    }
+}
+
+// ✅ ALWAYS: Use same font declarations
+@font-face {
+    font-family: "Gurajada";
+    src: url(/fonts/Gurajada-Regular.ttf);
+}
+
+// ✅ ALWAYS: Match responsive breakpoints exactly
+// Test on same screen sizes as production
+```
+
+---
 
 ## Project Structure
 

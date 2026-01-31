@@ -1,459 +1,245 @@
-@model MiGenteEnLinea.Web.Controllers.ContratistaController.PerfilContratistaViewModel
+@model dynamic
 @{
-    ViewData["Title"] = "Administrar Perfil Profesional";
     Layout = "~/Views/Shared/_LayoutContratista.cshtml";
+    ViewData["Title"] = "Perfil Profesional";
 }
 
-@section Styles {
-    <style>
-        .avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #007bff;
-            margin-bottom: 15px;
-        }
+<style>
+    .avatar {
+        border-radius: 50%;
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+    }
+</style>
 
-        .profile-sidebar {
-            text-align: center;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .rating-display {
-            font-size: 1.5rem;
-            color: #ffc107;
-            margin: 10px 0;
-        }
-
-        .rating-count {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .tab-content {
-            padding-top: 20px;
-        }
-
-        .conditional-section {
-            display: none;
-        }
-
-        .conditional-section.active {
-            display: block;
-        }
-
-        .whatsapp-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .status-button {
-            margin-top: 10px;
-        }
-
-        .service-grid {
-            margin-top: 15px;
-        }
-
-        .service-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            background: #fff;
-        }
-
-        .service-item:hover {
-            background: #f8f9fa;
-        }
-
-        .btn-remove-service {
-            padding: 5px 15px;
-            font-size: 0.875rem;
-        }
-
-        .form-section-title {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #007bff;
-        }
-    </style>
-}
-
-<div class="container mt-4">
-    <h3 class="mb-4">Administrar Perfil Profesional</h3>
+<div class="container">
+    <h3 class="text-white">Administrar Perfil Profesional</h3>
 
     <div class="row">
-        <!-- Profile Sidebar -->
-        <div class="col-md-3">
-            <div class="card profile-sidebar">
+        <!-- Columna Izquierda - Foto de Perfil -->
+        <div class="col-md-3" style="height: auto">
+            <div class="card" style="text-align: center;">
+                <div class="align-content-center justify-content-center" style="text-align: center; margin-top: 20px;">
+                    <img src="https://via.placeholder.com/150" class="card-img-top avatar" id="profileImage" alt="Imagen de perfil">
+                </div>
                 <div class="card-body">
-                    <img id="profileImage" 
-                         src="@(string.IsNullOrEmpty(Model.ImagenURL) ? "https://via.placeholder.com/150" : Model.ImagenURL)" 
-                         alt="Avatar" 
-                         class="avatar" />
-                    
                     <h5 class="card-title">Imagen de Perfil</h5>
-                    
-                    <form id="avatarForm" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <input type="file" 
-                                   id="fileUpload" 
-                                   name="avatarFile" 
-                                   class="form-control" 
-                                   accept="image/*" />
+                    <input type="file" class="form-control" id="fileUpload" accept="image/*" />
+                    <div class="mb-3" style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 15px;">
+                        <label class="form-label">Calificación de Perfil</label>
+                        <div id="ratingPerfil">
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star-o text-warning"></i>
+                            <i class="fa fa-star-o text-warning"></i>
                         </div>
-                    </form>
-
-                    <div class="rating-section mt-4">
-                        <h6>Calificación</h6>
-                        <div class="rating-display">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                if (i <= Math.Floor(Model.Rating))
-                                {
-                                    <i class="fas fa-star"></i>
-                                }
-                                else if (i - Model.Rating < 1 && i - Model.Rating > 0)
-                                {
-                                    <i class="fas fa-star-half-alt"></i>
-                                }
-                                else
-                                {
-                                    <i class="far fa-star"></i>
-                                }
-                            }
-                        </div>
-                        <p class="rating-count">@Model.NumeroCalificaciones calificaciones</p>
+                        <span id="ratingValue">3.0</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="col-md-9">
-            <!-- Tabs Navigation -->
-            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" 
-                            id="datos-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#datos" 
-                            type="button" 
-                            role="tab" 
-                            aria-controls="datos" 
-                            aria-selected="true">
-                        <i class="fas fa-user me-2"></i>Datos Generales
-                    </button>
+        <!-- Columna Derecha - Datos del Perfil -->
+        <div class="col-md-9 bg-white" style="height: auto; border-radius: 10px;">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#datosGenerales">Datos Generales</a>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" 
-                            id="servicios-tab" 
-                            data-bs-toggle="tab" 
-                            data-bs-target="#servicios" 
-                            type="button" 
-                            role="tab" 
-                            aria-controls="servicios" 
-                            aria-selected="false">
-                        <i class="fas fa-briefcase me-2"></i>Servicios
-                    </button>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#servicios">Catálogo de Servicios</a>
                 </li>
             </ul>
 
-            <!-- Tabs Content -->
-            <div class="tab-content" id="profileTabsContent">
-                <!-- Tab 1: Datos Generales -->
-                <div class="tab-pane fade show active" 
-                     id="datos" 
-                     role="tabpanel" 
-                     aria-labelledby="datos-tab">
-                    
-                    <div class="card">
-                        <div class="card-body">
-                            <form id="profileForm">
+            <div class="tab-content p-3">
+                <!-- Tab Datos Generales -->
+                <div class="tab-pane fade show active" id="datosGenerales">
+                    <form id="formPerfil">
+                        <div class="card">
+                            <div class="card-body">
                                 <div class="row">
-                                    <!-- Left Column -->
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="txtTitulo" class="form-label">Título de Publicación *</label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="txtTitulo" 
-                                                   name="titulo" 
-                                                   value="@Model.Titulo" 
-                                                   placeholder="Ingrese el título de su Publicación" 
-                                                   required />
+                                            <label for="txtTitulo" class="form-label">Título de Perfil</label>
+                                            <input type="text" class="form-control" id="txtTitulo" name="Titulo" placeholder="Ej: Plomero Profesional" />
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="ddlSector" class="form-label">Sector *</label>
-                                            <select class="form-select" 
-                                                    id="ddlSector" 
-                                                    name="sector" 
-                                                    required>
-                                                <option value="">----</option>
-                                                @if (ViewBag.Sectores != null)
-                                                {
-                                                    foreach (var sector in ViewBag.Sectores)
-                                                    {
-                                                        <option value="@sector.Value" 
-                                                                selected="@(sector.Value == Model.Sector)">
-                                                            @sector.Text
-                                                        </option>
-                                                    }
-                                                }
+                                            <label for="ddlSector" class="form-label">Sector Profesional</label>
+                                            <select class="form-control" id="ddlSector" name="Sector">
+                                                <option value="">-- Seleccione --</option>
+                                                <option value="Plomeria">Plomería</option>
+                                                <option value="Electricidad">Electricidad</option>
+                                                <option value="Carpinteria">Carpintería</option>
+                                                <option value="Pintura">Pintura</option>
+                                                <option value="Jardineria">Jardinería</option>
+                                                <option value="Limpieza">Limpieza</option>
+                                                <option value="Tecnologia">Tecnología</option>
+                                                <option value="Otros">Otros</option>
                                             </select>
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="presentacion" class="form-label">Presentación *</label>
-                                            <textarea class="form-control" 
-                                                      id="presentacion" 
-                                                      name="presentacion" 
-                                                      rows="5" 
-                                                      placeholder="Agregue una breve presentación..." 
-                                                      required>@Model.Presentacion</textarea>
+                                            <label for="presentacion" class="form-label">Presentación</label>
+                                            <textarea class="form-control" id="presentacion" name="Presentacion" rows="4" placeholder="Agregue una breve presentación para que sus posibles clientes le conozcan mejor."></textarea>
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="txtEmail" class="form-label">Correo Electrónico *</label>
-                                            <input type="email" 
-                                                   class="form-control" 
-                                                   id="txtEmail" 
-                                                   name="email" 
-                                                   value="@Model.Email" 
-                                                   required />
+                                            <label for="txtEmail" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="txtEmail" name="Email" />
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="mb-3">
                                                     <label for="txtExperiencia" class="form-label">Años de Experiencia</label>
-                                                    <input type="number" 
-                                                           class="form-control" 
-                                                           id="txtExperiencia" 
-                                                           name="experiencia" 
-                                                           value="@Model.Experiencia" 
-                                                           min="0" 
-                                                           max="50" 
-                                                           placeholder="0" />
+                                                    <input type="number" class="form-control" id="txtExperiencia" name="AnosExperiencia" min="0" style="width: 80px;" />
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-8">
                                                 <div class="mb-3">
                                                     <label for="comboProvincias" class="form-label">Provincia</label>
-                                                    <select class="form-select" 
-                                                            id="comboProvincias" 
-                                                            name="provincia">
-                                                        <option value="">----</option>
-                                                        @if (ViewBag.Provincias != null)
-                                                        {
-                                                            foreach (var provincia in ViewBag.Provincias)
-                                                            {
-                                                                <option value="@provincia.Value" 
-                                                                        selected="@(provincia.Value == Model.Provincia)">
-                                                                    @provincia.Text
-                                                                </option>
-                                                            }
-                                                        }
+                                                    <select class="form-control" id="comboProvincias" name="Provincia">
+                                                        <option value="">-- Seleccione --</option>
+                                                        <option value="Distrito Nacional">Distrito Nacional</option>
+                                                        <option value="Santo Domingo">Santo Domingo</option>
+                                                        <option value="Santiago">Santiago</option>
+                                                        <option value="La Vega">La Vega</option>
+                                                        <option value="San Cristóbal">San Cristóbal</option>
+                                                        <option value="Puerto Plata">Puerto Plata</option>
+                                                        <option value="Duarte">Duarte</option>
+                                                        <option value="La Romana">La Romana</option>
+                                                        <!-- Agregar más provincias -->
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Right Column -->
                                     <div class="col-md-6">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="ddlTipoPerfil" class="form-label">Tipo de Perfil *</label>
-                                                    <select class="form-select" 
-                                                            id="ddlTipoPerfil" 
-                                                            name="tipo" 
-                                                            required>
-                                                        <option value="1" selected="@(Model.Tipo == 1)">Persona Física</option>
-                                                        <option value="2" selected="@(Model.Tipo == 2)">Empresa</option>
+                                                    <label for="ddlTipoPerfil" class="form-label">Tipo de Perfil</label>
+                                                    <select class="form-control" id="ddlTipoPerfil" name="TipoPerfil">
+                                                        <option value="1" selected>Persona Física</option>
+                                                        <option value="2">Empresa</option>
                                                     </select>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="mb-3">
-                                                    <label for="txtIdentificacion" class="form-label">RNC/Cédula *</label>
-                                                    <input type="text" 
-                                                           class="form-control" 
-                                                           id="txtIdentificacion" 
-                                                           name="identificacion" 
-                                                           value="@Model.Identificacion" 
-                                                           required />
+                                                    <label for="txtIdentificacion" class="form-label">RNC/Cédula</label>
+                                                    <input type="text" class="form-control" id="txtIdentificacion" name="Identificacion" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Conditional Section: Persona Física -->
-                                        <div id="divTipoPersona" 
-                                             class="conditional-section @(Model.Tipo == 1 ? "active" : "")">
+                                        <!-- Sección Persona Física -->
+                                        <div id="divTipoPersona" style="display:none;">
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="txtNombre" class="form-label">Nombre</label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               id="txtNombre" 
-                                                               name="nombre" 
-                                                               value="@Model.Nombre" />
+                                                        <input type="text" class="form-control" id="txtNombre" name="Nombre" />
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="txtApellido" class="form-label">Apellido</label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               id="txtApellido" 
-                                                               name="apellido" 
-                                                               value="@Model.Apellido" />
+                                                        <input type="text" class="form-control" id="txtApellido" name="Apellido" />
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Conditional Section: Empresa -->
-                                        <div id="divTipoEmpresa" 
-                                             class="conditional-section @(Model.Tipo == 2 ? "active" : "")">
+                                        <!-- Sección Empresa -->
+                                        <div id="divTipoEmpresa" style="display:none;">
                                             <div class="mb-3">
                                                 <label for="txtRazonSocial" class="form-label">Razón Social</label>
-                                                <input type="text" 
-                                                       class="form-control" 
-                                                       id="txtRazonSocial" 
-                                                       name="razonSocial" 
-                                                       value="@Model.RazonSocial" />
+                                                <input type="text" class="form-control" id="txtRazonSocial" name="RazonSocial" />
                                             </div>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label for="telefono1" class="form-label">Teléfono 1</label>
-                                            <input type="tel" 
-                                                   class="form-control" 
-                                                   id="telefono1" 
-                                                   name="telefono1" 
-                                                   value="@Model.Telefono1" />
-                                            <div class="whatsapp-checkbox">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="chkWhatsapp1" 
-                                                       name="whatsapp1" 
-                                                       checked="@Model.Whatsapp1" />
-                                                <label class="form-check-label" for="chkWhatsapp1">
-                                                    <i class="fab fa-whatsapp text-success"></i> WhatsApp
-                                                </label>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label for="telefono1" class="form-label">Teléfono 1</label>
+                                                    <input type="text" class="form-control" id="telefono1" name="Telefono1" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="chkWhatsapp1" class="form-label">WhatsApp?</label>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="chkWhatsapp1" name="Whatsapp1" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label for="telefono2" class="form-label">Teléfono 2</label>
-                                            <input type="tel" 
-                                                   class="form-control" 
-                                                   id="telefono2" 
-                                                   name="telefono2" 
-                                                   value="@Model.Telefono2" />
-                                            <div class="whatsapp-checkbox">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="chkWhatsapp2" 
-                                                       name="whatsapp2" 
-                                                       checked="@Model.Whatsapp2" />
-                                                <label class="form-check-label" for="chkWhatsapp2">
-                                                    <i class="fab fa-whatsapp text-success"></i> WhatsApp
-                                                </label>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label for="telefono2" class="form-label">Teléfono 2</label>
+                                                    <input type="text" class="form-control" id="telefono2" name="Telefono2" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="chkWhatsapp2" class="form-label">WhatsApp?</label>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="chkWhatsapp2" name="Whatsapp2" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
+                            <div class="card-footer bg-secondary">
+                                <button type="submit" class="btn btn-primary" id="btnGuardar">
+                                    <i class="fa fa-save"></i> Guardar Información
+                                </button>
+                                <button type="button" class="btn btn-danger" id="btnEstatus" style="display:none;">
+                                    Desactivar Perfil
+                                </button>
+                            </div>
                         </div>
+                    </form>
+                </div>
 
-                        <div class="card-footer bg-secondary">
-                            <button type="button" 
-                                    class="btn btn-success" 
-                                    id="btnGuardar">
-                                <i class="fas fa-save me-2"></i>Guardar Información
-                            </button>
-                            
-                            <button type="button" 
-                                    class="btn @(Model.Activo ? "btn-danger" : "btn-success") status-button" 
-                                    id="btnEstatus" 
-                                    style="@(Model.ContratistaID == 0 ? "display: none;" : "")">
-                                <i class="fas @(Model.Activo ? "fa-ban" : "fa-check") me-2"></i>@(Model.Activo ? "Desactivar Perfil" : "Activar Perfil")
+                <!-- Tab Catálogo de Servicios -->
+                <div class="tab-pane fade" id="servicios">
+                    <br />
+                    <h5>Descripción de Servicio</h5>
+                    <div class="row">
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" id="txtServicio" placeholder="Ingrese la descripción de servicio que ofrece" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100" id="btnAgregar">
+                                <i class="fa fa-plus"></i> Agregar
                             </button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Tab 2: Servicios -->
-                <div class="tab-pane fade" 
-                     id="servicios" 
-                     role="tabpanel" 
-                     aria-labelledby="servicios-tab">
-                    
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="form-section-title">
-                                <i class="fas fa-briefcase me-2"></i>Gestión de Servicios
-                            </h5>
-
-                            <div class="row mb-4">
-                                <div class="col-md-10">
-                                    <label for="txtServicio" class="form-label">Descripción de Servicio</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="txtServicio" 
-                                           placeholder="Ingrese la descripción de servicio que ofrece" />
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button type="button" 
-                                            class="btn btn-primary w-100" 
-                                            id="btnAgregar">
-                                        <i class="fas fa-plus me-2"></i>Agregar
-                                    </button>
-                                </div>
-                            </div>
-
-                            <hr />
-
-                            <h5 class="form-section-title">
-                                <i class="fas fa-list me-2"></i>Servicios Registrados
-                            </h5>
-
-                            <div id="serviciosContainer" class="service-grid">
-                                @if (Model.Servicios != null && Model.Servicios.Any())
-                                {
-                                    foreach (var servicio in Model.Servicios)
-                                    {
-                                        <div class="service-item" data-servicio-id="@servicio.ServicioID">
-                                            <span class="service-description">@servicio.DetalleServicio</span>
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-sm btn-remove-service" 
-                                                    data-servicio-id="@servicio.ServicioID">
-                                                <i class="fas fa-times me-1"></i>Remover
-                                            </button>
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <p class="text-muted text-center">No hay servicios registrados. Agregue su primer servicio arriba.</p>
-                                }
-                            </div>
+                    <div class="card-body mt-3">
+                        <hr>
+                        <h4 class="card-title">Servicios</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered" id="gridServicios">
+                                <thead>
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th style="width: 100px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyServicios">
+                                    <!-- Se cargarán desde la API -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -462,278 +248,136 @@
     </div>
 </div>
 
-@section Scripts {
+@section scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <script>
         $(document).ready(function () {
-            // File upload preview
-            $('#fileUpload').on('change', function (e) {
+            loadPerfil();
+            loadServicios();
+
+            // Preview de imagen
+            $('#fileUpload').change(function () {
                 showSelectedImage(this);
             });
 
-            // Tipo perfil change handler
-            $('#ddlTipoPerfil').on('change', function () {
-                toggleConditionalSections();
+            // Mostrar/ocultar secciones según tipo
+            $('#ddlTipoPerfil').change(function () {
+                if ($(this).val() === '2') {
+                    $('#divTipoPersona').hide();
+                    $('#divTipoEmpresa').show();
+                } else {
+                    $('#divTipoPersona').show();
+                    $('#divTipoEmpresa').hide();
+                }
             });
-
-            // Save profile button
-            $('#btnGuardar').on('click', function () {
-                guardarPerfil();
-            });
-
-            // Toggle profile status button
-            $('#btnEstatus').on('click', function () {
-                toggleProfileStatus();
-            });
-
-            // Add service button
-            $('#btnAgregar').on('click', function () {
-                agregarServicio();
-            });
-
-            // Remove service buttons (delegated event)
-            $(document).on('click', '.btn-remove-service', function () {
-                const servicioID = $(this).data('servicio-id');
-                removerServicio(servicioID);
-            });
-
-            // Initialize conditional sections
-            toggleConditionalSections();
         });
 
-        // File preview function
+        function loadPerfil() {
+            // TODO: Cargar desde API
+        }
+
+        function loadServicios() {
+            // TODO: Cargar desde API
+        }
+
         function showSelectedImage(input) {
+            var image = document.getElementById("profileImage");
             if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                
+                var reader = new FileReader();
                 reader.onload = function (e) {
-                    $('#profileImage').attr('src', e.target.result);
+                    image.src = e.target.result;
                 };
-                
                 reader.readAsDataURL(input.files[0]);
-
-                // Auto-upload avatar
-                uploadAvatar();
             }
         }
 
-        // Upload avatar
-        function uploadAvatar() {
-            const formData = new FormData($('#avatarForm')[0]);
+        // Guardar perfil
+        $('#formPerfil').submit(function (e) {
+            e.preventDefault();
+            // TODO: Enviar a API
+            MostrarAlerta();
+        });
 
-            $.ajax({
-                url: '@Url.Action("UploadAvatar", "Contratista")',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            title: 'Imagen Actualizada',
-                            text: 'La imagen de perfil se ha actualizado correctamente.',
-                            icon: 'success',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudo actualizar la imagen. Intente nuevamente.',
-                        icon: 'error'
-                    });
-                }
-            });
-        }
-
-        // Toggle conditional sections based on tipo
-        function toggleConditionalSections() {
-            const tipo = $('#ddlTipoPerfil').val();
-
-            if (tipo === '1') {
-                $('#divTipoPersona').addClass('active');
-                $('#divTipoEmpresa').removeClass('active');
-            } else if (tipo === '2') {
-                $('#divTipoPersona').removeClass('active');
-                $('#divTipoEmpresa').addClass('active');
-            }
-        }
-
-        // Save profile
-        function guardarPerfil() {
-            const formData = $('#profileForm').serializeArray();
-            const data = {};
-            
-            $.each(formData, function (i, field) {
-                if (field.name === 'whatsapp1' || field.name === 'whatsapp2') {
-                    data[field.name] = $('#' + (field.name === 'whatsapp1' ? 'chkWhatsapp1' : 'chkWhatsapp2')).is(':checked');
-                } else {
-                    data[field.name] = field.value;
-                }
-            });
-
-            $.ajax({
-                url: '@Url.Action("UpdateProfile", "Contratista")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            title: 'Perfil Actualizado',
-                            text: 'Tu perfil ha sido actualizado correctamente.',
-                            icon: 'success'
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudo actualizar el perfil. Verifique los datos e intente nuevamente.',
-                        icon: 'error'
-                    });
-                }
-            });
-        }
-
-        // Toggle profile status
-        function toggleProfileStatus() {
-            const currentStatus = $('#btnEstatus').text().trim().includes('Desactivar');
-            const activate = !currentStatus;
-
-            $.ajax({
-                url: '@Url.Action("ToggleProfileStatus", "Contratista")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ activate: activate }),
-                success: function (response) {
-                    if (response.success) {
-                        const title = activate ? 'Perfil Activado' : 'Perfil Desactivado';
-                        const text = activate 
-                            ? 'Todos los miembros de la comunidad podrán ver tu perfil en el directorio.' 
-                            : 'Nadie podrá ver tu perfil publicado en el directorio.';
-                        const icon = activate ? 'success' : 'warning';
-
-                        Swal.fire({
-                            title: title,
-                            text: text,
-                            icon: icon
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudo cambiar el estado del perfil.',
-                        icon: 'error'
-                    });
-                }
-            });
-        }
-
-        // Add service
-        function agregarServicio() {
-            const detalleServicio = $('#txtServicio').val().trim();
-
-            if (!detalleServicio) {
-                Swal.fire({
-                    title: 'Campo Requerido',
-                    text: 'Debe ingresar la descripción del servicio.',
-                    icon: 'warning'
-                });
+        // Agregar servicio
+        $('#btnAgregar').click(function () {
+            var servicio = $('#txtServicio').val().trim();
+            if (servicio === '') {
+                Swal.fire('Error', 'Ingrese una descripción del servicio', 'error');
                 return;
             }
 
-            $.ajax({
-                url: '@Url.Action("AddServicio", "Contratista")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ detalleServicio: detalleServicio }),
-                success: function (response) {
-                    if (response.success) {
-                        // Add service to grid
-                        const serviceHtml = `
-                            <div class="service-item" data-servicio-id="${response.servicioID}">
-                                <span class="service-description">${detalleServicio}</span>
-                                <button type="button" 
-                                        class="btn btn-danger btn-sm btn-remove-service" 
-                                        data-servicio-id="${response.servicioID}">
-                                    <i class="fas fa-times me-1"></i>Remover
-                                </button>
-                            </div>
-                        `;
+            // Agregar a la tabla
+            var row = '<tr>' +
+                '<td>' + servicio + '</td>' +
+                '<td><button type="button" class="btn btn-sm btn-danger" onclick="removerServicio(this)"><i class="fa fa-trash"></i> Remover</button></td>' +
+                '</tr>';
+            $('#tbodyServicios').append(row);
+            $('#txtServicio').val('');
 
-                        $('#serviciosContainer').append(serviceHtml);
-                        $('#txtServicio').val('');
+            // TODO: Enviar a API
+        });
 
-                        Swal.fire({
-                            title: 'Servicio Agregado',
-                            text: 'El servicio se ha agregado correctamente.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudo agregar el servicio.',
-                        icon: 'error'
-                    });
+        function removerServicio(btn) {
+            Swal.fire({
+                title: '¿Remover servicio?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, remover',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $(btn).closest('tr').remove();
+                    // TODO: Enviar a API
                 }
             });
         }
 
-        // Remove service
-        function removerServicio(servicioID) {
+        // Desactivar perfil
+        $('#btnEstatus').click(function () {
             Swal.fire({
-                title: '¿Está seguro?',
-                text: 'Esta acción eliminará el servicio de su perfil.',
+                title: '¿Desactivar perfil?',
+                text: 'Nadie podrá ver tu perfil publicado en el directorio',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, desactivar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("DeleteServicio", "Contratista")',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ servicioID: servicioID }),
-                        success: function (response) {
-                            if (response.success) {
-                                $(`.service-item[data-servicio-id="${servicioID}"]`).fadeOut(300, function () {
-                                    $(this).remove();
-                                });
-
-                                Swal.fire({
-                                    title: 'Servicio Eliminado',
-                                    text: 'El servicio se ha eliminado correctamente.',
-                                    icon: 'success',
-                                    timer: 1500,
-                                    showConfirmButton: false
-                                });
-                            }
-                        },
-                        error: function () {
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'No se pudo eliminar el servicio.',
-                                icon: 'error'
-                            });
-                        }
-                    });
+                    // TODO: Enviar a API
+                    MostrarAlerta3();
                 }
+            });
+        });
+
+        function MostrarAlerta() {
+            Swal.fire({
+                title: 'Perfil Actualizado',
+                text: 'Tu perfil ha sido actualizado correctamente.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+
+        function MostrarAlerta2() {
+            Swal.fire({
+                title: 'Perfil Activado',
+                text: 'Todos los miembros de la comunidad podrán ver tu perfil en el directorio.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+
+        function MostrarAlerta3() {
+            Swal.fire({
+                title: 'Perfil Desactivado',
+                text: 'Nadie podrá ver tu perfil publicado en el directorio.',
+                icon: 'warning',
+                confirmButtonText: 'OK'
             });
         }
     </script>

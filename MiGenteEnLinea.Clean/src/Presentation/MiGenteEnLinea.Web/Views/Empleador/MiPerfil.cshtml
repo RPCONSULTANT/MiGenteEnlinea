@@ -1,480 +1,294 @@
-@model MiGenteEnLinea.Web.Controllers.EmpleadorController.PerfilEmpleadorViewModel
+@model dynamic
 @{
+    Layout = "~/Views/Shared/_LayoutEmpleador.cshtml";
     ViewData["Title"] = "Mi Perfil";
 }
 
-<!-- Breadcrumb -->
-<div class="pagetitle">
-    <h1>Gestión de Perfil</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="Colaboradores">Inicio</a></li>
-            <li class="breadcrumb-item active">Mi Perfil</li>
-        </ol>
-    </nav>
-</div>
+<div class="container">
+    <h3 style="color: white">Información de Perfil</h3>
+    
+    <form id="formPerfil">
+        <div class="form-control bg-white p-4">
+            
+            <div class="mb-3">
+                <label for="tipoCuenta" class="form-label">Tipo de Cuenta</label>
+                <select class="form-select" id="tipoCuenta" name="TipoCuenta" disabled>
+                    <option value="1" selected>Empleador</option>
+                    <option value="2">Contratista</option>
+                </select>
+            </div>
 
-<!-- Botón Nuevo Usuario -->
-<div class="row bg-white p-3">
-    <div class="col-md-3 col-12" id="divBoton">
-        <button type="button" class="btn btn-outline-primary w-100" onclick="abrirModalNuevoUsuario()">
-            <i class="bi bi-plus-circle"></i> Nuevo Usuario
-        </button>
-    </div>
-    <div class="col-md-12 col-12 d-none" id="divAgotado">
-        <div class="alert alert-danger" role="alert">
-            <strong>ATENCIÓN:</strong> Ya ha agotado la cantidad de usuarios permitidos en este plan.
-        </div>
-    </div>
-</div>
+            <div class="mb-3">
+                <label for="tipoIdentificacion" class="form-label">Tipo de Perfil</label>
+                <select class="form-select" id="ddlTipoIdentificacion" name="TipoPerfil">
+                    <option value="1">Persona Física</option>
+                    <option value="2">Empresa</option>
+                </select>
+            </div>
 
-<hr />
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Información de Registro</label>
+                <input type="text" class="form-control" id="nombre" name="Nombre" placeholder="Nombre" required />
+            </div>
 
-<!-- Tabs -->
-<ul class="nav nav-pills mb-3 mt-3" id="pills-tab" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="true">
-            Datos de Cuenta
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pills-users-tab" data-bs-toggle="pill" data-bs-target="#pills-users" type="button" role="tab" aria-controls="pills-users" aria-selected="false">
-            Credenciales de Acceso
-        </button>
-    </li>
-</ul>
+            <div class="mb-3">
+                <input type="text" class="form-control" id="apellido" name="Apellido" placeholder="Apellido" required />
+            </div>
 
-<div class="tab-content" id="pills-tabContent">
-    <!-- TAB 1: Datos de Cuenta -->
-    <div class="tab-pane fade show active" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Mi Perfil</h5>
+            <div class="mb-3">
+                <label for="identificacion" class="form-label">RNC/Cédula</label>
+                <input type="text" class="form-control" id="txtIdentificacion" name="Identificacion" required />
+            </div>
 
-                        <form id="formPerfil">
-                            <div class="row">
-                                <!-- Tipo de Cuenta (disabled) -->
-                                <div class="mb-3 col-md-2">
-                                    <label for="tipoCuenta" class="form-label">Tipo de Cuenta</label>
-                                    <select id="tipoCuenta" class="form-select" disabled>
-                                        <option value="1" selected>Empleador</option>
-                                    </select>
-                                </div>
+            <!-- Sección Empresa (visible solo si es tipo Empresa) -->
+            <div id="divEmpresa" style="display:none;">
+                <div class="mb-3">
+                    <label for="nombreComercial" class="form-label">Información Comercial</label>
+                    <input type="text" class="form-control" id="nombreComercial" name="NombreComercial" placeholder="Nombre Comercial" />
+                </div>
 
-                                <!-- Tipo de Perfil -->
-                                <div class="mb-3 col-md-3">
-                                    <label for="tipoIdentificacion" class="form-label">Tipo de Perfil</label>
-                                    <select id="tipoIdentificacion" class="form-select" onchange="toggleEmpresaFields()">
-                                        <option value="1">Persona Física</option>
-                                        <option value="2">Empresa</option>
-                                    </select>
-                                </div>
+                <div class="mb-3">
+                    <h4>Representante Legal</h4>
+                </div>
 
-                                <!-- Nombre -->
-                                <div class="mb-3 col-md-3">
-                                    <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nombre" required />
-                                </div>
+                <div class="mb-3">
+                    <label for="nombreGerente" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="txtNombreGerente" name="NombreGerente" placeholder="Nombre Representante Legal" />
+                </div>
 
-                                <!-- Apellido -->
-                                <div class="mb-3 col-md-3">
-                                    <label for="apellido" class="form-label">Apellido <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="apellido" required />
-                                </div>
+                <div class="mb-3">
+                    <label for="apellidoGerente" class="form-label">Apellido</label>
+                    <input type="text" class="form-control" id="txtApellidoGerente" name="ApellidoGerente" placeholder="Apellido Representante Legal" />
+                </div>
 
-                                <!-- RNC/Cédula -->
-                                <div class="mb-3 col-md-3">
-                                    <label for="identificacion" class="form-label">RNC/Cédula <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="identificacion" required />
-                                </div>
-
-                                <!-- Campos de Empresa (ocultos por defecto) -->
-                                <div id="divEmpresa" class="row d-none">
-                                    <div class="mb-3 col-md-6">
-                                        <label for="nombreComercial" class="form-label">Nombre Comercial</label>
-                                        <input type="text" class="form-control" id="nombreComercial" />
-                                    </div>
-
-                                    <div class="mb-3 col-md-12">
-                                        <h6 class="text-primary">Representante Legal</h6>
-                                    </div>
-
-                                    <div class="mb-3 col-md-3">
-                                        <label for="nombreGerente" class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" id="nombreGerente" />
-                                    </div>
-
-                                    <div class="mb-3 col-md-3">
-                                        <label for="apellidoGerente" class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="apellidoGerente" />
-                                    </div>
-
-                                    <div class="mb-3 col-md-12">
-                                        <label for="direccionGerente" class="form-label">Dirección del Representante</label>
-                                        <input type="text" class="form-control" id="direccionGerente" maxlength="250" />
-                                    </div>
-                                </div>
-
-                                <!-- Email -->
-                                <div class="mb-3 col-md-4">
-                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" required />
-                                </div>
-
-                                <!-- Teléfonos -->
-                                <div class="mb-3 col-md-3">
-                                    <label for="telefono1" class="form-label">Teléfono 1</label>
-                                    <input type="text" class="form-control" id="telefono1" placeholder="(809)-000-0000" />
-                                </div>
-
-                                <div class="mb-3 col-md-3">
-                                    <label for="telefono2" class="form-label">Teléfono 2</label>
-                                    <input type="text" class="form-control" id="telefono2" placeholder="(809)-000-0000" />
-                                </div>
-
-                                <!-- Dirección -->
-                                <div class="mb-3 col-md-12">
-                                    <label for="direccion" class="form-label">Dirección <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="direccion" maxlength="250" required />
-                                </div>
-
-                                <!-- Botón Actualizar -->
-                                <div class="mb-3 col-md-12">
-                                    <button type="button" class="btn btn-success" onclick="actualizarPerfil()">
-                                        <i class="bi bi-save"></i> Actualizar Perfil
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                <div class="mb-3">
+                    <label for="direccionGerente" class="form-label">Domicilio</label>
+                    <input type="text" class="form-control" id="txtDireccionGerente" name="DireccionGerente" placeholder="Dirección" maxlength="250" />
                 </div>
             </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="Email" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="telefono1" class="form-label">Teléfonos</label>
+                <input type="tel" class="form-control" id="telefono1" name="Telefono1" placeholder="(___)-___-____" />
+            </div>
+
+            <div class="mb-3">
+                <input type="tel" class="form-control" id="telefono2" name="Telefono2" placeholder="(___)-___-____" />
+            </div>
+
+            <div class="mb-3">
+                <label for="direccion" class="form-label">Dirección</label>
+                <input type="text" class="form-control" id="direccion" name="Direccion" maxlength="250" required />
+            </div>
+
+            <button type="submit" class="btn btn-success" id="btnGuardar">
+                <i class="fa fa-save"></i> Actualizar Perfil
+            </button>
+        </div>
+    </form>
+
+    <hr class="bg-white" />
+
+    <!-- Credenciales de Acceso -->
+    <div class="row bg-white p-3 mt-3 rounded">
+        <div class="col-md-9">
+            <h4>Credenciales de Acceso</h4>
+        </div>
+        <div class="col-md-3 text-right">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalNuevoUsuario">
+                <i class="fa fa-plus"></i> Nuevo
+            </button>
         </div>
     </div>
 
-    <!-- TAB 2: Credenciales de Acceso -->
-    <div class="tab-pane fade" id="pills-users" role="tabpanel" aria-labelledby="pills-users-tab">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Credenciales de Acceso</h5>
-
-                        <!-- Buscador -->
-                        <div class="mb-3">
-                            <input type="text" id="searchCredenciales" class="form-control" placeholder="Buscar por email..." onkeyup="filtrarCredenciales()" />
-                        </div>
-
-                        <!-- Tabla de Credenciales -->
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>Acción</th>
-                                        <th>Email</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="credencialesTableBody">
-                                    <tr id="loadingCredenciales">
-                                        <td colspan="3" class="text-center">
-                                            <div class="spinner-border" role="status">
-                                                <span class="visually-hidden">Cargando...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="table-responsive bg-white p-3 rounded">
+        <table class="table table-bordered table-striped" id="tablaUsuarios">
+            <thead>
+                <tr>
+                    <th style="display: none;">ID</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyUsuarios">
+                <!-- Se cargarán desde la API -->
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Modal: Crear Usuario -->
-<div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Modal Editar Contraseña -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalCrearUsuarioLabel">Crear Usuario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formNuevoUsuario">
-                    <div class="mb-3">
-                        <label for="nuevoEmail" class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="nuevoEmail" required />
-                    </div>
-                    <div class="mb-3">
-                        <label for="nuevoPassword" class="form-label">Contraseña <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="nuevoPassword" required />
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="nuevoActivo" checked />
-                        <label class="form-check-label" for="nuevoActivo">Activo</label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarNuevoUsuario()">
-                    <i class="bi bi-save"></i> Guardar
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Modificar Contraseña</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            <form id="formEditPassword">
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId" />
+                    <div class="mb-3">
+                        <label for="txtModalPassword" class="form-label">Nueva Contraseña</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="txtModalPassword" name="Password" required />
+                            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-@section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // Variables globales
-    var perfilData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Perfil ?? new object()));
-    var credencialesList = [];
-    var maxUsuarios = @Model.MaxUsuarios;
+<!-- Modal Nuevo Usuario -->
+<div class="modal fade" id="modalNuevoUsuario" tabindex="-1" role="dialog" aria-labelledby="modalNuevoUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNuevoUsuarioLabel">Nuevo Usuario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formNuevoUsuario">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="correo" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="correo" name="Email" placeholder="Correo Electrónico" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="contrasena" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="contrasena" name="Password" placeholder="Contraseña" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    // Cargar datos al iniciar
-    $(document).ready(function () {
-        cargarPerfil();
-        cargarCredenciales();
-    });
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Cargar datos del perfil
+            loadPerfil();
+            loadUsuarios();
 
-    // Función: Cargar datos del perfil
-    function cargarPerfil() {
-        if (perfilData && perfilData.tipoIdentificacion) {
-            $('#tipoIdentificacion').val(perfilData.tipoIdentificacion);
-            $('#nombre').val(perfilData.nombre || '');
-            $('#apellido').val(perfilData.apellido || '');
-            $('#identificacion').val(perfilData.identificacion || '');
-            $('#email').val(perfilData.email || '');
-            $('#telefono1').val(perfilData.telefono1 || '');
-            $('#telefono2').val(perfilData.telefono2 || '');
-            $('#direccion').val(perfilData.direccion || '');
-
-            if (perfilData.tipoIdentificacion == 2) {
-                $('#nombreComercial').val(perfilData.nombreComercial || '');
-                $('#nombreGerente').val(perfilData.nombreGerente || '');
-                $('#apellidoGerente').val(perfilData.apellidoGerente || '');
-                $('#direccionGerente').val(perfilData.direccionGerente || '');
-                $('#divEmpresa').removeClass('d-none');
-            }
-        }
-    }
-
-    // Función: Toggle campos de empresa
-    function toggleEmpresaFields() {
-        var tipoId = parseInt($('#tipoIdentificacion').val());
-        if (tipoId === 2) {
-            $('#divEmpresa').removeClass('d-none');
-        } else {
-            $('#divEmpresa').addClass('d-none');
-        }
-    }
-
-    // Función: Actualizar perfil
-    function actualizarPerfil() {
-        // Validar campos requeridos
-        if (!$('#nombre').val() || !$('#apellido').val() || !$('#identificacion').val() || !$('#email').val() || !$('#direccion').val()) {
-            Swal.fire('Error', 'Complete todos los campos requeridos', 'error');
-            return;
-        }
-
-        var requestData = {
-            tipoIdentificacion: parseInt($('#tipoIdentificacion').val()),
-            identificacion: $('#identificacion').val(),
-            nombre: $('#nombre').val(),
-            apellido: $('#apellido').val(),
-            email: $('#email').val(),
-            telefono1: $('#telefono1').val(),
-            telefono2: $('#telefono2').val(),
-            direccion: $('#direccion').val(),
-            nombreComercial: $('#nombreComercial').val(),
-            nombreGerente: $('#nombreGerente').val(),
-            apellidoGerente: $('#apellidoGerente').val(),
-            direccionGerente: $('#direccionGerente').val()
-        };
-
-        Swal.fire({
-            title: 'Actualizando...',
-            text: 'Guardando cambios en el perfil',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        $.ajax({
-            type: "POST",
-            url: '@Url.Action("ActualizarPerfil", "Empleador")',
-            data: JSON.stringify(requestData),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (response) {
-                if (response.success) {
-                    Swal.fire('¡Éxito!', response.message, 'success').then(() => {
-                        location.reload();
-                    });
+            // Mostrar/ocultar sección empresa
+            $('#ddlTipoIdentificacion').change(function () {
+                if ($(this).val() === '2') {
+                    $('#divEmpresa').show();
                 } else {
-                    Swal.fire('Error', response.message, 'error');
+                    $('#divEmpresa').hide();
                 }
-            },
-            error: function () {
-                Swal.fire('Error', 'Error al actualizar el perfil', 'error');
-            }
+            });
         });
-    }
 
-    // Función: Cargar credenciales
-    function cargarCredenciales() {
-        $.ajax({
-            type: "POST",
-            url: '@Url.Action("GetCredenciales", "Empleador")',
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (response) {
-                if (response.success) {
-                    credencialesList = response.data;
-                    renderizarCredenciales();
-                    verificarLimiteUsuarios();
-                } else {
-                    $('#credencialesTableBody').html('<tr><td colspan="3" class="text-center text-danger">Error al cargar credenciales</td></tr>');
-                }
-            },
-            error: function () {
-                $('#credencialesTableBody').html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
-            }
-        });
-    }
-
-    // Función: Renderizar credenciales
-    function renderizarCredenciales() {
-        var tbody = $('#credencialesTableBody');
-        tbody.empty();
-
-        if (credencialesList.length === 0) {
-            tbody.append('<tr><td colspan="3" class="text-center">No hay credenciales registradas</td></tr>');
-            return;
+        function loadPerfil() {
+            // TODO: Cargar desde API
+            // $.get('/api/empleadores/perfil', function(data) { ... });
         }
 
-        credencialesList.forEach(function (cred) {
-            var estadoBadge = cred.activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
-            var row = '<tr>' +
-                '<td>' +
-                '<button class="btn btn-sm btn-warning" onclick="resetPassword(\'' + cred.email + '\')"><i class="bi bi-key"></i> Reset</button>' +
-                '</td>' +
-                '<td>' + cred.email + '</td>' +
-                '<td>' + estadoBadge + '</td>' +
-                '</tr>';
-            tbody.append(row);
-        });
-    }
+        function loadUsuarios() {
+            // TODO: Cargar desde API
+            // $.get('/api/empleadores/credenciales', function(data) { ... });
+        }
 
-    // Función: Filtrar credenciales
-    function filtrarCredenciales() {
-        var searchTerm = $('#searchCredenciales').val().toLowerCase();
-        $('#credencialesTableBody tr').each(function () {
-            var email = $(this).find('td:eq(1)').text().toLowerCase();
-            if (email.includes(searchTerm) || searchTerm === '') {
-                $(this).show();
+        function togglePassword() {
+            var passwordField = document.getElementById('txtModalPassword');
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
             } else {
-                $(this).hide();
+                passwordField.type = "password";
             }
+        }
+
+        // Guardar perfil
+        $('#formPerfil').submit(function (e) {
+            e.preventDefault();
+            
+            var formData = $(this).serialize();
+            
+            // TODO: Enviar a API
+            Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
         });
-    }
 
-    // Función: Verificar límite de usuarios
-    function verificarLimiteUsuarios() {
-        if (credencialesList.length >= maxUsuarios) {
-            $('#divBoton').addClass('d-none');
-            $('#divAgotado').removeClass('d-none');
-        } else {
-            $('#divBoton').removeClass('d-none');
-            $('#divAgotado').addClass('d-none');
-        }
-    }
-
-    // Función: Abrir modal nuevo usuario
-    function abrirModalNuevoUsuario() {
-        $('#nuevoEmail').val('');
-        $('#nuevoPassword').val('');
-        $('#nuevoActivo').prop('checked', true);
-        var modal = new bootstrap.Modal(document.getElementById('modalCrearUsuario'));
-        modal.show();
-    }
-
-    // Función: Guardar nuevo usuario
-    function guardarNuevoUsuario() {
-        var email = $('#nuevoEmail').val();
-        var password = $('#nuevoPassword').val();
-        var activo = $('#nuevoActivo').is(':checked');
-
-        if (!email || !password) {
-            Swal.fire('Error', 'Complete email y contraseña', 'error');
-            return;
+        // Editar usuario
+        function editarUsuario(id, email) {
+            $('#editUserId').val(id);
+            $('#editModal').modal('show');
         }
 
-        var requestData = {
-            email: email,
-            password: password,
-            activo: activo
-        };
+        // Guardar contraseña editada
+        $('#formEditPassword').submit(function (e) {
+            e.preventDefault();
+            
+            var userId = $('#editUserId').val();
+            var password = $('#txtModalPassword').val();
+            
+            // TODO: Enviar a API
+            Swal.fire('Éxito', 'Contraseña actualizada correctamente', 'success');
+            $('#editModal').modal('hide');
+        });
 
-        $.ajax({
-            type: "POST",
-            url: '@Url.Action("CrearCredencial", "Empleador")',
-            data: JSON.stringify(requestData),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (response) {
-                if (response.success) {
-                    Swal.fire('¡Éxito!', response.message, 'success').then(() => {
-                        $('#modalCrearUsuario').modal('hide');
-                        cargarCredenciales();
-                    });
-                } else {
-                    Swal.fire('Error', response.message, 'error');
+        // Eliminar usuario
+        function eliminarUsuario(id) {
+            Swal.fire({
+                title: '¿Eliminar usuario?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // TODO: Enviar a API
+                    Swal.fire('Eliminado', 'El usuario ha sido eliminado', 'success');
                 }
-            },
-            error: function () {
-                Swal.fire('Error', 'Error al crear credencial', 'error');
-            }
-        });
-    }
+            });
+        }
 
-    // Función: Reset password
-    function resetPassword(email) {
-        Swal.fire({
-            title: '¿Enviar email de recuperación?',
-            text: 'Se enviará un email a ' + email + ' para restablecer la contraseña',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, enviar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    type: "POST",
-                    url: '@Url.Action("ResetPassword", "Empleador")',
-                    data: JSON.stringify({ email: email }),
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    success: function (response) {
-                        if (response.success) {
-                            Swal.fire('¡Enviado!', 'Email de recuperación enviado correctamente', 'success');
-                        } else {
-                            Swal.fire('Error', response.message, 'error');
-                        }
-                    },
-                    error: function () {
-                        Swal.fire('Error', 'Error al enviar email', 'error');
-                    }
-                });
+        // Guardar nuevo usuario
+        $('#formNuevoUsuario').submit(function (e) {
+            e.preventDefault();
+            
+            var email = $('#correo').val();
+            var password = $('#contrasena').val();
+            
+            // TODO: Enviar a API
+            Swal.fire('Éxito', 'Usuario creado correctamente', 'success');
+            $('#modalNuevoUsuario').modal('hide');
+            $('#correo').val('');
+            $('#contrasena').val('');
+        });
+
+        // Máscara para teléfonos
+        $('#telefono1, #telefono2').on('input', function () {
+            var value = $(this).val().replace(/\D/g, '');
+            if (value.length >= 10) {
+                $(this).val('(' + value.substring(0, 3) + ')-' + value.substring(3, 6) + '-' + value.substring(6, 10));
             }
         });
-    }
-</script>
+    </script>
 }

@@ -1,210 +1,128 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] - Mi Gente en Línea</title>
-    <meta name="description" content="">
-    <meta name="keywords" content="">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Mi Gente en línea</title>
+    
+    <!-- CSS de Producción (FRONT_Publicado) -->
+    <link href="~/css/animated.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/css/Custom.css" rel="stylesheet" />
+    
+    <style>
+        @@font-face {
+            font-family: "Gurajada";
+            src: url(/fonts/Gurajada-Regular.ttf);
+        }
 
-    <!-- Favicons -->
-    <link href="~/img/favicon.png" rel="icon">
-    <link href="~/img/apple-touch-icon.png" rel="apple-touch-icon">
+        .headerText {
+            font-family: "Gurajada", Gurajada;
+        }
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+        /* Estilos adicionales personalizados */
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar-brand img {
+            height: 50px;
+            margin-left: 10px;
+        }
+
+        .navbar-nav ml-auto {
+            margin-right: 10px;
+        }
+
+        .banner {
+            position: relative;
+            height: 500px;
+            background-image: linear-gradient(to bottom right, rgba(128, 0, 128, 0.4), rgba(147, 112, 219, 0.4), rgba(0, 0, 139, 1.9)), url(/images/back1.jpg);
+            background-size: auto;
+            background-position: unset;
+        }
+
+        .banner2 {
+            position: center;
+            height: 300px;
+            background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .banner-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .banner-content h1 {
+            font-size: 40px;
+        }
+
+        .link {
+            color: darkgrey;
+        }
+
+        .link:hover {
+            box-shadow: inset 30px 30px 30px 30px #007BFF;
+            color: darkgrey;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
     
-    <!-- Vendor CSS Files -->
-    <link href="~/lib/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="~/lib/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="~/lib/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link href="~/lib/vendor/quill/quill.snow.css" rel="stylesheet">
-    <link href="~/lib/vendor/quill/quill.bubble.css" rel="stylesheet">
-    <link href="~/lib/vendor/remixicon/remixicon.css" rel="stylesheet">
-    <link href="~/lib/vendor/simple-datatables/style.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
-    
-    <!-- Template Main CSS File -->
-    <link href="~/css/style.css" rel="stylesheet">
-    
-    @RenderSection("Head", required: false)
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-
 <body>
-    <!-- ======= Header ======= -->
-    <header id="header" class="header fixed-top d-flex align-items-center">
-        <div class="d-flex align-items-center justify-content-between">
-            <a href="/Home/Comunidad" class="logo d-flex align-items-center mt-3 mb-2">
-                <img src="~/images/logoMiGene.png" alt="Mi Gente Logo" style="width: 50%;" />
+    <div>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <img src="~/images/logoMiGene.png" alt="Logo Mi Gente" />
             </a>
-            <i class="bi bi-list toggle-sidebar-btn"></i>
-        </div>
-        <!-- End Logo -->
 
-        <div class="search-bar">
-            @* Search form commented out - not used *@
-        </div>
-        <!-- End Search Bar -->
+            <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="fa fa-light fa-key"></span>
+            </button>
 
-        <nav class="header-nav ms-auto">
-            <ul class="d-flex align-items-center">
-                <li class="nav-item d-block d-lg-none">
-                    <a class="nav-link nav-icon search-bar-toggle" href="#">
-                        <i class="bi bi-search"></i>
-                    </a>
-                </li>
-                <!-- End Search Icon -->
-
-                <li class="container">
-                    <a style="color: lightgray">|</a>
-                </li>
-
-                <li class="nav-item dropdown pe-3">
-                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                        <span class="d-none d-md-block dropdown-toggle ps-2" id="lbAcceso">K. Anderson</span>
-                    </a>
-                    <!-- End Profile Image Icon -->
-
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="/Empleador/MiPerfil">
-                                <i class="bi bi-person"></i>
-                                <span>Mi Perfil</span>
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="/Home/FAQ">
-                                <i class="bi bi-question-circle"></i>
-                                <span>Ayuda</span>
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="/Auth/Logout">
-                                <i class="bi bi-box-arrow-right"></i>
-                                <span>Cerrar Sesión</span>
-                            </a>
-                        </li>
-                    </ul>
-                    <!-- End Profile Dropdown Items -->
-                </li>
-                <!-- End Profile Nav -->
-            </ul>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="btn btn-transparent text-dark" asp-controller="Auth" asp-action="Register" style="border-radius:10px; border-color:gray">Afiliate</a>
+                        <a class="btn btn-transparent" asp-controller="Auth" asp-action="Login" style="border-radius:10px; border-color:gray">Acceder</a>
+                    </li>
+                </ul>
+            </div>
         </nav>
-        <!-- End Icons Navigation -->
-    </header>
-    <!-- End Header -->
 
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
-        <ul class="sidebar-nav" id="sidebar-nav">
-            <li class="nav-item">
-                <a class="nav-link" href="/Empleador/Colaboradores">
-                    <i class="bi bi-people"></i>
-                    <span>Gestión de Colaboradores</span>
-                </a>
-            </li>
+        <!-- Contenido Principal -->
+        <main>
+            @RenderBody()
+        </main>
+    </div>
 
-            <li class="nav-item">
-                <a class="nav-link" href="/Empleador/Calificaciones">
-                    <i class="bi bi-star"></i>
-                    <span>Calificación de Perfiles</span>
-                </a>
-            </li>
+    <!-- Scripts de Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="~/js/Custom.js" asp-append-version="true"></script>
 
-            <li class="nav-item">
-                <a class="nav-link" href="/Home/Comunidad">
-                    <i class="bi bi-person-rolodex"></i>
-                    <span>Comunidad de Profesionales</span>
-                </a>
-            </li>
-
-            @* Abogado Virtual - comentado para fase futura
-            <li class="nav-item">
-                <a class="nav-link" href="/Home/AbogadoVirtual">
-                    <i class="fas fa-balance-scale"></i>
-                    <span>Abogado Virtual</span>
-                </a>
-            </li>
-            *@
-
-            <!-- Gestión de Cuenta -->
-            <li class="nav-heading">Gestión de Cuenta</li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="/Empleador/MiPerfil">
-                    <i class="bi bi-person-fill-check"></i>
-                    <span>Perfil</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="/Subscription/Index">
-                    <i class="bi bi-receipt"></i>
-                    <span>Suscripción</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="/Auth/Logout">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Cerrar Sesión</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
-    <!-- End Sidebar -->
-
-    <!-- ======= Main Content ======= -->
-    <main id="main" class="main">
-        @RenderBody()
-    </main>
-    <!-- End #main -->
-
-    <!-- ======= Footer ======= -->
-    <footer id="footer" class="footer">
-        <div class="copyright">
-            &copy; Copyright <strong><span>IntDoSystem, SRL</span></strong>. All Rights Reserved
-        </div>
-        <div class="credits">
+    <!-- Footer -->
+    <footer>
+        <div class="form-control" style="background-color: dimgray; color: white; text-align: center;">
+            <a style="font-size: smaller">© Copyright Mi Gente en linea @DateTime.Now.Year</a>
+            <br />
+            <a style="font-size: smaller">Diseño y Desarrollo @@IntDoSystem, SRL</a>
         </div>
     </footer>
-    <!-- End Footer -->
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
-        <i class="bi bi-arrow-up-short"></i>
-    </a>
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- Vendor JS Files -->
-    <script src="~/lib/vendor/apexcharts/apexcharts.min.js"></script>
-    <script src="~/lib/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/vendor/chart.js/chart.umd.js"></script>
-    <script src="~/lib/vendor/echarts/echarts.min.js"></script>
-    <script src="~/lib/vendor/quill/quill.js"></script>
-    <script src="~/lib/vendor/simple-datatables/simple-datatables.js"></script>
-    <script src="~/lib/vendor/tinymce/tinymce.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-    <!-- SweetAlert2 JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
-
-    <!-- Template Main JS File -->
-    <script src="~/js/main.js"></script>
-
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

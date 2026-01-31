@@ -1,22 +1,19 @@
+@model dynamic
 @{
+    Layout = "~/Views/Shared/_LayoutEmpleador.cshtml";
     ViewData["Title"] = "Preguntas Frecuentes";
-    Layout = "_Layout";
 }
 
 <style>
-    body {
-        margin-top: 0px;
-    }
-
-    .section_padding_130 {
-        padding-top: 20px;
-        padding-bottom: 130px;
-    }
-
     .faq_area {
         position: relative;
         z-index: 1;
         background-color: #f5f5ff;
+    }
+
+    .section_padding_130 {
+        padding-top: 130px;
+        padding-bottom: 130px;
     }
 
     .faq-accordian {
@@ -24,86 +21,89 @@
         z-index: 1;
     }
 
-        .faq-accordian .card {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 1.5rem;
-        }
+    .faq-accordian .card {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1.5rem;
+    }
 
-            .faq-accordian .card:last-child {
-                margin-bottom: 0;
-            }
+    .faq-accordian .card:last-child {
+        margin-bottom: 0;
+    }
 
-            .faq-accordian .card .card-header {
-                background-color: #ffffff;
-                padding: 0;
-                border-bottom-color: #ebebeb;
-            }
+    .faq-accordian .card .card-header {
+        background-color: #ffffff;
+        padding: 0;
+        border-bottom-color: #ebebeb;
+    }
 
-                .faq-accordian .card .card-header h6 {
-                    cursor: pointer;
-                    padding: 1.75rem 2rem;
-                    color: #3f43fd;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
+    .faq-accordian .card .card-header h6 {
+        cursor: pointer;
+        padding: 1.75rem 2rem;
+        color: #3f43fd;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-                    .faq-accordian .card .card-header h6 span {
-                        font-size: 1.5rem;
-                    }
+    .faq-accordian .card .card-header h6 span {
+        font-size: 1.5rem;
+    }
 
-                    .faq-accordian .card .card-header h6.collapsed {
-                        color: #070a57;
-                    }
+    .faq-accordian .card .card-header h6.collapsed {
+        color: #070a57;
+    }
 
-                        .faq-accordian .card .card-header h6.collapsed span {
-                            transform: rotate(-180deg);
-                        }
+    .faq-accordian .card .card-header h6.collapsed span {
+        transform: rotate(-180deg);
+    }
 
-            .faq-accordian .card .card-body {
-                padding: 1.75rem 2rem;
-            }
+    .faq-accordian .card .card-body {
+        padding: 1.75rem 2rem;
+    }
 
-                .faq-accordian .card .card-body p:last-child {
-                    margin-bottom: 0;
-                }
+    .faq-accordian .card .card-body p:last-child {
+        margin-bottom: 0;
+    }
+
+    .support-button i {
+        color: #3f43fd;
+        font-size: 1.25rem;
+    }
+
+    .support-button a {
+        text-transform: capitalize;
+        color: #2ecc71;
+    }
 </style>
 
-<!-- Banner Section -->
-<div class="banner-section" style="background: url('https://www.screenbeam.com/wp-content/uploads/2018/10/usa-webcash-faq-banner-image.jpg') no-repeat center center; background-size: cover; padding: 40px 0; color: white;">
-    <div class="container text-center">
-        <h1 class="display-4 fw-bold text-shadow mb-3">Preguntas Frecuentes</h1>
-        <p class="lead text-shadow mb-5">Aquí encontrarás todo lo que necesitas para aclarar tus dudas sobre Mi Gente en línea</p>
-        <a href="#faq" class="btn btn-primary btn-lg">Explorar FAQ's</a>
-    </div>
-</div>
-
-<!-- FAQ Section -->
 <div class="faq_area section_padding_130" id="faq">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12 col-sm-8 col-lg-6">
-                <div class="section_heading text-center wow fadeInUp" data-wow-delay="0.2s">
-                    <div class="line mb-4"></div>
+                <!-- Section Heading -->
+                <div class="section_heading text-center wow fadeInUp">
                     <h3><span>Preguntas </span>Frecuentes de la Comunidad</h3>
                     <p>Aquí encontrarás todo lo que necesitas para aclarar tus dudas sobre Mi Gente en línea</p>
+                    <div class="line"></div>
                 </div>
             </div>
         </div>
+
         <div class="row justify-content-center">
             <!-- FAQ Area -->
             <div class="col-12 col-sm-10 col-lg-8">
-                <div class="accordion" id="faqAccordion">
-                    <!-- FAQ Item 1 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                <div class="accordion faq-accordian" id="faqAccordion">
+                    
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingOne">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                                 1. ¿Cómo inscribo a mis empleados en el sistema?
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseOne" aria-labelledby="headingOne" data-parent="#faqAccordion">
+                            <div class="card-body">
                                 <p>Para inscribir a tus empleados en nuestro sistema, simplemente sigue estos pasos:</p>
                                 <ul>
                                     <li>Accede a tu cuenta en nuestra plataforma.</li>
@@ -112,15 +112,16 @@
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 2 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingTwo">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
                                 2. ¿Qué ventajas ofrece la inscripción de empleados en la nube?
-                            </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseTwo" aria-labelledby="headingTwo" data-parent="#faqAccordion">
+                            <div class="card-body">
                                 <p>Al inscribir a tus empleados en la nube, podrás:</p>
                                 <ul>
                                     <li>Calcular fácilmente los días laborados.</li>
@@ -133,86 +134,128 @@
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 3 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingThree">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
                                 3. ¿Cómo se realiza un contrato de trabajo?
-                            </button>
-                        </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseThree" aria-labelledby="headingThree" data-parent="#faqAccordion">
+                            <div class="card-body">
                                 <p>El contrato de trabajo se realiza de acuerdo con las leyes laborales vigentes. En la República Dominicana, se define como un acuerdo mediante el cual una persona se compromete a prestar un servicio personal a otra a cambio de una remuneración. Puede ser por tiempo indefinido, por cierto tiempo o para una obra o servicio determinado.</p>
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 4 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFour">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingFour">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
                                 4. ¿Cómo calculo los días laborados y las horas extras de mis empleados?
-                            </button>
-                        </h2>
-                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <p>El cálculo de los días laborados y las horas extras se basa en la jornada de trabajo de cada empleado. Esto implica contabilizar las horas que el trabajador dedica a sus tareas y puede ser diario, semanal, mensual o anual. Este cálculo es fundamental para determinar las condiciones de trabajo y las horas extraordinarias.</p>
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseFour" aria-labelledby="headingFour" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>El cálculo de los días laborados y las horas extras se basa en la jornada de trabajo de cada empleado. Esto implica contabilizar las horas que el trabajador dedica a sus tareas y puede ser diario, semanal, mensual o anual.</p>
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 5 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFive">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingFive">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
                                 5. ¿Cómo puedo realizar la nómina regular de mis empleados?
-                            </button>
-                        </h2>
-                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <p>La nómina regular es un documento legal que refleja la cantidad de dinero que un empleado recibe por su trabajo. Incluye el salario bruto y los descuentos obligatorios por ley, así como los descuentos circunstanciales. El salario neto es la cantidad que el empleado recibe después de aplicar estos descuentos.</p>
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseFive" aria-labelledby="headingFive" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>La nómina regular es un documento legal que refleja la cantidad de dinero que un empleado recibe por su trabajo. Incluye el salario bruto y los descuentos obligatorios por ley.</p>
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 6 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingSix">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingSix">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
                                 6. ¿Cómo se calcula la Regalía Pascual (Salario de Navidad)?
-                            </button>
-                        </h2>
-                        <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <p>La Regalía Pascual, o salario de navidad, es la duodécima parte del salario ordinario devengado por el trabajador en el año calendario. Se calcula dividiendo entre doce el total de salarios ordinarios devengados, excluyendo las horas extras y la participación en los beneficios de la empresa. En ningún caso puede ser mayor que cinco salarios mínimos legalmente establecidos.</p>
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseSix" aria-labelledby="headingSix" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>La Regalía Pascual, o salario de navidad, es la duodécima parte del salario ordinario devengado por el trabajador en el año calendario. Se calcula dividiendo entre doce el total de salarios ordinarios devengados.</p>
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 7 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingSeven">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingSeven">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="true" aria-controls="collapseSeven">
                                 7. ¿Cómo genero un recibo de pago para mis empleados?
-                            </button>
-                        </h2>
-                        <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <p>Generar un recibo de pago es fundamental para registrar las transacciones entre empleador y empleado. Este documento sirve como comprobante de pago por los servicios prestados y evita futuros reclamos. Debes incluir detalles como la fecha, el monto y la firma de ambas partes.</p>
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseSeven" aria-labelledby="headingSeven" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>Generar un recibo de pago es fundamental para registrar las transacciones entre empleador y empleado. Este documento sirve como comprobante de pago por los servicios prestados.</p>
                             </div>
                         </div>
                     </div>
-                    <!-- FAQ Item 8 -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingEight">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingEight">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseEight" aria-expanded="true" aria-controls="collapseEight">
                                 8. ¿Cómo se calculan los Derechos Adquiridos de los empleados?
-                            </button>
-                        </h2>
-                        <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                <p>Los derechos adquiridos de los empleados, tales como vacaciones, regalía pascual, etc., se calculan con base en el tiempo trabajado por el empleado en la empresa. Cada año trabajado suma días de vacaciones, y dependiendo de su antigüedad, el monto de la regalía pascual puede ser mayor.</p>
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseEight" aria-labelledby="headingEight" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>Los Derechos Adquiridos son derechos que se generan desde el inicio de la relación laboral y deben ser reconocidos por el empleador. Estos derechos incluyen el salario, las vacaciones y el salario de navidad.</p>
                             </div>
                         </div>
                     </div>
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingNine">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseNine" aria-expanded="true" aria-controls="collapseNine">
+                                9. ¿Qué son las Prestaciones Laborales y cómo se calculan?
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseNine" aria-labelledby="headingNine" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>Las prestaciones laborales son derechos que corresponden a los empleados según la forma en que termine su contrato laboral (desahucio, despido, dimisión o incapacidad/muerte).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 wow fadeInUp">
+                        <div class="card-header" id="headingTen">
+                            <h6 class="mb-0 collapsed" data-toggle="collapse" data-target="#collapseTen" aria-expanded="true" aria-controls="collapseTen">
+                                10. ¿Por qué necesito un Recibo de Descargo al finalizar una relación laboral?
+                                <span class="fa fa-chevron-up"></span>
+                            </h6>
+                        </div>
+                        <div class="collapse" id="collapseTen" aria-labelledby="headingTen" data-parent="#faqAccordion">
+                            <div class="card-body">
+                                <p>Un Recibo de Descargo es esencial al concluir una relación laboral. En este documento, se detallan la fecha de ingreso y salida del empleado, su cargo y los montos a liquidar.</p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </div> 
+
+                <!-- Support Button -->
+                <div class="support-button text-center d-flex align-items-center justify-content-center mt-4 wow fadeInUp">
+                    <i class="fa fa-question-circle"></i>
+                    <p class="mb-0 px-2">¿No encuentras respuestas a tus preguntas?</p>
+                    <a href="mailto:soporte@migenteenlinea.com">Contáctanos</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

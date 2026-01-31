@@ -11,6 +11,10 @@
         {
             "name": "🚀 MiGente Clean Architecture",
             "path": "MiGenteEnLinea.Clean"
+        },
+        {
+            "name": "🌐 FRONT Publicado (Production)",
+            "path": "FRONT_Publicado"
         }
     ],
     "settings": {

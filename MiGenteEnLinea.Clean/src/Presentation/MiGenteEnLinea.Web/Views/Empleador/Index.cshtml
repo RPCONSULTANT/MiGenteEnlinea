@@ -1,0 +1,242 @@
+@model dynamic
+@{
+    Layout = "~/Views/Shared/_LayoutEmpleador.cshtml";
+    ViewData["Title"] = "Dashboard Empleador";
+}
+
+@section head {
+    <link href='https://use.fontawesome.com/releases/v5.7.2/css/all.css' rel='stylesheet'>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Maven+Pro&display=swap');
+
+        body {
+            font-family: 'Maven Pro', sans-serif;
+            background-color: #eee;
+        }
+
+        .add {
+            border-radius: 20px
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            transition: all 1s;
+            cursor: pointer
+        }
+
+        .card:hover {
+            -webkit-box-shadow: 3px 5px 17px -4px #777777;
+            box-shadow: 3px 5px 17px -4px #777777
+        }
+
+        .ratings i {
+            color: green
+        }
+
+        hr {
+            margin: 1rem 0;
+            color: inherit;
+            background-color: currentColor;
+            border: 0;
+            opacity: 0.25;
+        }
+
+        .star {
+            font-size: 20px;
+            color: #ccc;
+            margin-right: 5px;
+        }
+
+        .star.filled {
+            color: yellow;
+        }
+
+        .avatar {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .profile-image {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+        }
+    </style>
+}
+
+<div class="container text-center m-t-5" style="margin-top: 50px;">
+</div>
+
+<h2 id="tituloBuscador">Ultimas Publicaciones</h2>
+<p>Encuentra lo que buscas gracias a nuestra comunidad de profesionales calificados</p>
+<hr />
+
+<div class="row" id="profilesContainer">
+    @* Aquí se cargarán los perfiles desde la API *@
+    
+    <!-- Ejemplo de tarjeta de perfil (template) -->
+    <div class="col-md-3 col-sm-6 profile-card" style="display: none;" id="profileTemplate">
+        <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
+            <div class="img mb-2" style="width: 100%; height: 100px; overflow: hidden; border-radius: 50%;">
+                <img src="" class="card-img-top avatar profile-img" style="width: 100px; height: 100px;">
+            </div>
+            <h5 style="font-weight: bold" class="mb-0 profile-name"></h5>
+            <medium class="profile-title"></medium>
+            <div class="ratings mt-2">
+                <span class="profile-rating"></span>
+                <small class="profile-reviews"></small>
+            </div>
+            <div class="mt-4">
+                <a href="#" class="btn btn-success text-uppercase profile-link">Ver Perfil</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensaje de carga -->
+    <div class="col-12 text-center" id="loadingProfiles">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Cargando...</span>
+        </div>
+        <p>Cargando perfiles...</p>
+    </div>
+
+    <!-- Mensaje sin resultados -->
+    <div class="col-12 text-center" id="noProfiles" style="display: none;">
+        <p>No se encontraron perfiles disponibles.</p>
+    </div>
+</div>
+
+<!-- Modal Perfil Profesional -->
+<div class="modal fade" id="modalPerfil" tabindex="-1" role="dialog" aria-labelledby="modalPerfilLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalPerfilLabel">Perfil Profesional</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <img src="" id="modalProfileImg" style="width: 100px; height: 100px;" class="card-img-top avatar" />
+                    <h5 class="card-title" id="modalNombrePerfil" style="font-weight: bold">Nombre</h5>
+                    <div class="rating horizontal" id="modalRating">
+                    </div>
+                    <div class="form-group">
+                        <p id="modalPresentacion">Presentación de ejemplo</p>
+                    </div>
+                </div>
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#datosGenerales">Datos Generales</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#servicios">Catálogo de Servicios</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="datosGenerales">
+                        <div class="container">
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="titulo" class="form-label">Título de Perfil</label>
+                                        <p id="modalTitulo">Título de ejemplo</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email" class="form-label">Email</label>
+                                        <p id="modalEmail">correo@example.com</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="experiencia" class="form-label">Años de Experiencia</label>
+                                        <p id="modalExperiencia">5 años</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="telefono1" class="form-label">Teléfono 1</label>
+                                        <a id="modalTelefono1Link" href="#">
+                                            <img src="~/images/whatsapp.png" width="24" height="24" id="modalWhatsapp1" style="display: none;" />
+                                        </a>
+                                        <p id="modalTelefono1">(000)-000-0000</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="telefono2" class="form-label">Teléfono 2</label>
+                                        <a id="modalTelefono2Link" href="#">
+                                            <img src="~/images/whatsapp.png" width="24" height="24" id="modalWhatsapp2" style="display: none;" />
+                                        </a>
+                                        <p id="modalTelefono2">(000)-000-0000</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="servicios">
+                        <div class="container">
+                            <div class="form-group">
+                                <label for="servicio" class="form-label">Catálogo de Servicios</label>
+                                <table class="table table-striped" id="modalServiciosTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Detalle del Servicio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modalServiciosBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Función para generar estrellas
+        function getStarRating(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<i class="fas fa-star" style="color: gold;"></i>';
+                } else if (i - 0.5 <= rating) {
+                    stars += '<i class="fas fa-star-half-alt" style="color: gold;"></i>';
+                } else {
+                    stars += '<i class="far fa-star" style="color: gold;"></i>';
+                }
+            }
+            return stars;
+        }
+
+        // Cargar perfiles al iniciar
+        $(document).ready(function() {
+            loadProfiles();
+        });
+
+        function loadProfiles() {
+            // TODO: Conectar con API
+            // $.get('/api/contratistas', function(data) { ... });
+            
+            // Por ahora, mostrar mensaje de ejemplo
+            $('#loadingProfiles').hide();
+            $('#noProfiles').show();
+        }
+
+        function showProfile(userId) {
+            // TODO: Cargar perfil desde API y mostrar modal
+            $('#modalPerfil').modal('show');
+        }
+    </script>
+}

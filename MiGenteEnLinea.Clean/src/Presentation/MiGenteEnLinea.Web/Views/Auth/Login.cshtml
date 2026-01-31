@@ -1,192 +1,125 @@
-@model MiGenteEnLinea.Web.Models.ViewModels.LoginViewModel
 @{
+    Layout = null;
     ViewData["Title"] = "Iniciar Sesión";
-    Layout = null; // Login page sin layout
 }
 
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Mi Gente en Línea</title>
-    
+    <title>Mi Gente en Línea - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
     <link href="~/css/animated.css" rel="stylesheet" />
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css" />
-    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <style>
-        /* Contenedor principal */
+        .logo {
+            text-align: center
+        }
+
+        body {
+            background: linear-gradient(to bottom right, rgba(255, 0, 255, 0.1), rgba(0, 0, 255, 0.91)), url('/images/back1.jpg');
+            background-size: inherit;
+        }
+
         .login-container {
-            min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-        }
-
-        /* Imagen de fondo */
-        .login-bg {
-            background-image: url('/images/MainBanner2.jpg'); /* Imagen detrás */
-            background-size: contain;
-            background-position: left;
-            background-repeat: no-repeat;
-            background-attachment: fixed; /* Fija el fondo */
+            align-items: center;
             height: 100vh;
-            overflow: hidden; /* Evita scroll */
         }
 
-        /* Formulario centrado */
-        .login-card {
-            background-color: rgba(255, 255, 255, 0.85); /* Transparencia */
-            backdrop-filter: blur(10px); /* Efecto blur */
-            z-index: 2;
-            border-radius: 12px;
-            padding: 30px;
-            width: 100%;
+        .login-form {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 20px;
             max-width: 400px;
-        }
-
-        /* Estilo responsivo para móviles */
-        @@media (max-width: 767.98px) {
-            .login-bg {
-                display: none; /* Oculta el fondo en móviles */
-            }
-
-            .login-container {
-                padding: 15px;
-                background-color: #f8f9fa; /* Fondo claro para mayor legibilidad */
-            }
-        }
-
-        /* Evitar scroll en toda la página */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+            .form-group label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
 
         .animated-form {
             display: none;
         }
     </style>
 </head>
-
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Imagen de fondo con superposición -->
-            <div class="col-lg-8 d-none d-lg-block position-relative login-bg">
-                <div class="overlay"></div>
-                <img src="~/images/logoMiGene.png" width="200" />
-            </div>
+    <div class="login-container animate__animated animate__jello">
+        <div id="loginForm" class="login-form animate__animated animate__flipInY">
+            <h4 class="text-center">Bienvenido a</h4>
+            <a href="/">
+                <div style="text-align: center">
+                    <img src="~/images/logoMiGene.png" alt="Mi Gente en Línea" />
+                </div>
+            </a>
 
-            <!-- Formulario de Login -->
-            <div class="col-lg-4 col-12 login-container">
-                <div class="login-card shadow-lg">
-                    <div class="">
-                        <!-- Formulario de Login -->
-                        <div id="loginForm" class="login-form animate__animated animate__flipInY">
-                            <a href="https://www.migenteenlinea.do" target="_parent">
-                                <div style="text-align: center" class="d-md-none">
-                                    <img src="~/images/logoMiGene.png" />
-                                </div>
-                            </a>
+            <hr />
 
-                            <form asp-action="Login" asp-controller="Auth" method="post">
-                                @Html.AntiForgeryToken()
-                                
-                                <div class="form-group">
-                                    <label asp-for="Email">Email</label>
-                                    <input asp-for="Email" class="form-control" placeholder="Correo electrónico" />
-                                    <span asp-validation-for="Email" class="text-danger"></span>
-                                </div>
+            <form asp-action="Login" asp-controller="Auth" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="form-group">
+                    <label for="Email">Email</label>
+                    <input type="email" name="Email" id="Email" class="form-control" placeholder="Correo electrónico" required />
+                </div>
 
-                                <div class="form-group">
-                                    <label asp-for="Password">Contraseña</label>
-                                    <div class="input-group">
-                                        <input asp-for="Password" type="password" id="txtPassword" class="form-control" placeholder="Contraseña" />
-                                        <div class="input-group-append">
-                                            <button id="btnTogglePassword" class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
-                                                <i id="eyeIcon" class="fa fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <span asp-validation-for="Password" class="text-danger"></span>
-                                </div>
-
-                                <div class="row">
-                                    <div class="form-group col col-md-5 col-12">
-                                        <button type="submit" class="btn btn-primary w-100">Acceder</button>
-                                    </div>
-                                    <div class="form-group col col-md-7 col-12">
-                                        <a href="@Url.Action("Register", "Auth")" class="btn btn-outline-secondary w-100">Crear Nueva Cuenta</a>
-                                    </div>
-                                </div>
-
-                                <div class="form-group text-center">
-                                    <a href="#" onclick="toggleDivs('loginForm','forgotPasswordForm')" class="text-primary">¿Olvidaste tu contraseña?</a>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Formulario de Recuperación de Contraseña -->
-                        <div id="forgotPasswordForm" class="login-form animated-form animate__animated animate__flipInX">
-                            <h4 class="text-center">Recuperar contraseña</h4>
-                            <hr />
-
-                            <div>
-                                <div class="form-group">
-                                    <label for="txtForgotEmail">Correo electrónico</label>
-                                    <input type="email" id="txtForgotEmail" class="form-control" placeholder="Correo Electrónico" />
-                                </div>
-
-                                <div class="form-group">
-                                    <button type="button" id="btnSendSolicitud" class="btn btn-primary w-100" onclick="sendForgotPassword()">
-                                        Enviar Solicitud
-                                    </button>
-                                </div>
-
-                                <div class="form-group text-center">
-                                    <a href="#" onclick="toggleDivs('forgotPasswordForm','loginForm')" class="text-primary">Volver al inicio de sesión</a>
-                                </div>
-                            </div>
+                <div class="form-group">
+                    <label for="Password">Contraseña</label>
+                    <div class="input-group">
+                        <input type="password" name="Password" id="Password" class="form-control" placeholder="Contraseña" required />
+                        <div class="input-group-append">
+                            <button id="btnTogglePassword" class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
+                                <i id="eyeIcon" class="fa fa-eye"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Iniciar sesión</button>
+                </div>
+                <div class="form-group">
+                    <a asp-action="Registrar" asp-controller="Auth" class="btn btn-secondary btn-block">Crear Nueva Cuenta</a>
+                </div>
+                <div class="form-group text-center">
+                    <a href="#" onclick="toggleDivs('loginForm','forgotPasswordForm')" class="text-primary">¿Olvidaste tu contraseña?</a>
+                </div>
+            </form>
+        </div>
+
+        <div id="forgotPasswordForm" class="login-form animated-form animate__animated animate__flipInX">
+            <h4 class="text-center">Recuperar contraseña</h4>
+            <hr />
+
+            <form asp-action="RecuperarPassword" asp-controller="Auth" method="post">
+                <div class="form-group">
+                    <label for="ForgotEmail">Correo electrónico</label>
+                    <input type="email" name="Email" id="ForgotEmail" class="form-control" placeholder="Correo electrónico" required />
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Enviar Solicitud</button>
+                </div>
+
+                <div class="form-group text-center">
+                    <a href="#" onclick="toggleDivs('forgotPasswordForm','loginForm')" class="text-primary">Volver al inicio de sesión</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- SweetAlert2 JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
-    
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- Validation Scripts -->
-    <partial name="_ValidationScriptsPartial" />
-
     <script>
-        // Toggle entre formularios
         function toggleDivs(hideDivId, showDivId) {
             var hideDiv = document.getElementById(hideDivId);
             var showDiv = document.getElementById(showDivId);
@@ -197,111 +130,21 @@
             }
         }
 
-        // Toggle visibilidad de contraseña
         function togglePasswordVisibility() {
-            var passwordField = document.getElementById("txtPassword");
+            var passwordField = document.getElementById("Password");
             var eyeIcon = document.getElementById("eyeIcon");
 
             if (passwordField.type === "password") {
                 passwordField.type = "text";
-                eyeIcon.classList.remove("fa-eye");
-                eyeIcon.classList.add("fa-eye-slash");
+                eyeIcon.className = "fa fa-eye-slash";
             } else {
                 passwordField.type = "password";
-                eyeIcon.classList.remove("fa-eye-slash");
-                eyeIcon.classList.add("fa-eye");
+                eyeIcon.className = "fa fa-eye";
             }
-        }
-
-        // Enviar solicitud de recuperación de contraseña
-        function sendForgotPassword() {
-            var email = document.getElementById('txtForgotEmail').value;
-
-            if (!email) {
-                Swal.fire({
-                    title: 'Campo requerido',
-                    text: 'Por favor ingrese su correo electrónico',
-                    icon: 'warning',
-                    confirmButtonText: 'Aceptar'
-                });
-                return;
-            }
-
-            $.ajax({
-                url: '@Url.Action("ForgotPassword", "Auth")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ email: email }),
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            title: 'Restablecer Password',
-                            text: response.message,
-                            icon: 'info',
-                            confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            toggleDivs('forgotPasswordForm', 'loginForm');
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'No existe',
-                            text: response.message,
-                            icon: 'error',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ha ocurrido un error. Por favor intente nuevamente.',
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar'
-                    });
-                }
-            });
-        }
-
-        // Mostrar errores desde TempData
-        @if (TempData["ErrorType"] != null)
-        {
-            var errorType = TempData["ErrorType"]?.ToString() ?? "unknown";
-            var errorMessage = TempData["ErrorMessage"]?.ToString() ?? "Error desconocido";
-            var iconType = "error";
-            var titleText = "Error";
-
-            if (errorType == "inactive")
-            {
-                titleText = "No Activado";
-            }
-            else if (errorType == "notfound")
-            {
-                titleText = "No existe";
-            }
-            else if (errorType == "incorrect")
-            {
-                titleText = "Incorrecto";
-            }
-
-            <text>
-            Swal.fire({
-                title: '@titleText',
-                text: '@errorMessage',
-                icon: '@iconType',
-                confirmButtonText: 'Aceptar'
-            });
-            </text>
-        }
-
-        // Auto-submit si vienen parámetros en URL
-        @if (!string.IsNullOrEmpty(Model.Email) && !string.IsNullOrEmpty(Model.Password))
-        {
-            <text>
-            $(document).ready(function() {
-                $('form').submit();
-            });
-            </text>
         }
     </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
