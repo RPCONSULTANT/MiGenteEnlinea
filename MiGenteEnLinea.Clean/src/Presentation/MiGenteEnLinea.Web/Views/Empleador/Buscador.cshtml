@@ -510,21 +510,233 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
+        const API_BASE_URL = '@ViewData["ApiBaseUrl"]' || 'http://localhost:5015/api';
+        
+        // Obtener token del almacenamiento
+        function getToken() {
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        }
+        
+        // Obtener userId del token
+        function getUserIdFromToken(token) {
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.nameid || payload.sub || payload.userId;
+            } catch (e) {
+                console.error('Error parsing token:', e);
+                return null;
+            }
+        }
+        
         // Función para buscar contratistas
-        document.getElementById('btnBuscar').addEventListener('click', function() {
+        document.getElementById('btnBuscar').addEventListener('click', async function() {
             var busqueda = document.getElementById('txtBusqueda').value;
             var ciudad = document.getElementById('ddlCiudad').value;
+            const token = getToken();
             
-            // TODO: Llamar al API para buscar contratistas
-            console.log('Buscando:', busqueda, 'en', ciudad);
+            if (!busqueda && !ciudad) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Por favor ingrese un criterio de búsqueda',
+                    icon: 'warning'
+                });
+                return;
+            }
             
             Swal.fire({
                 title: 'Buscando...',
                 text: 'Buscando profesionales que coincidan con tu criterio',
-                icon: 'info',
-                timer: 1500,
-                showConfirmButton: false
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
+            
+            try {
+                const params = new URLSearchParams();
+                if (busqueda) params.append('busqueda', busqueda);
+                if (ciudad) params.append('ciudad', ciudad);
+                
+                const response = await fetch(`${API_BASE_URL}/contratistas/buscar?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const contratistas = await response.json();
+                    renderContratistas(contratistas);
+                    Swal.close();
+                } else {
+                    throw new Error('Error en búsqueda');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'No se pudo realizar la búsqueda. Intente nuevamente.',
+                    icon: 'error'
+                });
+            }
+        });
+        
+        // Función para renderizar contratistas en las tarjetas
+        function renderContratistas(contratistas) {
+            const container = document.getElementById('contratistasContainer');
+            if (!container) return;
+            
+            if (!contratistas || contratistas.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center"><p>No se encontraron profesionales con ese criterio.</p></div>';
+                return;
+            }
+            
+            container.innerHTML = contratistas.map(c => `
+                <div class="col-md-3 col-sm-6">
+                    <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center;">
+                        <div class="img mb-2" style="width: 100px; height: 100px; overflow: hidden; border-radius: 50%;">
+                            <img src="${c.fotoUrl || 'https://via.placeholder.com/150'}" style="width: 100px; height: 100px;" class="card-img-top avatar">
+                        </div>
+                        <h5 style="font-weight: bold" class="mb-0">${c.nombre || 'Sin nombre'}</h5>
+                        <medium>${c.titulo || c.servicioPrincipal || 'Profesional'}</medium>
+                        <div class="ratings mt-2" title="Calificación: ${c.promedioCalificacion || 0}">
+                            ${renderEstrellas(c.promedioCalificacion || 0)}
+                            <small>${(c.promedioCalificacion || 0).toFixed(1)}</small>
+                        </div>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-success text-uppercase btn-ver-perfil" 
+                                data-identificacion="${c.identificacion}"
+                                data-nombre="${c.nombre || ''}"
+                                data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Agregar listeners a los nuevos botones
+            document.querySelectorAll('.btn-ver-perfil').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const identificacion = this.getAttribute('data-identificacion');
+                    verPerfilContratista(identificacion);
+                });
+            });
+        }
+        
+        // Renderizar estrellas según calificación
+        function renderEstrellas(calificacion) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                if (calificacion >= i) {
+                    html += '<span class="fa fa-star" style="color:darkorange"></span>';
+                } else if (calificacion >= i - 0.5) {
+                    html += '<span class="fa fa-star-half-o" style="color:darkorange"></span>';
+                } else {
+                    html += '<span class="fa fa-star-o" style="color:darkgray"></span>';
+                }
+            }
+            return html;
+        }
+        
+        // Ver perfil del contratista y registrar consulta
+        async function verPerfilContratista(identificacion) {
+            const token = getToken();
+            const userId = getUserIdFromToken(token);
+            
+            try {
+                // 1. Registrar la consulta del perfil (tracking)
+                if (userId && identificacion) {
+                    fetch(`${API_BASE_URL}/consultas`, {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            empleadorUserId: userId,
+                            contratistaIdentificacion: identificacion
+                        })
+                    }).catch(err => console.log('Error tracking consulta:', err));
+                }
+                
+                // 2. Cargar datos del perfil
+                const response = await fetch(`${API_BASE_URL}/contratistas/${identificacion}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const perfil = await response.json();
+                    mostrarPerfilEnModal(perfil);
+                } else {
+                    console.error('Error cargando perfil');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Mostrar datos en el modal
+        function mostrarPerfilEnModal(perfil) {
+            document.getElementById('imgProfile').src = perfil.fotoUrl || 'https://via.placeholder.com/150';
+            document.getElementById('NombrePerfil').textContent = perfil.nombre || 'Sin nombre';
+            document.getElementById('presentacion').textContent = perfil.presentacion || 'Sin presentación';
+            document.getElementById('titulo').textContent = perfil.titulo || 'Sin título';
+            document.getElementById('email').textContent = perfil.email || 'No disponible';
+            document.getElementById('experiencia').textContent = `${perfil.anosExperiencia || 0} años`;
+            document.getElementById('telefono1').textContent = perfil.telefono1 || 'No disponible';
+            document.getElementById('telefono2').textContent = perfil.telefono2 || 'No disponible';
+            
+            // Actualizar calificación
+            const calificacion = perfil.promedioCalificacion || 0;
+            document.getElementById('calificacionValor').textContent = calificacion.toFixed(1);
+            
+            // Actualizar enlaces de WhatsApp
+            if (perfil.telefono1) {
+                const tel1 = perfil.telefono1.replace(/\D/g, '');
+                document.getElementById('enlaceWhatsapp1').href = `https://wa.me/1${tel1}`;
+                document.getElementById('enlaceTelefono1').href = `tel:${perfil.telefono1}`;
+            }
+            if (perfil.telefono2) {
+                const tel2 = perfil.telefono2.replace(/\D/g, '');
+                document.getElementById('enlaceWhatsapp2').href = `https://wa.me/1${tel2}`;
+                document.getElementById('enlaceTelefono2').href = `tel:${perfil.telefono2}`;
+            }
+            
+            // Cargar servicios si existe el contenedor
+            const serviciosContainer = document.getElementById('serviciosContainer');
+            if (serviciosContainer && perfil.servicios) {
+                serviciosContainer.innerHTML = perfil.servicios.map(s => `
+                    <div class="col-md-6 mb-2">
+                        <div class="card p-2">
+                            <strong>${s.nombre}</strong>
+                            <small>${s.descripcion || ''}</small>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Listener para botones de perfil estáticos (demo)
+        document.querySelectorAll('[data-target="#modalPerfil"]').forEach(btn => {
+            if (!btn.classList.contains('btn-ver-perfil')) {
+                btn.addEventListener('click', function() {
+                    // Para las tarjetas demo, usar identificación de prueba
+                    const nombreElement = this.closest('.card')?.querySelector('h5');
+                    if (nombreElement) {
+                        // Demo: registrar consulta con ID de ejemplo
+                        const token = getToken();
+                        const userId = getUserIdFromToken(token);
+                        if (userId) {
+                            fetch(`${API_BASE_URL}/consultas`, {
+                                method: 'POST',
+                                headers: { 
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    empleadorUserId: userId,
+                                    contratistaIdentificacion: 'DEMO-' + nombreElement.textContent.replace(/\s/g, '')
+                                })
+                            }).catch(err => console.log('Error tracking demo consulta:', err));
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>

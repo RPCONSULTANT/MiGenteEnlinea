@@ -520,6 +520,10 @@
                 
                 // Auto-open edit modal if requested via URL parameter
                 if (shouldAutoEdit()) {
+                    // Clear the edit parameter from URL to prevent re-opening on subsequent loads
+                    const url = new URL(window.location);
+                    url.searchParams.delete('edit');
+                    window.history.replaceState({}, '', url);
                     setTimeout(() => openEditModal(), 300);
                 }
                 

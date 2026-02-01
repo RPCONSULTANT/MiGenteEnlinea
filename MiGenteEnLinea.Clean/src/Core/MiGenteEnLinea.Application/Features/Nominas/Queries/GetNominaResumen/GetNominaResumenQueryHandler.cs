@@ -68,23 +68,26 @@ public class GetNominaResumenQueryHandler : IRequestHandler<GetNominaResumenQuer
         }
 
         var recibos = await recibosQuery
-            .Include(r => r.Detalles)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        // Calcular totales
+        // Calcular totales (sin Include porque Detalles está ignorado en EF config)
         var totalEmpleados = recibos.Select(r => r.EmpleadoId).Distinct().Count();
         var totalSalarioBruto = recibos.Sum(r => r.TotalIngresos);
         var totalDeducciones = recibos.Sum(r => r.TotalDeducciones);
         var totalSalarioNeto = recibos.Sum(r => r.NetoPagar);
 
-        // Calcular desglose de deducciones por tipo
-        var deduccionesPorTipo = recibos
-            .SelectMany(r => r.Detalles)
-            .Where(d => d.EsDeduccion())
-            .GroupBy(d => d.Concepto)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Sum(d => d.ObtenerMontoAbsoluto()));
+        // Obtener pagoIds para cargar detalles por separado
+        var pagoIds = recibos.Select(r => r.PagoId).ToList();
+        
+        // Cargar detalles de deducciones directamente
+        var deduccionesPorTipo = pagoIds.Any()
+            ? await _context.RecibosDetalle
+                .Where(d => pagoIds.Contains(d.PagoId) && d.Monto < 0) // Deducciones tienen monto negativo
+                .GroupBy(d => d.Concepto)
+                .Select(g => new { Concepto = g.Key, Total = g.Sum(d => Math.Abs(d.Monto)) })
+                .ToDictionaryAsync(x => x.Concepto ?? "Otros", x => x.Total, cancellationToken)
+            : new Dictionary<string, decimal>();
 
         // Calcular estadísticas
         var recibosGenerados = recibos.Count(r => r.EstaPagado() || r.EstaPendiente());

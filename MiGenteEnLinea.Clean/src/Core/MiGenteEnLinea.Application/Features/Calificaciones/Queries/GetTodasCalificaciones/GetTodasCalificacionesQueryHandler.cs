@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Calificaciones.DTOs;
@@ -26,11 +27,25 @@ public class GetTodasCalificacionesQueryHandler : IRequestHandler<GetTodasCalifi
     {
         _logger.LogInformation("Obteniendo todas las calificaciones");
 
-        // TODO: Implementar cuando vista VCalificaciones exista o crear join apropiado
-        // Legacy: return db.VCalificaciones.ToList();
+        var calificaciones = await _context.Calificaciones
+            .AsNoTracking()
+            .OrderByDescending(c => c.Id)
+            .Take(100) // Limitar para performance
+            .Select(c => new CalificacionVistaDto
+            {
+                CalificacionId = c.Id,
+                UserId = c.EmpleadorUserId,
+                Identificacion = c.ContratistaIdentificacion,
+                Puntuacion = (c.Puntualidad + c.Cumplimiento + c.Conocimientos + c.Recomendacion) / 4,
+                Comentario = null,
+                FechaCreacion = c.Fecha,
+                NombreCalificador = c.ContratistaNombre,
+                ApellidoCalificador = string.Empty
+            })
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation("Se encontraron {Count} calificaciones", calificaciones.Count);
         
-        _logger.LogWarning("GetTodasCalificaciones no completamente implementado - retornando lista vacía");
-        
-        return new List<CalificacionVistaDto>();
+        return calificaciones;
     }
 }

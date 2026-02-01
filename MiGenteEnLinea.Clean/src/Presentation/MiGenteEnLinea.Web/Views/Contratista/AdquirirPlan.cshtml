@@ -55,9 +55,9 @@
         <div class="col-lg-6 col-md-8">
             <div class="card pricing-card text-center p-4">
                 <div class="card-body">
-                    <h4 class="text-primary">Mi Gente, Soy yo</h4>
+                    <h4 class="text-primary">Plan Ofertantes</h4>
                     <hr>
-                    <h1 class="display-4 text-dark">RD$495.00</h1>
+                    <h1 class="display-4 text-dark">RD$499.00</h1>
                     <span class="text-muted">/Anual</span>
                     <hr>
                     <ul class="list-unstyled mt-4 mb-4 text-start">
@@ -166,11 +166,11 @@
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Plan:</span>
-                                <strong>Mi Gente, Soy yo</strong>
+                                <strong>Plan Ofertantes</strong>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span>TOTAL A PAGAR:</span>
-                                <strong class="text-primary fs-5">RD$495.00</strong>
+                                <strong class="text-primary fs-5">RD$499.00</strong>
                             </div>
                         </div>
                     </div>
@@ -204,8 +204,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const API_BASE_URL = 'http://localhost:5015/api';
-        const PLAN_CONTRATISTA_ID = 1; // Plan único para contratistas
-        const PLAN_CONTRATISTA_PRECIO = 495;
+        const PLAN_CONTRATISTA_ID = 4; // Plan Ofertantes (ID de producción)
+        const PLAN_CONTRATISTA_PRECIO = 499;
 
         function getAuthToken() {
             return localStorage.getItem('accessToken');
@@ -327,7 +327,10 @@
                     confirmButtonText: 'Ir a Mi Perfil',
                     confirmButtonColor: '#0d6efd'
                 }).then((result) => {
-                    window.location.href = '/Contratista/Perfil';
+                    // Actualizar planId en localStorage para que el usuario pueda navegar
+                    localStorage.setItem('planId', PLAN_CONTRATISTA_ID);
+                    localStorage.setItem('vencimientoPlan', new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString());
+                    window.location.href = '/Contratista';
                 });
 
             } catch (error) {

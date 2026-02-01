@@ -124,6 +124,9 @@ public partial class MiGenteDbContext : IdentityDbContext<ApplicationUser>, IApp
     // DDD Refactored entity (replaces DetalleContratacione)
     public virtual DbSet<DetalleContratacion> DetalleContrataciones { get; set; }
 
+    // Tracking de consultas de perfil (nueva entidad - no existe en Legacy)
+    public virtual DbSet<Domain.Entities.Consultas.ConsultaPerfil> ConsultasPerfil { get; set; }
+
     // Legacy scaffolded entity (kept for reference)
     // public virtual DbSet<Infrastructure.Persistence.Entities.Generated.Empleado> EmpleadosLegacy { get; set; }
 

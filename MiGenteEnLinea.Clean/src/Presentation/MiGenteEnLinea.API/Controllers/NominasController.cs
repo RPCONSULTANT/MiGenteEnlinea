@@ -8,6 +8,7 @@ using MiGenteEnLinea.Application.Features.Nominas.Commands.ProcesarNominaLote;
 using MiGenteEnLinea.Application.Features.Nominas.Commands.ProcessContractPayment;
 using MiGenteEnLinea.Application.Features.Nominas.DTOs;
 using MiGenteEnLinea.Application.Features.Nominas.Queries.GetNominaResumen;
+using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorByUserId;
 using System.Security.Claims;
 
 namespace MiGenteEnLinea.API.Controllers;
@@ -216,12 +217,30 @@ public class NominasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<NominaResumenDto>> GetResumen(
-        [FromQuery] int empleadorId,
+        [FromQuery] int empleadorId = 0,
         [FromQuery] string? periodo = null,
         [FromQuery] DateTime? fechaInicio = null,
         [FromQuery] DateTime? fechaFin = null,
         [FromQuery] bool incluirDetalleEmpleados = true)
     {
+        // If empleadorId is not provided, get it from the authenticated user
+        if (empleadorId == 0)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { error = "Usuario no autenticado" });
+            }
+
+            var empleadorQuery = new GetEmpleadorByUserIdQuery(userId);
+            var empleador = await _mediator.Send(empleadorQuery);
+            if (empleador == null)
+            {
+                return NotFound(new { error = "No se encontró el perfil de empleador para este usuario" });
+            }
+            empleadorId = empleador.EmpleadorId;
+        }
+
         _logger.LogInformation(
             "Getting payroll summary - Employer: {EmpleadorId}, Period: {Periodo}",
             empleadorId,

@@ -96,7 +96,7 @@ public class UpdateEmpleadoCommandHandler : IRequestHandler<UpdateEmpleadoComman
 
         if (request.Tss.HasValue)
         {
-            // empleado.Tss = request.Tss.Value;
+            empleado.ActualizarInscripcionTss(request.Tss.Value);
         }
 
         // PASO 8: Actualizar foto (si se proporciona)

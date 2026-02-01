@@ -26,10 +26,35 @@ public class GetCalificacionesQueryHandler : IRequestHandler<GetCalificacionesQu
             request.Identificacion,
             request.UserId);
 
-        // TODO: Implementar lógica real cuando exista vista o join
-        // Por ahora retornamos lista vacía
-        _logger.LogWarning("GetCalificaciones not fully implemented - returning empty list");
+        // Query base: filtrar por identificación del contratista
+        var query = _context.Calificaciones
+            .AsNoTracking()
+            .Where(c => c.ContratistaIdentificacion == request.Identificacion);
+
+        // Si se provee UserId, filtrar también por empleador
+        if (!string.IsNullOrEmpty(request.UserId))
+        {
+            query = query.Where(c => c.EmpleadorUserId == request.UserId);
+        }
+
+        // Obtener calificaciones con join a Perfiles para nombre del calificador
+        var calificaciones = await query
+            .OrderByDescending(c => c.Id)
+            .Select(c => new CalificacionVistaDto
+            {
+                CalificacionId = c.Id,
+                UserId = c.EmpleadorUserId,
+                Identificacion = c.ContratistaIdentificacion,
+                Puntuacion = (c.Puntualidad + c.Cumplimiento + c.Conocimientos + c.Recomendacion) / 4,
+                Comentario = null, // Legacy no tiene campo de comentario
+                FechaCreacion = c.Fecha,
+                NombreCalificador = c.ContratistaNombre, // Por ahora usamos el nombre del contratista
+                ApellidoCalificador = string.Empty
+            })
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation("Se encontraron {Count} calificaciones", calificaciones.Count);
         
-        return new List<CalificacionVistaDto>();
+        return calificaciones;
     }
 }

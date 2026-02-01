@@ -1,4 +1,5 @@
 using MiGenteEnLinea.Infrastructure;
+using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Application;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -260,19 +261,39 @@ app.MapGet("/health", () => Results.Ok(new
 }));
 
 // ========================================
-// INICIALIZAR BASE DE DATOS (Opcional)
+// INICIALIZAR BASE DE DATOS Y SEEDING
 // ========================================
-// TODO: Descomentar si necesitas aplicar migrations automáticamente en desarrollo
-/*
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     
-    // Aplicar migrations pendientes
-    await dbContext.Database.MigrateAsync();
+    try
+    {
+        var dbContext = services.GetRequiredService<MiGenteDbContext>();
+        
+        // Verificar conexión a base de datos
+        if (await dbContext.Database.CanConnectAsync())
+        {
+            logger.LogInformation("✅ Conexión a base de datos exitosa");
+            
+            // Ejecutar seeding si las tablas están vacías
+            var seeder = new MiGenteEnLinea.Infrastructure.Persistence.Seeding.DatabaseSeeder(
+                dbContext, 
+                services.GetRequiredService<ILogger<MiGenteEnLinea.Infrastructure.Persistence.Seeding.DatabaseSeeder>>());
+            
+            await seeder.SeedAsync();
+        }
+        else
+        {
+            logger.LogWarning("⚠️ No se pudo conectar a la base de datos");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ Error durante la inicialización de la base de datos");
+    }
 }
-*/
 
 // ========================================
 // RUN APP

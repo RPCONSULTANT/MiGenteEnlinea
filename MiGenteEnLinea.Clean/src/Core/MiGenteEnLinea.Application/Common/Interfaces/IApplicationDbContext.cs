@@ -32,6 +32,7 @@ public interface IApplicationDbContext
     DbSet<Domain.Entities.Nominas.DeduccionTss> DeduccionesTss { get; }
     DbSet<Domain.Entities.Calificaciones.Calificacion> Calificaciones { get; }
     DbSet<Domain.Entities.Contrataciones.DetalleContratacion> DetalleContrataciones { get; }
+    DbSet<Domain.Entities.Consultas.ConsultaPerfil> ConsultasPerfil { get; }
     
     // Entidades de recibos de contrataciones (DDD refactored from Legacy)
     DbSet<Domain.Entities.Pagos.EmpleadorRecibosHeaderContratacione> EmpleadorRecibosHeaderContrataciones { get; }

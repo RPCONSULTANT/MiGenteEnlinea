@@ -397,6 +397,15 @@ public sealed class Empleado : AggregateRoot
     }
 
     /// <summary>
+    /// Actualiza la inscripción del empleado en el TSS.
+    /// </summary>
+    /// <param name="inscrito">True para inscribir, false para dar de baja del TSS</param>
+    public void ActualizarInscripcionTss(bool inscrito)
+    {
+        InscritoTss = inscrito;
+    }
+
+    /// <summary>
     /// Inscribe el empleado en el TSS.
     /// </summary>
     public void InscribirEnTss()

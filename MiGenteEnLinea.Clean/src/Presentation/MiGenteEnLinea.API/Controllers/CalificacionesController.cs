@@ -8,6 +8,7 @@ using MiGenteEnLinea.Application.Features.Calificaciones.DTOs;
 using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetCalificacionById;
 using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetCalificaciones;
 using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetCalificacionesByContratista;
+using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetCalificacionesByEmpleador;
 using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetPromedioCalificacion;
 using MiGenteEnLinea.Application.Features.Calificaciones.Queries.GetTodasCalificaciones;
 
@@ -166,6 +167,22 @@ public class CalificacionesController : ControllerBase
         }
 
         return Ok(promedio);
+    }
+
+    /// <summary>
+    /// Obtener calificaciones hechas por un empleador
+    /// </summary>
+    /// <param name="userId">ID del empleador que realizó las calificaciones</param>
+    /// <returns>Lista de calificaciones realizadas por el empleador</returns>
+    /// <response code="200">Lista de calificaciones (puede estar vacía)</response>
+    [HttpGet("por-empleador/{userId}")]
+    [Authorize]
+    [ProducesResponseType(typeof(List<CalificacionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetByEmpleador(string userId)
+    {
+        var query = new GetCalificacionesByEmpleadorQuery { UserId = userId };
+        var calificaciones = await _mediator.Send(query);
+        return Ok(calificaciones);
     }
 
     // ============================================

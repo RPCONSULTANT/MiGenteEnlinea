@@ -10,12 +10,12 @@
             <p style="color:white">Para acceder y disfrutar de los beneficios que te ofrece Mi Gente en Línea, debes adquirir uno de nuestros planes</p>
         </div>
         <div class="row text-center" id="planesContainer">
-            <!-- Plan 1 - Eres Mi Gente -->
+            <!-- Plan 1 - Mi Gente, Soy Yo -->
             <div class="col-lg-4 col-sm-6 col-xs-12 mb-4">
                 <div class="pricing_design">
                     <div class="single-pricing">
                         <div class="price-head">
-                            <h4>Eres Mi Gente</h4>
+                            <h4>Mi Gente, Soy Yo</h4>
                             <h2>RD$495.00</h2>
                             <span>/Anual</span>
                         </div>
@@ -27,19 +27,19 @@
                             <li style="color: #ccc;"><s>Usuarios de Consulta</s></li>
                             <li style="color: #ccc;"><s>Nómina TSS</s></li>
                         </ul>
-                        <button class="price_btn" onclick="seleccionarPlan(1, 'Eres Mi Gente', 495)">
+                        <button class="price_btn" onclick="seleccionarPlan(1, 'Mi Gente, Soy Yo', 495)">
                             <i class="fa fa-shopping-cart me-2"></i>Adquirir
                         </button>
                     </div>
                 </div>
             </div>
-            <!-- Plan 2 - Somos Mi Gente -->
+            <!-- Plan 2 - Mi Gente en Familia -->
             <div class="col-lg-4 col-sm-6 col-xs-12 mb-4">
                 <div class="pricing_design">
                     <div class="single-pricing" style="transform: scale(1.05);">
                         <span class="badge bg-warning text-dark mb-3" style="position: relative; top: -15px;">MÁS POPULAR</span>
                         <div class="price-head">
-                            <h4>Somos Mi Gente</h4>
+                            <h4>Mi Gente en Familia</h4>
                             <h2>RD$1,695.00</h2>
                             <span>/Anual</span>
                         </div>
@@ -51,7 +51,7 @@
                             <li><b>12</b> Meses de Data Histórica</li>
                             <li style="color: #ccc;"><s>Nómina TSS</s></li>
                         </ul>
-                        <button class="price_btn" onclick="seleccionarPlan(2, 'Somos Mi Gente', 1695)">
+                        <button class="price_btn" onclick="seleccionarPlan(2, 'Mi Gente en Familia', 1695)">
                             <i class="fa fa-shopping-cart me-2"></i>Adquirir
                         </button>
                     </div>
@@ -94,8 +94,8 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Características</th>
-                            <th style="background-color: #00176B; color: white;">Eres Mi Gente</th>
-                            <th style="background-color: #00176B; color: white;">Somos Mi Gente</th>
+                            <th style="background-color: #00176B; color: white;">Mi Gente, Soy Yo</th>
+                            <th style="background-color: #00176B; color: white;">Mi Gente en Familia</th>
                             <th style="background-color: #00176B; color: white;">Mi Gente Somos Todos</th>
                         </tr>
                     </thead>
@@ -483,7 +483,10 @@
                     confirmButtonText: 'Continuar',
                     confirmButtonColor: '#00176B'
                 }).then((result) => {
-                    window.location.href = '/Empleador/Dashboard';
+                    // Actualizar planId en localStorage para que el usuario pueda navegar
+                    localStorage.setItem('planId', planSeleccionado.id);
+                    localStorage.setItem('vencimientoPlan', new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString());
+                    window.location.href = '/Empleador';
                 });
 
             } catch (error) {

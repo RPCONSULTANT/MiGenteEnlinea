@@ -138,16 +138,20 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 10: Configurar TSS y días de pago
-        // Nota: Estos campos se actualizan directamente porque no tienen métodos domain específicos
-        // TODO: Considerar agregar método domain si la lógica se complica
+        // PASO 10: Configurar TSS
+        if (request.Tss)
+        {
+            empleado.ActualizarInscripcionTss(true);
+        }
+
+        // PASO 11: Configurar días de pago si se proporciona
         if (request.DiasPago.HasValue)
         {
             // Acceso directo a propiedad por ahora
             // empleado.DiasPago = request.DiasPago.Value;
         }
 
-        // PASO 11: Asignar foto si se proporciona
+        // PASO 12: Asignar foto si se proporciona
         if (!string.IsNullOrEmpty(request.Foto))
         {
             // empleado.Foto = request.Foto;

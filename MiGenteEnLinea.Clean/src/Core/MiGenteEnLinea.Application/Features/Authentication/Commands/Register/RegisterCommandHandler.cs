@@ -4,6 +4,7 @@ using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Authentication.DTOs;
 using MiGenteEnLinea.Domain.Entities.Authentication;
 using MiGenteEnLinea.Domain.Entities.Contratistas;
+using MiGenteEnLinea.Domain.Entities.Empleadores;
 using MiGenteEnLinea.Domain.Entities.Seguridad;
 using MiGenteEnLinea.Domain.Interfaces.Repositories;
 
@@ -163,7 +164,25 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
 
             await _unitOfWork.Contratistas.AddAsync(contratista, cancellationToken);
 
-            // 3.4 Guardar cambios Legacy
+            // 3.4 Crear Empleador (si es tipo=1) - Para que pueda gestionar empleados y nómina
+            // IMPORTANTE: Sin este registro, el usuario no puede usar funcionalidades de empleador
+            if (request.Tipo == 1)
+            {
+                var empleador = Empleador.Create(
+                    userId: userId,
+                    habilidades: null, // Se completa después en el perfil
+                    experiencia: null,
+                    descripcion: $"Empleador: {request.Nombre} {request.Apellido}"
+                );
+
+                await _unitOfWork.Empleadores.AddAsync(empleador, cancellationToken);
+                
+                _logger.LogInformation(
+                    "Registro Empleador creado para usuario {UserId}",
+                    userId);
+            }
+
+            // 3.5 Guardar cambios Legacy
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
