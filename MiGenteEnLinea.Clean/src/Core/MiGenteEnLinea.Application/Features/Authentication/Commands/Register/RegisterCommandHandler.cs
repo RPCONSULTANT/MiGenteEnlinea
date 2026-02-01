@@ -62,7 +62,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         // ================================================================================
         // Identity crea el usuario en AspNetUsers con password hasheado automáticamente
         var nombreCompleto = $"{request.Nombre} {request.Apellido}";
-        var tipo = request.Tipo == 1 ? "Empleador" : "Contratista";
+        // Tipo: "1" = Empleador, "2" = Contratista (formato legacy)
+        var tipo = request.Tipo.ToString();
 
         string userId;
         try
@@ -127,16 +128,26 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             // 3.2 Crear Credencial (tabla Credenciales - usada en lógica de negocio)
             var email = Domain.ValueObjects.Email.Create(request.Email);
             
-            // FLUJO LEGACY: Si no hay password, guardar hash vacío (se establecerá en activación)
-            var passwordHash = string.IsNullOrEmpty(request.Password) 
-                ? string.Empty  // Se establecerá cuando el usuario active la cuenta
-                : _passwordHasher.HashPassword(request.Password);
-            
-            var credencial = Credencial.Create(
-                userId: userId,
-                email: email!,
-                passwordHash: passwordHash
-            );
+            // FLUJO LEGACY: Si no hay password, usar CreateWithoutPassword
+            Credencial credencial;
+            if (string.IsNullOrEmpty(request.Password))
+            {
+                // Flujo Legacy: Sin password, se establecerá en activación
+                credencial = Credencial.CreateWithoutPassword(
+                    userId: userId,
+                    email: email!
+                );
+            }
+            else
+            {
+                // Flujo normal: Con password
+                var passwordHash = _passwordHasher.HashPassword(request.Password);
+                credencial = Credencial.Create(
+                    userId: userId,
+                    email: email!,
+                    passwordHash: passwordHash
+                );
+            }
 
             await _unitOfWork.Credenciales.AddAsync(credencial, cancellationToken);
 

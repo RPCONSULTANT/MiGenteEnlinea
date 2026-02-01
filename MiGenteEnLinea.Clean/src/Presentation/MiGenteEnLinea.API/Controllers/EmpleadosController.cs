@@ -16,6 +16,7 @@ using MiGenteEnLinea.Application.Features.Empleados.Commands.DeleteRemuneracion;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateRemuneraciones;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.UpdateRemuneraciones;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.DarDeBajaEmpleado;
+using MiGenteEnLinea.Application.Features.Empleados.Commands.ReactivarEmpleado;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CancelarTrabajo;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.EliminarRecibo;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.EliminarEmpleadoTemporal;
@@ -214,6 +215,32 @@ public class EmpleadosController : ControllerBase
         var result = await _mediator.Send(command);
 
         _logger.LogInformation("Empleado dado de baja exitosamente: {EmpleadoId}", empleadoId);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Reactivar un empleado previamente dado de baja.
+    /// </summary>
+    /// <param name="empleadoId">ID del empleado a reactivar</param>
+    /// <returns>Resultado de la operación</returns>
+    /// <response code="200">Empleado reactivado exitosamente</response>
+    /// <response code="400">Datos inválidos o empleado ya activo</response>
+    /// <response code="401">No autenticado</response>
+    /// <response code="404">Empleado no encontrado</response>
+    [HttpPut("{empleadoId}/reactivar")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> ReactivarEmpleado(int empleadoId)
+    {
+        _logger.LogInformation("Reactivando empleado: {EmpleadoId}", empleadoId);
+
+        var command = new ReactivarEmpleadoCommand(empleadoId, GetUserId());
+        var result = await _mediator.Send(command);
+
+        _logger.LogInformation("Empleado reactivado exitosamente: {EmpleadoId}", empleadoId);
 
         return Ok(result);
     }

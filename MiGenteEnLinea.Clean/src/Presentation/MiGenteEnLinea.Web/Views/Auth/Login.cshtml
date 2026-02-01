@@ -134,15 +134,24 @@
                     // Show success message
                     showAlert('loginAlert', '¡Bienvenido! Redirigiendo...', 'success');
                     
-                    // Redirect based on user type (tipo: 1 = Empleador, 2 = Contratista)
+                    // Debug: Log user data
+                    console.log('Login response user:', data.user);
+                    console.log('User tipo:', data.user.tipo, 'Type:', typeof data.user.tipo);
+                    
+                    // Redirect based on user type 
+                    // Supports both formats: "1"/"2" (legacy) and "Empleador"/"Contratista" (text)
                     setTimeout(() => {
+                        const tipo = String(data.user.tipo).toLowerCase();
+                        console.log('Normalized tipo:', tipo);
+                        
                         if (returnUrl && returnUrl !== '') {
                             window.location.href = returnUrl;
-                        } else if (data.user.tipo === 1 || data.user.tipo === '1') {
+                        } else if (tipo === '1' || tipo === 'empleador') {
                             window.location.href = '/Empleador';
-                        } else if (data.user.tipo === 2 || data.user.tipo === '2') {
+                        } else if (tipo === '2' || tipo === 'contratista') {
                             window.location.href = '/Contratista';
                         } else {
+                            console.warn('Unknown user tipo:', data.user.tipo);
                             window.location.href = '/';
                         }
                     }, 500);

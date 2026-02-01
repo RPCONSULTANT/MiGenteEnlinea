@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MiGenteEnLinea.Application.Features.Suscripciones.DTOs;
 
 /// <summary>
@@ -12,6 +14,7 @@ public record PlanDto
     /// <summary>
     /// ID único del plan.
     /// </summary>
+    [JsonPropertyName("id")]
     public int PlanId { get; init; }
 
     /// <summary>
@@ -23,6 +26,11 @@ public record PlanDto
     /// Precio mensual en DOP (Pesos Dominicanos).
     /// </summary>
     public decimal Precio { get; init; }
+
+    /// <summary>
+    /// Duración del plan en meses.
+    /// </summary>
+    public int DuracionMeses { get; init; } = 12;
 
     /// <summary>
     /// Indica si el plan está disponible para compra.
@@ -51,4 +59,9 @@ public record PlanDto
     /// Solo aplica para planes de empleadores (null para contratistas).
     /// </summary>
     public bool? IncluyeNomina { get; init; }
+
+    /// <summary>
+    /// Características del plan (para mostrar en UI).
+    /// </summary>
+    public List<string>? Caracteristicas { get; init; }
 }

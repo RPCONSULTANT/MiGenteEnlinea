@@ -186,17 +186,29 @@ public class EmailService : IEmailService
                 // ENVIAR VÍA SMTP
                 using var smtpClient = new SmtpClient();
 
-                // Configurar timeout
-                smtpClient.Timeout = _settings.Timeout;
+                // Configurar timeout más largo para conexiones lentas
+                smtpClient.Timeout = 120000; // 2 minutos
 
-                // Conectar
+                // Ignorar validación de certificado SSL (como Legacy)
+                smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                // Usar Auto para que MailKit detecte el tipo correcto de SSL
+                _logger.LogDebug(
+                    "Conectando a SMTP: {Server}:{Port}",
+                    _settings.SmtpServer,
+                    _settings.SmtpPort);
+                
                 await smtpClient.ConnectAsync(
                     _settings.SmtpServer,
                     _settings.SmtpPort,
-                    _settings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
+                    SecureSocketOptions.Auto);
+
+                _logger.LogDebug("Autenticando con usuario: {Username}", _settings.Username);
 
                 // Autenticar
                 await smtpClient.AuthenticateAsync(_settings.Username, _settings.Password);
+
+                _logger.LogDebug("Enviando mensaje...");
 
                 // Enviar
                 await smtpClient.SendAsync(message);

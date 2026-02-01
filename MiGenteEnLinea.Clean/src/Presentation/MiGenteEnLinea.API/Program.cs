@@ -60,11 +60,11 @@ builder.Services.AddApplication();
 // HttpContext para CurrentUserService
 builder.Services.AddHttpContextAccessor();
 
-// Controllers con configuración de JSON
+// Controllers con configuración de JSON (camelCase para compatibilidad con JavaScript/REST estándar)
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null; // PascalCase
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase; // camelCase para REST API
         options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });

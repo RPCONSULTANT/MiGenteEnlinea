@@ -1,0 +1,3 @@
+# Ignorar archivos Razor para que Prettier no los rompa
+*.cshtml
+Views/**/*.cshtml

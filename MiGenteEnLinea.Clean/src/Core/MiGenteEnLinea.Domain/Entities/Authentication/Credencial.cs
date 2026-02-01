@@ -80,7 +80,7 @@ public sealed class Credencial : AggregateRoot
     {
         UserId = userId ?? throw new ArgumentNullException(nameof(userId));
         Email = email ?? throw new ArgumentNullException(nameof(email));
-        PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
+        PasswordHash = passwordHash ?? string.Empty; // Permitir vacío para flujo Legacy
         Activo = activo;
         FechaActivacion = activo ? DateTime.UtcNow : null;
     }
@@ -106,6 +106,27 @@ public sealed class Credencial : AggregateRoot
         var credencial = new Credencial(userId, email, passwordHash, activo: false);
 
         // Nota: NO lanzamos evento aquí porque la credencial aún no está activada
+        return credencial;
+    }
+
+    /// <summary>
+    /// Factory Method: Crea una nueva credencial sin password (Flujo Legacy)
+    /// El usuario establecerá su contraseña durante la activación de la cuenta.
+    /// </summary>
+    /// <param name="userId">GUID del usuario</param>
+    /// <param name="email">Email válido</param>
+    /// <returns>Nueva instancia de Credencial sin contraseña</returns>
+    public static Credencial CreateWithoutPassword(string userId, Email email)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("UserId no puede estar vacío", nameof(userId));
+
+        if (email == null)
+            throw new ArgumentNullException(nameof(email));
+
+        // Crear con passwordHash vacío - se establecerá en la activación
+        var credencial = new Credencial(userId, email, string.Empty, activo: false);
+
         return credencial;
     }
 
