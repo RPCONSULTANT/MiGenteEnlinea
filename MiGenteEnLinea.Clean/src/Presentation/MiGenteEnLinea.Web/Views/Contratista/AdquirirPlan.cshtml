@@ -203,6 +203,14 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const API_BASE_URL = 'http://localhost:5015/api';
+        const PLAN_CONTRATISTA_ID = 1; // Plan único para contratistas
+        const PLAN_CONTRATISTA_PRECIO = 495;
+
+        function getAuthToken() {
+            return localStorage.getItem('accessToken');
+        }
+
         $(document).ready(function() {
             // Formatear número de tarjeta
             $('#txtNumeroTarjeta').on('input', function() {
@@ -220,34 +228,117 @@
                 $(this).val(value);
             });
 
-            // Procesar pago
-            $('#btnProcesarPago').on('click', function() {
-                if (!$('#formCheckout')[0].checkValidity()) {
-                    $('#formCheckout')[0].reportValidity();
-                    return;
-                }
-
-                if (!$('#chkTerminos').is(':checked')) {
-                    Swal.fire('Error', 'Debe aceptar los términos y condiciones', 'warning');
-                    return;
-                }
-
-                $('#loadingOverlay').show();
-                $('#checkoutModal').modal('hide');
-
-                // TODO: Llamar API de Cardnet
-                setTimeout(function() {
-                    $('#loadingOverlay').hide();
-                    Swal.fire({
-                        title: '¡Pago Exitoso!',
-                        text: 'Tu suscripción ha sido activada. Ya puedes publicar tu perfil profesional.',
-                        icon: 'success',
-                        confirmButtonText: 'Ir a Mi Perfil'
-                    }).then((result) => {
-                        window.location.href = '/Contratista/Perfil';
-                    });
-                }, 3000);
+            // Solo números en CVV
+            $('#txtCVV').on('input', function() {
+                $(this).val($(this).val().replace(/\D/g, ''));
             });
+
+            // Procesar pago
+            $('#btnProcesarPago').on('click', procesarPago);
         });
+
+        async function procesarPago() {
+            if (!$('#formCheckout')[0].checkValidity()) {
+                $('#formCheckout')[0].reportValidity();
+                return;
+            }
+
+            if (!$('#chkTerminos').is(':checked')) {
+                Swal.fire('Error', 'Debe aceptar los términos y condiciones', 'warning');
+                return;
+            }
+
+            const token = getAuthToken();
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            const nombre = $('#txtNombreTitular').val().trim();
+            const numero = $('#txtNumeroTarjeta').val().replace(/\s/g, '');
+            const vencimiento = $('#txtVencimiento').val();
+            const cvv = $('#txtCVV').val();
+
+            // Validaciones
+            if (numero.length < 15 || numero.length > 16) {
+                Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
+                return;
+            }
+
+            if (cvv.length < 3) {
+                Swal.fire('Error', 'El CVV debe tener al menos 3 dígitos.', 'error');
+                return;
+            }
+
+            if (!/^\d{2}\/\d{2}$/.test(vencimiento)) {
+                Swal.fire('Error', 'El formato de vencimiento debe ser MM/AA.', 'error');
+                return;
+            }
+
+            $('#loadingOverlay').show();
+            $('#checkoutModal').modal('hide');
+
+            try {
+                const userId = localStorage.getItem('userId');
+                
+                // Formatear fecha de expiración a MMYY
+                const expParts = vencimiento.split('/');
+                const expirationDate = expParts[0] + expParts[1];
+
+                // Preparar datos del pago usando ProcesarVentaCommand
+                const pagoData = {
+                    userId: userId,
+                    planId: PLAN_CONTRATISTA_ID, // Plan de contratista
+                    cardNumber: numero,
+                    cvv: cvv,
+                    expirationDate: expirationDate,
+                    referenceNumber: 'REF-C-' + Date.now(),
+                    invoiceNumber: 'INV-C-' + Date.now()
+                };
+
+                // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
+                const response = await fetch(`${API_BASE_URL}/pagos/procesar`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pagoData)
+                });
+
+                $('#loadingOverlay').hide();
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.tipo === 'pago_rechazado') {
+                        throw new Error(errorData.message || 'El pago fue rechazado por la entidad bancaria');
+                    }
+                    throw new Error(errorData.message || 'Error al procesar el pago');
+                }
+
+                const result = await response.json();
+
+                Swal.fire({
+                    title: '¡Pago Exitoso!',
+                    html: `<p>Tu suscripción ha sido activada. Ya puedes publicar tu perfil profesional.</p>
+                           <p class="text-muted small">Referencia: ${result.ventaId || 'N/A'}</p>`,
+                    icon: 'success',
+                    confirmButtonText: 'Ir a Mi Perfil',
+                    confirmButtonColor: '#0d6efd'
+                }).then((result) => {
+                    window.location.href = '/Contratista/Perfil';
+                });
+
+            } catch (error) {
+                $('#loadingOverlay').hide();
+                console.error('Error procesando pago:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo procesar el pago. Por favor intente nuevamente.',
+                    icon: 'error'
+                });
+            }
+        }
     </script>
 }

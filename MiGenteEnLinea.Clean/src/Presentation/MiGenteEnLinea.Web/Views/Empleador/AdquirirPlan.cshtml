@@ -422,7 +422,7 @@
             // Mostrar procesando
             Swal.fire({
                 title: 'Procesando pago...',
-                html: '<div class="spinner-border" style="color: #00176B;" role="status"></div><br><br>Por favor no cierre esta ventana.<br><small>Conectando con Cardnet...</small>',
+                html: '<div class="spinner-border" style="color: #00176B;" role="status"></div><br><br>Por favor no cierre esta ventana.<br><small>Conectando con pasarela de pago...</small>',
                 allowOutsideClick: false,
                 showConfirmButton: false
             });
@@ -435,48 +435,50 @@
             }
 
             try {
-                // Preparar datos del pago
                 const userId = localStorage.getItem('userId');
-                const pagoData = {
-                    planId: planSeleccionado.id,
-                    nombreTarjeta: nombre,
-                    numeroTarjeta: numero,
-                    mesExpiracion: parseInt(vencimiento.split('/')[0]),
-                    anioExpiracion: parseInt('20' + vencimiento.split('/')[1]),
-                    cvv: cvv,
-                    monto: planSeleccionado.precio
-                };
+                
+                // Formatear fecha de expiración a MMYY (ej: "12/25" -> "1225")
+                const expParts = vencimiento.split('/');
+                const expirationDate = expParts[0] + expParts[1];
 
-                // Por ahora, crear la suscripción directamente
-                // TODO: Integrar con Cardnet para procesar el pago real
-                const suscripcionData = {
+                // Preparar datos del pago usando ProcesarVentaCommand
+                const pagoData = {
                     userId: userId,
                     planId: planSeleccionado.id,
-                    tipoSuscripcion: 'Empleador',
-                    mesesDuracion: 12
+                    cardNumber: numero,
+                    cvv: cvv,
+                    expirationDate: expirationDate, // Formato MMYY
+                    referenceNumber: 'REF-' + Date.now(),
+                    invoiceNumber: 'INV-' + Date.now()
                 };
 
-                const response = await fetch(`${API_BASE_URL}/suscripciones`, {
+                // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
+                const response = await fetch(`${API_BASE_URL}/pagos/procesar`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(suscripcionData)
+                    body: JSON.stringify(pagoData)
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || 'Error al crear la suscripción');
+                    // Verificar si es pago rechazado
+                    if (errorData.tipo === 'pago_rechazado') {
+                        throw new Error(errorData.message || 'El pago fue rechazado por la entidad bancaria');
+                    }
+                    throw new Error(errorData.message || 'Error al procesar el pago');
                 }
 
                 const result = await response.json();
 
                 $('#modalCheckout').modal('hide');
                 Swal.fire({
-                    title: '¡Suscripción Activada!',
-                    html: `<p>Tu suscripción al plan <strong>${planSeleccionado.nombre}</strong> ha sido activada correctamente.</p>
-                           <p class="text-muted small">Tu plan estará activo por 12 meses.</p>`,
+                    title: '¡Pago Procesado!',
+                    html: `<p>Tu pago para el plan <strong>${planSeleccionado.nombre}</strong> ha sido procesado correctamente.</p>
+                           <p class="text-muted small">Tu plan estará activo por 12 meses.</p>
+                           <p class="text-muted small">Referencia: ${result.ventaId || 'N/A'}</p>`,
                     icon: 'success',
                     confirmButtonText: 'Continuar',
                     confirmButtonColor: '#00176B'
@@ -485,10 +487,10 @@
                 });
 
             } catch (error) {
-                console.error('Error procesando suscripción:', error);
+                console.error('Error procesando pago:', error);
                 Swal.fire({
                     title: 'Error',
-                    text: error.message || 'No se pudo procesar la suscripción. Por favor intente nuevamente.',
+                    text: error.message || 'No se pudo procesar el pago. Por favor intente nuevamente.',
                     icon: 'error',
                     confirmButtonColor: '#00176B'
                 });

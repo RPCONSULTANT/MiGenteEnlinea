@@ -270,9 +270,24 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const API_BASE_URL = 'http://localhost:5015/api';
+        let suscripcionActual = null;
+
+        function getAuthToken() {
+            return localStorage.getItem('accessToken');
+        }
+
+        // Mapeo de planes a nombres y características
+        const planesInfo = {
+            1: { nombre: 'Eres Mi Gente', precio: 495, empleados: 1, consulta: 0, nomina: false },
+            2: { nombre: 'Somos Mi Gente', precio: 1695, empleados: 5, consulta: 1, nomina: false },
+            3: { nombre: 'Mi Gente Somos Todos', precio: 3750, empleados: 15, consulta: 2, nomina: true }
+        };
+
         $(document).ready(function() {
             // Cargar datos de suscripción desde API
-            // TODO: Implementar carga de datos
+            cargarSuscripcion();
+            cargarHistorialPagos();
             
             // Mostrar modal de cancelación
             $('#btnCancelarSuscripcion').on('click', function() {
@@ -287,36 +302,285 @@
                     $('#divOtroMotivo').hide();
                 }
             });
+        });
+
+        async function cargarSuscripcion() {
+            const token = getAuthToken();
+            const userId = localStorage.getItem('userId');
             
-            // Confirmar cancelación
-            $('#btnConfirmarCancelacion').on('click', function() {
-                var motivo = $('#motivoCancelacion').val();
-                if (!motivo) {
-                    Swal.fire('Error', 'Por favor seleccione un motivo de cancelación.', 'error');
+            if (!token || !userId) {
+                console.log('No hay sesión activa');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/suscripciones/activa/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 404) {
+                    // No tiene suscripción
+                    mostrarSinSuscripcion();
                     return;
                 }
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar suscripción');
+                }
+
+                const suscripcion = await response.json();
+                suscripcionActual = suscripcion;
+                actualizarUISuscripcion(suscripcion);
+
+            } catch (error) {
+                console.error('Error cargando suscripción:', error);
+                mostrarErrorSuscripcion();
+            }
+        }
+
+        function actualizarUISuscripcion(suscripcion) {
+            const plan = planesInfo[suscripcion.planId] || { nombre: `Plan ${suscripcion.planId}`, precio: 0 };
+            
+            // Actualizar nombre y precio del plan
+            $('#nombrePlan').text(plan.nombre);
+            $('#precioPlan').text('RD$' + plan.precio.toLocaleString('es-DO'));
+            
+            // Actualizar descripción según el plan
+            const descripciones = {
+                1: 'Plan básico para comenzar tu gestión de nómina',
+                2: 'Ideal para pequeñas empresas con varios empleados',
+                3: 'Solución completa con nómina TSS incluida'
+            };
+            $('#descripcionPlan').text(descripciones[suscripcion.planId] || '');
+
+            // Formatear fechas
+            const fechaInicio = new Date(suscripcion.fechaInicio);
+            const fechaVencimiento = new Date(suscripcion.vencimiento);
+            
+            $('#fechaInicio').text(fechaInicio.toLocaleDateString('es-DO'));
+            $('#proximoPago').text(fechaVencimiento.toLocaleDateString('es-DO'));
+
+            // Actualizar estado
+            if (suscripcion.cancelada) {
+                $('#estadoPlan').removeClass('bg-success bg-warning').addClass('bg-danger').text('Cancelada');
+            } else if (suscripcion.estaActiva) {
+                if (suscripcion.diasRestantes <= 30) {
+                    $('#estadoPlan').removeClass('bg-success bg-danger').addClass('bg-warning').text(`Activo (${suscripcion.diasRestantes} días)`);
+                    $('#proximoPago').addClass('text-danger');
+                } else {
+                    $('#estadoPlan').removeClass('bg-warning bg-danger').addClass('bg-success').text('Activo');
+                }
+            } else {
+                $('#estadoPlan').removeClass('bg-success bg-warning').addClass('bg-danger').text('Vencido');
+            }
+
+            // Actualizar características del plan
+            const caracteristicas = `
+                <li><i class="fa fa-check text-success"></i> 1 Usuario Administrador</li>
+                <li><i class="fa fa-check text-success"></i> ${plan.empleados} Empleado${plan.empleados > 1 ? 's' : ''}</li>
+                <li><i class="fa fa-check text-success"></i> Recibos de Pago</li>
+                <li><i class="fa fa-check text-success"></i> Contratos Laborales</li>
+                ${plan.consulta > 0 ? `<li><i class="fa fa-check text-success"></i> ${plan.consulta} Usuario${plan.consulta > 1 ? 's' : ''} de Consulta</li>` : ''}
+                ${plan.nomina ? '<li><i class="fa fa-check text-success"></i> Nómina TSS</li>' : ''}
+            `;
+            $('#caracteristicasPlan').html(caracteristicas);
+
+            // Cargar uso actual (empleados registrados)
+            cargarUsoActual(plan.empleados);
+        }
+
+        async function cargarUsoActual(limiteEmpleados) {
+            const token = getAuthToken();
+            const userId = localStorage.getItem('userId');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados?userId=${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const empleados = await response.json();
+                    const total = Array.isArray(empleados) ? empleados.length : 0;
+                    const porcentaje = limiteEmpleados > 0 ? (total / limiteEmpleados) * 100 : 0;
+                    
+                    $('#barraEmpleados')
+                        .css('width', Math.min(porcentaje, 100) + '%')
+                        .text(`${total}/${limiteEmpleados}`);
+                    
+                    if (porcentaje >= 90) {
+                        $('#barraEmpleados').removeClass('bg-primary').addClass('bg-danger');
+                    }
+                }
+            } catch (error) {
+                console.log('Error cargando uso:', error);
+            }
+        }
+
+        async function cargarHistorialPagos() {
+            const token = getAuthToken();
+            const userId = localStorage.getItem('userId');
+            
+            if (!token || !userId) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/suscripciones/ventas/${userId}?pageSize=10`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar historial');
+                }
+
+                const ventas = await response.json();
+                actualizarTablaHistorial(ventas);
+
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+            }
+        }
+
+        function actualizarTablaHistorial(ventas) {
+            const tbody = $('#gridPagos tbody');
+            tbody.empty();
+
+            if (!ventas || ventas.length === 0) {
+                tbody.html('<tr><td colspan="6" class="text-center text-muted">No hay pagos registrados</td></tr>');
+                return;
+            }
+
+            ventas.forEach(venta => {
+                const fecha = new Date(venta.fechaTransaccion).toLocaleDateString('es-DO');
+                const plan = planesInfo[venta.planId] || { nombre: `Plan ${venta.planId}` };
                 
-                // TODO: Llamar API para cancelar suscripción
+                // Determinar badge de estado
+                let estadoBadge = '';
+                switch (venta.estado) {
+                    case 2: // Aprobado
+                        estadoBadge = '<span class="badge bg-success">Pagado</span>';
+                        break;
+                    case 3: // Error
+                        estadoBadge = '<span class="badge bg-warning">Error</span>';
+                        break;
+                    case 4: // Rechazado
+                        estadoBadge = '<span class="badge bg-danger">Rechazado</span>';
+                        break;
+                    default:
+                        estadoBadge = `<span class="badge bg-secondary">${venta.estadoTexto || 'Desconocido'}</span>`;
+                }
+
+                // Método de pago
+                let metodoPago = venta.metodoPagoTexto || 'Tarjeta';
+                if (venta.metodoReferencia) {
+                    metodoPago += ` ****${venta.metodoReferencia.slice(-4)}`;
+                }
+
+                const row = `
+                    <tr>
+                        <td>${fecha}</td>
+                        <td>Suscripción Anual - ${plan.nombre}</td>
+                        <td>${metodoPago}</td>
+                        <td>RD$${venta.precio.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="verFactura(${venta.ventaId})">
+                                <i class="fa fa-file-pdf"></i> Ver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function mostrarSinSuscripcion() {
+            $('#nombrePlan').text('Sin Plan');
+            $('#descripcionPlan').text('No tienes un plan activo');
+            $('#estadoPlan').removeClass('bg-success').addClass('bg-secondary').text('Sin Plan');
+            $('#precioPlan').text('RD$0');
+        }
+
+        function mostrarErrorSuscripcion() {
+            Swal.fire('Error', 'No se pudo cargar la información de tu suscripción', 'error');
+        }
+
+        // Confirmar cancelación
+        $('#btnConfirmarCancelacion').on('click', async function() {
+            var motivo = $('#motivoCancelacion').val();
+            var otroMotivo = $('#otroMotivo').val();
+            
+            if (!motivo) {
+                Swal.fire('Error', 'Por favor seleccione un motivo de cancelación.', 'error');
+                return;
+            }
+
+            const token = getAuthToken();
+            const userId = localStorage.getItem('userId');
+            
+            if (!token || !userId) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/suscripciones/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        motivo: motivo === 'otro' ? otroMotivo : motivo
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cancelar suscripción');
+                }
+
                 $('#modalCancelarSuscripcion').modal('hide');
                 Swal.fire({
                     title: 'Suscripción Cancelada',
                     text: 'Tu suscripción ha sido cancelada. Tendrás acceso hasta el final de tu período actual.',
                     icon: 'info',
                     confirmButtonText: 'Entendido'
+                }).then(() => {
+                    cargarSuscripcion(); // Recargar datos
                 });
-            });
-            
-            // Guardar tarjeta
-            $('#btnGuardarTarjeta').on('click', function() {
-                // TODO: Validar y enviar a API
-                $('#modalAgregarTarjeta').modal('hide');
-                Swal.fire('Éxito', 'La tarjeta ha sido agregada correctamente.', 'success');
-            });
+            } catch (error) {
+                console.error('Error cancelando suscripción:', error);
+                Swal.fire('Error', 'No se pudo cancelar la suscripción. Intente nuevamente.', 'error');
+            }
+        });
+        
+        // Guardar tarjeta (funcionalidad futura)
+        $('#btnGuardarTarjeta').on('click', function() {
+            // Nota: La gestión de tarjetas guardadas requiere integración adicional con Cardnet
+            $('#modalAgregarTarjeta').modal('hide');
+            Swal.fire('Información', 'Esta funcionalidad estará disponible próximamente.', 'info');
         });
         
         function verFactura(facturaId) {
-            // TODO: Abrir factura en nueva ventana o descargar PDF
-            window.open('/Empleador/Factura/' + facturaId, '_blank');
+            // Abrir factura (implementar endpoint de factura PDF)
+            Swal.fire({
+                title: 'Factura #' + facturaId,
+                text: 'La descarga de facturas estará disponible próximamente.',
+                icon: 'info',
+                confirmButtonText: 'Entendido'
+            });
+            // window.open('/Empleador/Factura/' + facturaId, '_blank');
         }
         
         function eliminarTarjeta(tarjetaId) {
@@ -331,8 +595,8 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // TODO: Llamar API para eliminar
-                    Swal.fire('Eliminada', 'La tarjeta ha sido eliminada.', 'success');
+                    // Nota: Requiere integración adicional
+                    Swal.fire('Información', 'Esta funcionalidad estará disponible próximamente.', 'info');
                 }
             });
         }
