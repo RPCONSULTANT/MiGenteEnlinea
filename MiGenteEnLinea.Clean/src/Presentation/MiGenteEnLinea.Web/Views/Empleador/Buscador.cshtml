@@ -1,413 +1,531 @@
+@* Buscador de Contratistas / Directorio
+   REPLICADO DE: FRONT_Publicado/Empleador/index_empleador.aspx 
+   Layout: comunity.Master (diferente al dashboard) *@
 @{
-    ViewData["Title"] = "Buscador de Profesionales";
-    Layout = "_LayoutEmpleador";
+    ViewData["Title"] = "Mi Gente en línea";
+    Layout = null; // Esta página tiene su propio layout completo
 }
 
-<div class="container-fluid mt-4">
-    <h2 style="color:white"><i class="fa fa-search"></i> Encuentra el Profesional Ideal</h2>
-    <p style="color:lightgray">Busca entre nuestra red de contratistas verificados para tus necesidades de servicio.</p>
-    <hr />
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    
+    <!-- Bootstrap 4 -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" rel="stylesheet" />
+    <!-- Custom Styles -->
+    <link href="~/css/animated.css" rel="stylesheet" />
+    <link href="~/css/Custom.css" rel="stylesheet" />
+    
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Maven+Pro&display=swap');
 
-<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
-    <!-- Filtros de búsqueda -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <label class="form-label">Servicio</label>
-            <select class="form-select" id="ddlServicio">
-                <option value="">-- Todos los servicios --</option>
-                <option value="1">Electricidad</option>
-                <option value="2">Plomería</option>
-                <option value="3">Carpintería</option>
-                <option value="4">Pintura</option>
-                <option value="5">Jardinería</option>
-                <option value="6">Limpieza</option>
-                <option value="7">Albañilería</option>
-                <option value="8">Mecánica</option>
-                <option value="9">Cocina</option>
-                <option value="10">Cuidado de Niños</option>
-                <option value="11">Cuidado de Adultos Mayores</option>
-                <option value="12">Otro</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Zona</label>
-            <select class="form-select" id="ddlZona">
-                <option value="">-- Todas las zonas --</option>
-                <option value="DN">Distrito Nacional</option>
-                <option value="SD">Santo Domingo</option>
-                <option value="SN">Santiago</option>
-                <option value="LP">La Vega</option>
-                <option value="PP">Puerto Plata</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Calificación Mínima</label>
-            <select class="form-select" id="ddlCalificacion">
-                <option value="">-- Cualquiera --</option>
-                <option value="4">4+ estrellas</option>
-                <option value="3">3+ estrellas</option>
-                <option value="2">2+ estrellas</option>
-            </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-primary w-100" id="btnBuscar">
-                <i class="fa fa-search"></i> Buscar
+        @@font-face {
+            font-family: "Gurajada";
+            src: url(/fonts/Gurajada-Regular.ttf);
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: 'Maven Pro', sans-serif;
+            background-color: #eee;
+        }
+
+        .footer {
+            margin-top: auto;
+        }
+
+        .headerText {
+            font-family: "Gurajada", Gurajada;
+        }
+
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar {
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .navbar-brand img {
+            height: 50px;
+            margin-left: 10px;
+        }
+
+        .banner {
+            position: relative;
+            height: 500px;
+            background: url("/images/banner_Foto1.jpg");
+            background-size: cover;
+            background-position: left;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .banner2 {
+            position: center;
+            height: 300px;
+            background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            transition: all 1s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            -webkit-box-shadow: 3px 5px 17px -4px #777777;
+            box-shadow: 3px 5px 17px -4px #777777;
+        }
+
+        .ratings i {
+            color: green;
+        }
+
+        hr {
+            margin: 1rem 0;
+            color: inherit;
+            background-color: currentColor;
+            border: 0;
+            opacity: 0.25;
+        }
+
+        .star {
+            font-size: 20px;
+            color: #ccc;
+            margin-right: 5px;
+        }
+
+        .star.filled {
+            color: yellow;
+        }
+
+        .avatar {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .profile-image {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .link {
+            color: darkgrey;
+        }
+
+        .link:hover {
+            box-shadow: inset 30px 30px 30px 30px #007BFF;
+            color: darkgrey;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .no-border {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Banner con barra de búsqueda -->
+    <div class="banner" style="position: relative; z-index: 0;">
+        <!-- Navbar transparente -->
+        <nav class="navbar navbar-expand-lg" style="background-color: transparent; position: absolute; width: 100%; z-index: 1;">
+            <a class="navbar-brand" asp-controller="Empleador" asp-action="Buscador">
+                <img src="~/images/logoMiGenteBlanco.png" alt="Logo" />
+            </a>
+
+            <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse"
+                data-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <span class="fa fa-solid fa-bars" style="color: #ffffff;"></span>
             </button>
-        </div>
-    </div>
 
-    <!-- Resultados -->
-    <div class="row" id="resultadosContainer">
-        <!-- Placeholder mientras no hay búsqueda -->
-        <div class="col-12 text-center py-5" id="placeholderBusqueda">
-            <i class="fa fa-users fa-5x text-muted mb-3"></i>
-            <h4 class="text-muted">Selecciona los filtros y haz clic en Buscar</h4>
-            <p class="text-muted">Encontrarás profesionales verificados en tu zona.</p>
-        </div>
-    </div>
-
-    <!-- Loading -->
-    <div id="loadingContainer" style="display:none;" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3">Buscando profesionales...</p>
-    </div>
-
-    <!-- Template de perfil (se clona con JavaScript) -->
-    <template id="templatePerfil">
-        <div class="col-md-4 mb-4 perfil-card">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <img src="~/images/default-avatar.png" class="rounded-circle mb-3 foto-perfil" style="width: 100px; height: 100px; object-fit: cover;">
-                    <h5 class="nombre-perfil">Nombre del Profesional</h5>
-                    <p class="text-muted servicio-perfil mb-2">Servicio</p>
-                    <div class="estrellas-perfil text-warning mb-2">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star-half-alt"></i>
-                        <span class="text-dark ms-2 calificacion-numero">4.5</span>
-                    </div>
-                    <p class="zona-perfil text-muted mb-3"><i class="fa fa-map-marker-alt"></i> <span>Zona</span></p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-ver-perfil">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                        <a href="#" class="btn btn-success btn-whatsapp">
-                            <i class="fab fa-whatsapp"></i> Contactar
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-</div>
-
-<!-- Modal Ver Perfil -->
-<div class="modal fade" id="modalVerPerfil" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fa fa-user"></i> Perfil Profesional</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Tabs -->
-                <ul class="nav nav-tabs" id="perfilTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button">
-                            <i class="fa fa-user"></i> Datos Generales
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="servicios-tab" data-bs-toggle="tab" data-bs-target="#servicios" type="button">
-                            <i class="fa fa-tools"></i> Catálogo de Servicios
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="calificaciones-tab" data-bs-toggle="tab" data-bs-target="#calificaciones" type="button">
-                            <i class="fa fa-star"></i> Calificaciones
-                        </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="btn btn-transparent text-light" asp-controller="Empleador" asp-action="Index"
+                            style="border-radius: 10px; border-color: white">Mi Gente En Linea</a>
+                        <div class="btn-group">
+                            <button id="btnPerfil" type="button" class="btn btn-light dropdown-toggle" 
+                                style="border-radius: 10px; border-color: white" 
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @User.Identity?.Name
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" asp-controller="Empleador" asp-action="Perfil">Mi Perfil</a>
+                                <a class="dropdown-item" asp-controller="Empleador" asp-action="MiSuscripcion">Mi Suscripción</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Cerrar Sesión</a>
+                            </div>
+                        </div>
                     </li>
                 </ul>
-                <div class="tab-content mt-3" id="perfilTabsContent">
-                    <!-- Tab Datos Generales -->
-                    <div class="tab-pane fade show active" id="datos" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-4 text-center">
-                                <img id="modalFoto" src="~/images/default-avatar.png" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                <h4 id="modalNombre">Nombre del Profesional</h4>
-                                <p class="text-muted" id="modalServicioPrincipal">Servicio Principal</p>
-                            </div>
-                            <div class="col-md-8">
-                                <table class="table">
-                                    <tr>
-                                        <th>Identificación:</th>
-                                        <td id="modalCedula">000-0000000-0</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Zona de Trabajo:</th>
-                                        <td id="modalZona">Distrito Nacional</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Experiencia:</th>
-                                        <td id="modalExperiencia">5 años</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Miembro desde:</th>
-                                        <td id="modalMiembroDesde">Enero 2022</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Trabajos realizados:</th>
-                                        <td id="modalTrabajos">25</td>
-                                    </tr>
-                                </table>
-                                <div class="mt-3">
-                                    <h6>Calificación Promedio</h6>
-                                    <div class="d-flex align-items-center">
-                                        <span class="text-warning fs-4" id="modalEstrellas">
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star"></i>
-                                            <i class="fa fa-star-half-alt"></i>
-                                        </span>
-                                        <span class="ms-2 fs-5" id="modalPromedio">4.5</span>
-                                        <span class="text-muted ms-2">(<span id="modalTotalCalificaciones">15</span> calificaciones)</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </nav>
 
-                    <!-- Tab Servicios -->
-                    <div class="tab-pane fade" id="servicios" role="tabpanel">
-                        <h5>Servicios que Ofrece</h5>
-                        <div class="row" id="listaServicios">
-                            <div class="col-md-6 mb-2">
-                                <div class="card bg-light">
-                                    <div class="card-body py-2">
-                                        <i class="fa fa-bolt text-warning me-2"></i> Electricidad Residencial
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <div class="card bg-light">
-                                    <div class="card-body py-2">
-                                        <i class="fa fa-bolt text-warning me-2"></i> Instalaciones Eléctricas
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <div class="card bg-light">
-                                    <div class="card-body py-2">
-                                        <i class="fa fa-lightbulb text-warning me-2"></i> Reparación de Luminarias
-                                    </div>
-                                </div>
-                            </div>
+        <!-- Contenido del banner con overlay oscuro -->
+        <div class="mask text-light" style="background-color: rgba(0, 0, 0, 0.7); height: 100%">
+            <div class="banner-content">
+                <div class="form-inline col col-12">
+                    <div class="row justify-content-left col col-lg-8" style="margin-top: 150px">
+                        <div class="form-group col col-lg-6">
+                            <h3 class="animate__animated animate__bounceInUp">Encuentra ese colaborador perfecto</h3>
+                            <a class="animate__animated animate__fadeIn animate__slower" style="color: white">
+                                Apoyate de una comunidad de profesionales calificados
+                            </a>
                         </div>
-                        <hr>
-                        <h5>Descripción</h5>
-                        <p id="modalDescripcion">
-                            Profesional con amplia experiencia en trabajos de electricidad residencial y comercial. 
-                            Ofrezco servicios de calidad con garantía.
-                        </p>
-                    </div>
-
-                    <!-- Tab Calificaciones -->
-                    <div class="tab-pane fade" id="calificaciones" role="tabpanel">
-                        <h5>Resumen de Calificaciones</h5>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="mb-2">
-                                    <span class="me-3" style="width: 100px; display: inline-block;">Puntualidad:</span>
-                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 90%;">4.5</div>
+                        
+                        <!-- Formulario de búsqueda -->
+                        <div class="form-control col-md-10" style="padding-top: 10px; padding-bottom: 10px">
+                            <div class="form-row animate__animated animate__backInLeft">
+                                <div class="col-md-6 col-xs-12">
+                                    <div class="input-group border-0">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text border-0" style="background-color: transparent">
+                                                <i class="fa fa-search"></i>
+                                            </span>
+                                        </div>
+                                        <input type="text" id="txtBusqueda" class="form-control" 
+                                            placeholder="Criterio de Búsqueda" style="border-style:None;" />
                                     </div>
                                 </div>
-                                <div class="mb-2">
-                                    <span class="me-3" style="width: 100px; display: inline-block;">Conocimientos:</span>
-                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 95%;">4.8</div>
+                                <div class="col-md-4 col-xs-12">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text border-0" style="background-color: transparent">
+                                                <i class="fa fa-map-marker"></i>
+                                            </span>
+                                        </div>
+                                        <select id="ddlCiudad" class="form-control border-0">
+                                            <option value="Cualquier Ubicacion">Cualquier Ubicacion</option>
+                                            <option value="Azua">Azua</option>
+                                            <option value="Bahoruco">Bahoruco</option>
+                                            <option value="Barahona">Barahona</option>
+                                            <option value="Dajabón">Dajabón</option>
+                                            <option value="Distrito Nacional">Distrito Nacional</option>
+                                            <option value="Duarte">Duarte</option>
+                                            <option value="Elías Piña">Elías Piña</option>
+                                            <option value="El Seibo">El Seibo</option>
+                                            <option value="Espaillat">Espaillat</option>
+                                            <option value="Hato Mayor">Hato Mayor</option>
+                                            <option value="Hermanas Mirabal">Hermanas Mirabal</option>
+                                            <option value="Independencia">Independencia</option>
+                                            <option value="La Altagracia">La Altagracia</option>
+                                            <option value="La Romana">La Romana</option>
+                                            <option value="La Vega">La Vega</option>
+                                            <option value="María Trinidad Sánchez">María Trinidad Sánchez</option>
+                                            <option value="Monseñor Nouel">Monseñor Nouel</option>
+                                            <option value="Monte Cristi">Monte Cristi</option>
+                                            <option value="Monte Plata">Monte Plata</option>
+                                            <option value="Pedernales">Pedernales</option>
+                                            <option value="Peravia">Peravia</option>
+                                            <option value="Puerto Plata">Puerto Plata</option>
+                                            <option value="Samaná">Samaná</option>
+                                            <option value="San Cristóbal">San Cristóbal</option>
+                                            <option value="San José de Ocoa">San José de Ocoa</option>
+                                            <option value="San Juan">San Juan</option>
+                                            <option value="San Pedro de Macorís">San Pedro de Macorís</option>
+                                            <option value="Sánchez Ramírez">Sánchez Ramírez</option>
+                                            <option value="Santiago">Santiago</option>
+                                            <option value="Santiago Rodríguez">Santiago Rodríguez</option>
+                                            <option value="Valverde">Valverde</option>
+                                            <option value="Santo Domingo Este">Santo Domingo Este</option>
+                                            <option value="Santo Domingo Oeste">Santo Domingo Oeste</option>
+                                            <option value="Santo Domingo Norte">Santo Domingo Norte</option>
+                                        </select>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-2">
-                                    <span class="me-3" style="width: 100px; display: inline-block;">Cumplimiento:</span>
-                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 85%;">4.3</div>
-                                    </div>
+                                <div class="col-md-2 col-xs-12 mt-2 mt-md-0">
+                                    <button class="bg-primary col col-sm-12 btn btn-secondary" id="btnBuscar" type="button">
+                                        Encontrar
+                                    </button>
                                 </div>
-                                <div class="mb-2">
-                                    <span class="me-3" style="width: 100px; display: inline-block;">Recomendación:</span>
-                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 92%;">4.6</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <h5>Últimas Opiniones</h5>
-                        <div class="list-group" id="listaOpiniones">
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <strong>Cliente Anónimo</strong>
-                                    <span class="text-warning">
-                                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                    </span>
-                                </div>
-                                <small class="text-muted">Hace 2 semanas</small>
-                                <p class="mb-0">Excelente trabajo, muy puntual y profesional. Lo recomiendo totalmente.</p>
-                            </div>
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <strong>Cliente Anónimo</strong>
-                                    <span class="text-warning">
-                                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="far fa-star"></i>
-                                    </span>
-                                </div>
-                                <small class="text-muted">Hace 1 mes</small>
-                                <p class="mb-0">Buen servicio, llegó a tiempo y resolvió el problema rápidamente.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <a href="#" class="btn btn-success" id="btnContactarWhatsApp">
-                    <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
-                </a>
-                <button type="button" class="btn btn-primary" id="btnContratar">
-                    <i class="fa fa-handshake"></i> Contratar
-                </button>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <div class="container text-center m-t-5" style="margin-top: 50px;"></div>
+
+        <h2 id="tituloBuscador">Ultimas Publicaciones</h2>
+        <a>Encuentra lo que buscas gracias a nuestra comunidad de profesionales calificados</a>
+        <br />
+        <hr />
+
+        <!-- Grid de tarjetas de contratistas -->
+        <div class="row col col-md-12 col-sm-12" id="contratistasContainer">
+            <!-- Las tarjetas se cargarán dinámicamente -->
+            
+            <!-- Tarjeta de ejemplo 1 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
+                    <div class="img mb-2" style="width: 100%; height: 100px; overflow: hidden; border-radius: 50%;">
+                        <img src="https://via.placeholder.com/150" style="width: 100px; height: 100px;" class="card-img-top avatar">
+                    </div>
+                    <h5 style="font-weight: bold" class="mb-0">Juan Pérez</h5>
+                    <medium>Electricista</medium>
+                    <div class="ratings mt-2" title="Perfil calificado: 5 veces">
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star-half-o" style="color:darkorange;margin-right:5px;"></span>
+                        <small>5</small>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success text-uppercase" 
+                            data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de ejemplo 2 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
+                    <div class="img mb-2" style="width: 100%; height: 100px; overflow: hidden; border-radius: 50%;">
+                        <img src="https://via.placeholder.com/150" style="width: 100px; height: 100px;" class="card-img-top avatar">
+                    </div>
+                    <h5 style="font-weight: bold" class="mb-0">María García</h5>
+                    <medium>Contadora</medium>
+                    <div class="ratings mt-2" title="Perfil calificado: 3 veces">
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <small>3</small>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success text-uppercase" 
+                            data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de ejemplo 3 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
+                    <div class="img mb-2" style="width: 100%; height: 100px; overflow: hidden; border-radius: 50%;">
+                        <img src="https://via.placeholder.com/150" style="width: 100px; height: 100px;" class="card-img-top avatar">
+                    </div>
+                    <h5 style="font-weight: bold" class="mb-0">Carlos Rodríguez</h5>
+                    <medium>Plomero</medium>
+                    <div class="ratings mt-2" title="Perfil calificado: 0 veces">
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <span class="fa fa-star-o" style="color:darkgray"></span>
+                        <small>0</small>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success text-uppercase" 
+                            data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de ejemplo 4 -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
+                    <div class="img mb-2" style="width: 100%; height: 100px; overflow: hidden; border-radius: 50%;">
+                        <img src="https://via.placeholder.com/150" style="width: 100px; height: 100px;" class="card-img-top avatar">
+                    </div>
+                    <h5 style="font-weight: bold" class="mb-0">Ana Martínez</h5>
+                    <medium>Abogada</medium>
+                    <div class="ratings mt-2" title="Perfil calificado: 8 veces">
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <span class="fa fa-star" style="color:darkorange"></span>
+                        <small>8</small>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success text-uppercase" 
+                            data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Perfil Profesional -->
+        <div class="modal fade" id="modalPerfil" tabindex="-1" role="dialog" aria-labelledby="modalPerfilLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalPerfilLabel">Perfil Profesional</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <img src="https://via.placeholder.com/150" id="imgProfile" style="width: 100px; height: 100px;" class="card-img-top avatar"/>
+                            <h5 class="card-title" id="NombrePerfil" style="font-weight: bold">Nombre</h5>
+                            <div class="rating horizontal">
+                                <span class="fa fa-star" style="color:darkorange"></span>
+                                <span class="fa fa-star" style="color:darkorange"></span>
+                                <span class="fa fa-star" style="color:darkorange"></span>
+                                <span class="fa fa-star" style="color:darkorange"></span>
+                                <span class="fa fa-star-half-o" style="color:darkorange"></span>
+                                <span id="calificacionValor">4.5</span>
+                            </div>
+                            <div class="form-group">
+                                <p id="presentacion">Presentación de ejemplo</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#datosGenerales">Datos Generales</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#servicios">Catálogo de Servicios</a>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content">
+                            <!-- Tab Datos Generales -->
+                            <div class="tab-pane fade show active" id="datosGenerales">
+                                <div class="container">
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="titulo" class="form-label">Título de Perfil</label>
+                                                <p id="titulo">Título de ejemplo</p>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="email" class="form-label">Email</label>
+                                                <p id="email">correo@example.com</p>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="experiencia" class="form-label">Años de Experiencia</label>
+                                                <p id="experiencia">5 años</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <div class="horizontal">
+                                                    <a href="#" id="enlaceWhatsapp1" style="display: block; color: black">
+                                                        <label for="telefono1" class="form-label">Teléfono 1</label>
+                                                        <img src="~/images/whatsapp.png" style="margin-left: 5px;" width="24" height="24" />
+                                                    </a>
+                                                </div>
+                                                <a href="#" id="enlaceTelefono1" style="display: block; color: black">
+                                                    <p id="telefono1">(000)-000-0000</p>
+                                                </a>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="horizontal">
+                                                    <a href="#" id="enlaceWhatsapp2" style="display: block; color: black">
+                                                        <label for="telefono2" class="form-label">Teléfono 2</label>
+                                                        <img src="~/images/whatsapp.png" style="margin-left: 5px;" width="24" height="24" />
+                                                    </a>
+                                                </div>
+                                                <a href="#" id="enlaceTelefono2" style="display: block; color: black">
+                                                    <p id="telefono2">(000)-000-0000</p>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Servicios -->
+                            <div class="tab-pane fade" id="servicios">
+                                <div class="container">
+                                    <div class="form-group">
+                                        <label for="servicio" class="form-label">Catálogo de Servicios</label>
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Detalle del Servicio</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tablaServicios">
+                                                <tr><td>Servicio de ejemplo 1</td></tr>
+                                                <tr><td>Servicio de ejemplo 2</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="form-control" style="background-color: dimgray; color: white; text-align: center;">
+            <a asp-controller="Empleador" asp-action="FAQ" class="text-white" title="Sección de Preguntas y Respuestas">
+                <h3>Preguntas y Respuestas</h3>
+            </a>
+            <hr />
+            <a style="font-size: smaller">© Derechos reservados Mi Gente en línea @DateTime.Now.Year</a>
+            <br />
+            <a style="font-size: smaller">Diseño y Desarrollo por IntDoSystem, SRL</a>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
-        $(document).ready(function() {
-            // Buscar profesionales
-            $('#btnBuscar').on('click', function() {
-                buscarProfesionales();
-            });
+        // Función para buscar contratistas
+        document.getElementById('btnBuscar').addEventListener('click', function() {
+            var busqueda = document.getElementById('txtBusqueda').value;
+            var ciudad = document.getElementById('ddlCiudad').value;
             
-            // Ver perfil
-            $(document).on('click', '.btn-ver-perfil', function() {
-                var card = $(this).closest('.perfil-card');
-                var perfilId = card.data('id');
-                abrirPerfil(perfilId);
-            });
+            // TODO: Llamar al API para buscar contratistas
+            console.log('Buscando:', busqueda, 'en', ciudad);
             
-            // Contratar
-            $('#btnContratar').on('click', function() {
-                $('#modalVerPerfil').modal('hide');
-                Swal.fire({
-                    title: '¿Deseas contratar este profesional?',
-                    text: 'Se creará una contratación temporal.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sí, contratar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/Empleador/Contrataciones';
-                    }
-                });
+            Swal.fire({
+                title: 'Buscando...',
+                text: 'Buscando profesionales que coincidan con tu criterio',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false
             });
         });
-        
-        function buscarProfesionales() {
-            var servicio = $('#ddlServicio').val();
-            var zona = $('#ddlZona').val();
-            var calificacion = $('#ddlCalificacion').val();
-            
-            // Mostrar loading
-            $('#placeholderBusqueda').hide();
-            $('#loadingContainer').show();
-            
-            // TODO: Llamar API para buscar profesionales
-            // Simulación de resultados
-            setTimeout(function() {
-                $('#loadingContainer').hide();
-                mostrarResultados([
-                    { id: 1, nombre: 'Juan Pérez', servicio: 'Electricista', zona: 'Distrito Nacional', calificacion: 4.5, foto: '/images/default-avatar.png' },
-                    { id: 2, nombre: 'María García', servicio: 'Plomería', zona: 'Santo Domingo Este', calificacion: 4.8, foto: '/images/default-avatar.png' },
-                    { id: 3, nombre: 'Carlos Rodríguez', servicio: 'Pintura', zona: 'Distrito Nacional', calificacion: 4.2, foto: '/images/default-avatar.png' },
-                    { id: 4, nombre: 'Ana Martínez', servicio: 'Limpieza', zona: 'Santiago', calificacion: 5.0, foto: '/images/default-avatar.png' },
-                    { id: 5, nombre: 'Pedro Sánchez', servicio: 'Carpintería', zona: 'Distrito Nacional', calificacion: 4.7, foto: '/images/default-avatar.png' },
-                    { id: 6, nombre: 'Laura Díaz', servicio: 'Jardinería', zona: 'Santo Domingo Norte', calificacion: 4.3, foto: '/images/default-avatar.png' }
-                ]);
-            }, 1500);
-        }
-        
-        function mostrarResultados(resultados) {
-            var container = $('#resultadosContainer');
-            container.html('');
-            
-            if (resultados.length === 0) {
-                container.html(`
-                    <div class="col-12 text-center py-5">
-                        <i class="fa fa-search fa-5x text-muted mb-3"></i>
-                        <h4 class="text-muted">No se encontraron resultados</h4>
-                        <p class="text-muted">Intenta con otros filtros de búsqueda.</p>
-                    </div>
-                `);
-                return;
-            }
-            
-            var template = document.getElementById('templatePerfil');
-            
-            resultados.forEach(function(perfil) {
-                var clone = template.content.cloneNode(true);
-                var card = clone.querySelector('.perfil-card');
-                
-                card.dataset.id = perfil.id;
-                card.querySelector('.nombre-perfil').textContent = perfil.nombre;
-                card.querySelector('.servicio-perfil').textContent = perfil.servicio;
-                card.querySelector('.zona-perfil span').textContent = perfil.zona;
-                card.querySelector('.calificacion-numero').textContent = perfil.calificacion;
-                
-                // Generar estrellas
-                var estrellasHtml = generarEstrellas(perfil.calificacion);
-                card.querySelector('.estrellas-perfil').innerHTML = estrellasHtml + 
-                    '<span class="text-dark ms-2">' + perfil.calificacion + '</span>';
-                
-                // Link de WhatsApp
-                card.querySelector('.btn-whatsapp').href = 'https://wa.me/18090000000?text=Hola, te encontré en MiGente En Línea';
-                
-                container.append(card);
-            });
-        }
-        
-        function generarEstrellas(calificacion) {
-            var html = '';
-            var fullStars = Math.floor(calificacion);
-            var hasHalfStar = (calificacion - fullStars) >= 0.5;
-            var emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-            
-            for (var i = 0; i < fullStars; i++) {
-                html += '<i class="fa fa-star"></i>';
-            }
-            if (hasHalfStar) {
-                html += '<i class="fa fa-star-half-alt"></i>';
-            }
-            for (var i = 0; i < emptyStars; i++) {
-                html += '<i class="far fa-star"></i>';
-            }
-            return html;
-        }
-        
-        function abrirPerfil(perfilId) {
-            // TODO: Cargar datos del perfil desde API
-            // Por ahora mostrar modal con datos de ejemplo
-            $('#modalVerPerfil').modal('show');
-        }
     </script>
-}
+</body>
+</html>

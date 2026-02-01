@@ -1,5 +1,4 @@
-@{
-    ViewData["Title"] = "Checkout";
+@{ViewData["Title"] = "Checkout";
     Layout = "_LayoutContratista";
     var planId = ViewData["PlanId"];
 }
@@ -121,7 +120,8 @@
                                 <button type="button" class="btn btn-primary btn-lg w-100" id="btnPagar">
                                     <i class="fa fa-lock"></i> Pagar RD$495.00
                                 </button>
-                                <a href="@Url.Action("AdquirirPlan", "Contratista")" class="btn btn-outline-secondary w-100 mt-2">
+                                <a href="@Url.Action("AdquirirPlan",
+  "Contratista")" class="btn btn-outline-secondary w-100 mt-2">
                                     <i class="fa fa-arrow-left"></i> Volver a Planes
                                 </a>
                             </div>
@@ -149,53 +149,249 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        $(document).ready(function() {
-            // Formatear número de tarjeta
-            $('#txtTarjeta').on('input', function() {
-                var value = $(this).val().replace(/\s/g, '').replace(/\D/g, '');
-                var formatted = value.match(/.{1,4}/g)?.join(' ') || '';
-                $(this).val(formatted);
-                
-                // Detectar tipo de tarjeta
-                if (value.startsWith('4')) {
-                    $('#cardType').html('<i class="fab fa-cc-visa text-primary"></i>');
-                } else if (value.startsWith('5')) {
-                    $('#cardType').html('<i class="fab fa-cc-mastercard text-danger"></i>');
-                } else {
-                    $('#cardType').html('<i class="fa fa-credit-card"></i>');
-                }
-            });
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script>
+      // API Base URL
+      const API_BASE_URL = "http://localhost:5015/api";
+      var planId = "@planId" || "10";
+      var planData = null;
 
-            // Procesar pago
-            $('#btnPagar').on('click', function() {
-                if (!$('#formPago')[0].checkValidity()) {
-                    $('#formPago')[0].reportValidity();
-                    return;
-                }
+      $(document).ready(function () {
+        // Check if user is authenticated
+        const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+          Swal.fire({
+            title: "Sesión Requerida",
+            text: "Debe iniciar sesión para adquirir un plan",
+            icon: "warning",
+            confirmButtonText: "Ir al Login",
+          }).then(() => {
+            window.location.href =
+              "/Auth/Login?returnUrl=" +
+              encodeURIComponent(window.location.href);
+          });
+          return;
+        }
 
-                if (!$('#chkTerminos').is(':checked')) {
-                    Swal.fire('Error', 'Debe aceptar los términos y condiciones', 'warning');
-                    return;
-                }
+        // Pre-fill user data
+        const nombreCompleto = localStorage.getItem("nombreCompleto");
+        if (nombreCompleto) {
+          $("#txtNombre").val(nombreCompleto);
+        }
 
-                $('#loadingOverlay').show();
+        // Load plan info from API
+        cargarInfoPlan();
 
-                // TODO: Llamar API de Cardnet
-                setTimeout(function() {
-                    $('#loadingOverlay').hide();
-                    Swal.fire({
-                        title: '¡Pago Exitoso!',
-                        text: 'Tu suscripción ha sido activada correctamente.',
-                        icon: 'success',
-                        confirmButtonText: 'Ir a Mi Perfil',
-                        allowOutsideClick: false
-                    }).then((result) => {
-                        window.location.href = '/Contratista/Perfil';
-                    });
-                }, 3000);
-            });
+        // Formatear número de tarjeta
+        $("#txtTarjeta").on("input", function () {
+          var value = $(this).val().replace(/\s/g, "").replace(/\D/g, "");
+          var formatted = value.match(/.{1,4}/g)?.join(" ") || "";
+          $(this).val(formatted);
+
+          // Detectar tipo de tarjeta
+          if (value.startsWith("4")) {
+            $("#cardType").html('<i class="fab fa-cc-visa text-primary"></i>');
+          } else if (value.startsWith("5")) {
+            $("#cardType").html(
+              '<i class="fab fa-cc-mastercard text-danger"></i>',
+            );
+          } else {
+            $("#cardType").html('<i class="fa fa-credit-card"></i>');
+          }
         });
+
+        // Procesar pago
+        $("#btnPagar").on("click", function () {
+          procesarPago();
+        });
+      });
+
+      async function cargarInfoPlan() {
+        try {
+          // Cargar planes de contratistas desde API
+          const response = await fetch(
+            `${API_BASE_URL}/suscripciones/planes/contratistas`,
+          );
+
+          if (!response.ok) {
+            throw new Error("Error al cargar planes");
+          }
+
+          const planes = await response.json();
+          planData = planes.find((p) => p.id == planId);
+
+          if (!planData) {
+            // Fallback a datos locales
+            const planesLocal = {
+              10: {
+                id: 10,
+                nombre: "Mi Gente, Soy yo",
+                precio: 495,
+                duracionMeses: 12,
+              },
+              11: {
+                id: 11,
+                nombre: "Plan Premium",
+                precio: 995,
+                duracionMeses: 12,
+              },
+            };
+            planData = planesLocal[planId] || planesLocal["10"];
+          }
+
+          actualizarUI();
+        } catch (error) {
+          console.error("Error loading plan:", error);
+          // Fallback
+          const planesLocal = {
+            10: {
+              id: 10,
+              nombre: "Mi Gente, Soy yo",
+              precio: 495,
+              duracionMeses: 12,
+            },
+            11: {
+              id: 11,
+              nombre: "Plan Premium",
+              precio: 995,
+              duracionMeses: 12,
+            },
+          };
+          planData = planesLocal[planId] || planesLocal["10"];
+          actualizarUI();
+        }
+      }
+
+      function actualizarUI() {
+        // Update summary section
+        $(".card-body .d-flex:first strong").text(planData.nombre);
+        const duracion =
+          planData.duracionMeses > 1
+            ? planData.duracionMeses + " meses"
+            : "1 mes";
+        $(".card-body .d-flex:eq(1) strong").text(duracion);
+
+        // Update prices
+        const precioFormateado =
+          "RD$" + planData.precio.toLocaleString() + ".00";
+        $('.d-flex:contains("Subtotal") span:last').text(precioFormateado);
+        $(".d-flex:last strong.text-primary").text(precioFormateado);
+
+        // Update button
+        $("#btnPagar").html(
+          `<i class="fa fa-lock"></i> Pagar ${precioFormateado}`,
+        );
+      }
+
+      async function procesarPago() {
+        // Validar formulario
+        if (!$("#formPago")[0].checkValidity()) {
+          $("#formPago")[0].reportValidity();
+          return;
+        }
+
+        if (!$("#chkTerminos").is(":checked")) {
+          Swal.fire(
+            "Error",
+            "Debe aceptar los términos y condiciones",
+            "warning",
+          );
+          return;
+        }
+
+        // Validar tarjeta
+        const numeroTarjeta = $("#txtTarjeta").val().replace(/\s/g, "");
+        if (numeroTarjeta.length < 15) {
+          Swal.fire("Error", "El número de tarjeta no es válido", "error");
+          return;
+        }
+
+        const cvv = $("#txtCVV").val();
+        if (cvv.length < 3) {
+          Swal.fire("Error", "El CVV debe tener al menos 3 dígitos", "error");
+          return;
+        }
+
+        const accessToken = localStorage.getItem("accessToken");
+        const userId = localStorage.getItem("userId");
+
+        if (!accessToken || !userId) {
+          Swal.fire(
+            "Error",
+            "Sesión expirada. Por favor inicie sesión nuevamente.",
+            "error",
+          );
+          window.location.href = "/Auth/Login";
+          return;
+        }
+
+        $("#loadingOverlay").show();
+        $("#btnPagar").prop("disabled", true);
+
+        try {
+          // Llamar API para crear suscripción
+          const response = await fetch(`${API_BASE_URL}/suscripciones`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              userId: userId,
+              planId: parseInt(planId),
+              duracionMeses: planData.duracionMeses || 12,
+            }),
+          });
+
+          const result = await response.json();
+
+          $("#loadingOverlay").hide();
+
+          if (response.ok || response.status === 201) {
+            // Update local storage with new plan
+            localStorage.setItem("planId", planId);
+            const vencimiento = new Date();
+            vencimiento.setMonth(
+              vencimiento.getMonth() + (planData.duracionMeses || 12),
+            );
+            localStorage.setItem("vencimientoPlan", vencimiento.toISOString());
+
+            Swal.fire({
+              title: "¡Pago Exitoso!",
+              html:
+                "Tu suscripción al plan <strong>" +
+                planData.nombre +
+                "</strong> ha sido activada correctamente.",
+              icon: "success",
+              confirmButtonText: "Ir a Mi Perfil",
+              allowOutsideClick: false,
+            }).then((result) => {
+              window.location.href = "/Contratista/Index";
+            });
+          } else if (response.status === 401) {
+            Swal.fire(
+              "Sesión Expirada",
+              "Por favor inicie sesión nuevamente.",
+              "warning",
+            ).then(() => (window.location.href = "/Auth/Login"));
+          } else {
+            const errorMsg =
+              result.message ||
+              result.title ||
+              "Error al procesar la suscripción";
+            Swal.fire("Error", errorMsg, "error");
+          }
+        } catch (error) {
+          console.error("Payment error:", error);
+          $("#loadingOverlay").hide();
+          Swal.fire(
+            "Error",
+            "Error de conexión. Por favor intente nuevamente.",
+            "error",
+          );
+        } finally {
+          $("#btnPagar").prop("disabled", false);
+        }
+      }
     </script>
+  }
 }

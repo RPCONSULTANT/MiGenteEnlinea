@@ -1,154 +1,237 @@
+@*
+    Vista Suscripciones del Contratista
+    Basado en: FRONT_Publicado/Contratista/Suscripciones_Contratistas.aspx
+    Tema: Argon Dashboard 2.0 + Bootstrap 5
+*@
 @{
     ViewData["Title"] = "Mi Suscripción";
     Layout = "_LayoutContratista";
 }
 
 <div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="pagetitle">
-                <h1>Gestión de Suscripción</h1>
-                <nav>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Contratista</a></li>
-                        <li class="breadcrumb-item active">Mi Suscripción</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-3">
-        <!-- Plan Actual -->
+    <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fa fa-star"></i> Plan Actual</h5>
-                </div>
-                <div class="card-body text-center">
-                    <h3 class="text-primary" id="planNombre">Mi Gente, Soy yo</h3>
-                    <h2 class="text-dark">RD$495.00 <small class="text-muted">/Anual</small></h2>
-                    <hr>
-                    <ul class="list-unstyled text-start">
-                        <li><i class="fa fa-check text-success me-2"></i> <strong>1</strong> Administrador</li>
-                        <li><i class="fa fa-check text-success me-2"></i> <strong>1</strong> Registro de Perfil Profesional</li>
-                        <li><i class="fa fa-check text-success me-2"></i> Consultas Ilimitadas</li>
-                        <li><i class="fa fa-check text-success me-2"></i> Registro de Portafolio</li>
-                        <li><i class="fa fa-check text-success me-2"></i> Adquisición de Reputación por Rating</li>
-                        <li><i class="fa fa-check text-success me-2"></i> <strong>12</strong> Meses de Data Histórica</li>
-                    </ul>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <strong>Fecha Inicio</strong>
-                            <p class="text-muted" id="fechaInicio">01/01/2025</p>
-                        </div>
-                        <div class="col-6">
-                            <strong>Fecha Vencimiento</strong>
-                            <p class="text-danger" id="fechaVencimiento">01/01/2026</p>
-                        </div>
-                    </div>
-                    <div class="alert alert-success" id="alertActivo">
-                        <i class="fa fa-check-circle"></i> Suscripción Activa
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Acciones -->
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fa fa-sync"></i> Renovar Suscripción</h5>
+                    <h5 class="mb-0" style="color:white">
+                        <i class="fa fa-credit-card me-2"></i>Gestión de Suscripción
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <p>Tu suscripción vence pronto. Renueva ahora para mantener tu perfil visible en el directorio.</p>
-                    <a href="@Url.Action("AdquirirPlan", "Contratista")" class="btn btn-success btn-lg w-100">
-                        <i class="fa fa-credit-card"></i> Renovar Ahora
-                    </a>
-                </div>
-            </div>
-
-            <div class="card shadow">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fa fa-history"></i> Historial de Pagos</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Plan</th>
-                                    <th>Monto</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>01/01/2025</td>
-                                    <td>Mi Gente, Soy yo</td>
-                                    <td>RD$495.00</td>
-                                    <td><span class="badge bg-success">Pagado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>01/01/2024</td>
-                                    <td>Mi Gente, Soy yo</td>
-                                    <td>RD$450.00</td>
-                                    <td><span class="badge bg-success">Pagado</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Plan Actual</label>
+                        <input type="text" class="form-control" id="txtPlanActual" value="Mi Gente, Soy yo" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Fecha de Inicio</label>
+                        <input type="text" class="form-control" id="txtFechaInicio" value="01/01/2025" readonly />
+                    </div>
+                    <div class="mb-3" id="proxPago">
+                        <label class="form-label text-muted">Próximo Pago</label>
+                        <input type="text" class="form-control" id="txtProximoPago" value="01/01/2026" readonly />
+                    </div>
+                    <div class="mb-3" style="margin-block:10px">
+                        <a href="@Url.Action("AdquirirPlan", "Contratista")" class="btn btn-success">
+                            <i class="fa fa-sync"></i> Renovar Suscripción
+                        </a>
+                        <button type="button" class="btn btn-danger" id="btnCancelar">
+                            <i class="fa fa-times"></i> Cancelar Suscripción
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Información de Perfil -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fa fa-chart-bar"></i> Estadísticas de Perfil</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <i class="fa fa-eye fa-3x text-primary mb-2"></i>
-                                <h4>150</h4>
-                                <p class="text-muted">Visitas al Perfil</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <i class="fa fa-star fa-3x text-warning mb-2"></i>
-                                <h4>4.5</h4>
-                                <p class="text-muted">Calificación Promedio</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <i class="fa fa-comments fa-3x text-success mb-2"></i>
-                                <h4>25</h4>
-                                <p class="text-muted">Calificaciones Recibidas</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="p-3">
-                                <i class="fa fa-briefcase fa-3x text-info mb-2"></i>
-                                <h4>12</h4>
-                                <p class="text-muted">Contrataciones</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="container mt-4">
+        <h5>Histórico de Facturación</h5>
+    </div>
+    <div class="container mt-2">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped" id="gridPagos">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Id Plan</th>
+                        <th>Precio</th>
+                        <th>Tarjeta</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>01/01/2025</td>
+                        <td>1</td>
+                        <td>RD$495.00</td>
+                        <td>**** **** **** 1234</td>
+                        <td><span class="badge bg-success">Pagado</span></td>
+                    </tr>
+                    <tr>
+                        <td>01/01/2024</td>
+                        <td>1</td>
+                        <td>RD$450.00</td>
+                        <td>**** **** **** 1234</td>
+                        <td><span class="badge bg-success">Pagado</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // API Base URL - Configurar según ambiente
+        const API_BASE = 'http://localhost:5015/api';
+        
+        $(document).ready(function () {
+            loadSuscripcion();
+            loadHistoricoPagos();
+            
+            // Cancelar suscripción
+            $('#btnCancelar').on('click', function () {
+                Swal.fire({
+                    title: '¿Cancelar suscripción?',
+                    text: 'Tu perfil dejará de ser visible en el directorio al vencer tu plan actual.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, cancelar',
+                    cancelButtonText: 'Mantener suscripción'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        cancelarSuscripcion();
+                    }
+                });
+            });
+        });
+        
+        // Cargar suscripción actual
+        async function loadSuscripcion() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            
+            if (!userId) {
+                console.warn('No userId encontrado');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/suscripciones/usuario/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    $('#txtPlanActual').val(data.planNombre || 'Sin plan activo');
+                    $('#txtFechaInicio').val(data.fechaInicio ? new Date(data.fechaInicio).toLocaleDateString('es-DO') : '-');
+                    $('#txtProximoPago').val(data.fechaVencimiento ? new Date(data.fechaVencimiento).toLocaleDateString('es-DO') : '-');
+                    
+                    // Ocultar próximo pago si no tiene suscripción activa
+                    if (!data.activa) {
+                        $('#proxPago').hide();
+                    }
+                } else if (response.status === 404) {
+                    $('#txtPlanActual').val('Sin suscripción');
+                    $('#proxPago').hide();
+                }
+            } catch (error) {
+                console.error('Error al cargar suscripción:', error);
+            }
+        }
+        
+        // Cargar histórico de pagos
+        async function loadHistoricoPagos() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            
+            if (!userId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/suscripciones/ventas/usuario/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const ventas = await response.json();
+                    renderHistoricoPagos(ventas);
+                }
+            } catch (error) {
+                console.error('Error al cargar histórico:', error);
+            }
+        }
+        
+        // Renderizar histórico de pagos
+        function renderHistoricoPagos(ventas) {
+            const tbody = $('#gridPagos tbody');
+            tbody.empty();
+            
+            if (!ventas || ventas.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            No hay pagos registrados.
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+            
+            ventas.forEach(function(v) {
+                const fecha = v.fecha ? new Date(v.fecha).toLocaleDateString('es-DO') : '-';
+                const tarjeta = v.tarjetaUltimos4 ? `**** **** **** ${v.tarjetaUltimos4}` : 'N/A';
+                const estado = v.estado === 'aprobado' || v.aprobado 
+                    ? '<span class="badge bg-success">Pagado</span>' 
+                    : '<span class="badge bg-danger">Fallido</span>';
+                
+                const row = `<tr>
+                    <td>${fecha}</td>
+                    <td>${v.planId || '-'}</td>
+                    <td>RD$${(v.monto || 0).toFixed(2)}</td>
+                    <td>${tarjeta}</td>
+                    <td>${estado}</td>
+                </tr>`;
+                tbody.append(row);
+            });
+        }
+        
+        // Cancelar suscripción
+        async function cancelarSuscripcion() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            
+            try {
+                const response = await fetch(`${API_BASE}/suscripciones/cancelar/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+                
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Suscripción cancelada',
+                        text: 'Tu suscripción no se renovará automáticamente.',
+                        icon: 'info',
+                        confirmButtonText: 'OK'
+                    });
+                    loadSuscripcion(); // Recargar datos
+                } else {
+                    const error = await response.json();
+                    Swal.fire('Error', error.message || 'No se pudo cancelar la suscripción', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error de conexión al servidor', 'error');
+            }
+        }
+    </script>
 }

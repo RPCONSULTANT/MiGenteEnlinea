@@ -8,8 +8,10 @@
         <h4 class="text-center">Activación de Cuenta</h4>
         <hr />
 
-        <form asp-action="Activar" method="post">
-            @Html.AntiForgeryToken()
+        <div id="activarAlert" class="alert" style="display: none;"></div>
+
+        <form id="formActivar" onsubmit="return handleActivation(event)">
+            <input type="hidden" id="userId" value="@ViewData["UserId"]" />
             
             <div class="form-group">
                 <label for="email">Correo electrónico</label>
@@ -19,20 +21,42 @@
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Contraseña" required />
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="Mínimo 8 caracteres" required minlength="8" />
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password', 'eyeIcon1')">
+                            <i id="eyeIcon1" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted">Debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.</small>
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Confirmar contraseña</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Confirmar contraseña" required />
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" 
+                           placeholder="Confirmar contraseña" required minlength="8" />
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword', 'eyeIcon2')">
+                            <i id="eyeIcon2" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
-                <button type="submit" id="btnActivar" class="btn btn-primary btn-block" disabled>Crear contraseña</button>
+                <button type="submit" id="btnActivar" class="btn btn-primary btn-block" disabled>
+                    <span id="activarSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status"></span>
+                    <span id="activarText">Activar Cuenta</span>
+                </button>
             </div>
             
-            <div id="passwordError" class="alert alert-danger" style="display: none;">
-                Las contraseñas no coinciden.
+            <div id="passwordError" class="alert alert-warning" style="display: none;"></div>
+            
+            <div class="form-group text-center mt-3">
+                <a href="@Url.Action("Login", "Auth")" class="text-primary">Volver al inicio de sesión</a>
             </div>
         </form>
     </div>
@@ -40,20 +64,168 @@
 
 @section Scripts {
     <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5015/api';
+        
+        // ============================================
+        // ACTIVATION HANDLER
+        // ============================================
+        async function handleActivation(event) {
+            event.preventDefault();
+            
+            const userId = document.getElementById('userId').value;
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (!email || !password || !confirmPassword) {
+                showAlert('activarAlert', 'Por favor complete todos los campos', 'danger');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showAlert('activarAlert', 'Las contraseñas no coinciden', 'danger');
+                return false;
+            }
+            
+            if (!validatePasswordStrength(password)) {
+                showAlert('activarAlert', 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial', 'danger');
+                return false;
+            }
+            
+            setLoading(true);
+            hideAlert('activarAlert');
+            
+            try {
+                const payload = {
+                    userId: userId,
+                    email: email,
+                    password: password,
+                    confirmPassword: confirmPassword
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/auth/activate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Success
+                    showAlert('activarAlert', '¡Cuenta activada exitosamente! Redirigiendo al login...', 'success');
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Login", "Auth")';
+                    }, 2000);
+                    
+                } else if (response.status === 400) {
+                    // Validation error
+                    let errorMsg = 'Error de validación';
+                    if (data.errors) {
+                        const errors = Object.values(data.errors).flat();
+                        errorMsg = errors[0] || errorMsg;
+                    } else if (data.message) {
+                        errorMsg = data.message;
+                    }
+                    showAlert('activarAlert', errorMsg, 'danger');
+                    
+                } else if (response.status === 404) {
+                    showAlert('activarAlert', 'Usuario no encontrado o enlace de activación inválido', 'danger');
+                    
+                } else if (response.status === 409) {
+                    showAlert('activarAlert', 'Esta cuenta ya fue activada anteriormente', 'warning');
+                    
+                } else {
+                    const errorMsg = data.message || data.title || 'Error al activar la cuenta';
+                    showAlert('activarAlert', errorMsg, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Activation error:', error);
+                showAlert('activarAlert', 'Error de conexión. Verifique que el servidor esté disponible.', 'danger');
+            } finally {
+                setLoading(false);
+            }
+            
+            return false;
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function validatePasswordStrength(password) {
+            // At least 8 characters, one uppercase, one lowercase, one number, one special character
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@@$!%*?&#])[A-Za-z\d@@$!%*?&#]{8,}$/;
+            return regex.test(password);
+        }
+        
+        function togglePasswordVisibility(fieldId, iconId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(iconId);
+            
+            if (field.type === "password") {
+                field.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                field.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+        
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+        }
+        
+        function hideAlert(elementId) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.style.display = 'none';
+        }
+        
+        function setLoading(isLoading) {
+            const btn = document.getElementById('btnActivar');
+            const spinner = document.getElementById('activarSpinner');
+            const text = document.getElementById('activarText');
+            
+            if (btn) btn.disabled = isLoading;
+            if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+            if (text) text.textContent = isLoading ? 'Activando...' : 'Activar Cuenta';
+        }
+        
+        // Password matching validation
         document.addEventListener('DOMContentLoaded', function() {
-            var password = document.getElementById('password');
-            var confirmPassword = document.getElementById('confirmPassword');
-            var btnActivar = document.getElementById('btnActivar');
-            var passwordError = document.getElementById('passwordError');
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const btnActivar = document.getElementById('btnActivar');
+            const passwordError = document.getElementById('passwordError');
 
             function validatePasswords() {
                 if (password.value && confirmPassword.value) {
-                    if (password.value === confirmPassword.value) {
+                    if (password.value !== confirmPassword.value) {
+                        btnActivar.disabled = true;
+                        passwordError.textContent = 'Las contraseñas no coinciden';
+                        passwordError.style.display = 'block';
+                    } else if (password.value.length < 8) {
+                        btnActivar.disabled = true;
+                        passwordError.textContent = 'La contraseña debe tener al menos 8 caracteres';
+                        passwordError.style.display = 'block';
+                    } else if (!validatePasswordStrength(password.value)) {
+                        btnActivar.disabled = true;
+                        passwordError.textContent = 'Debe incluir mayúscula, minúscula, número y carácter especial';
+                        passwordError.style.display = 'block';
+                    } else {
                         btnActivar.disabled = false;
                         passwordError.style.display = 'none';
-                    } else {
-                        btnActivar.disabled = true;
-                        passwordError.style.display = 'block';
                     }
                 } else {
                     btnActivar.disabled = true;
@@ -63,6 +235,15 @@
 
             password.addEventListener('input', validatePasswords);
             confirmPassword.addEventListener('input', validatePasswords);
+            
+            // Check if we have valid activation data
+            const userId = document.getElementById('userId').value;
+            const email = document.getElementById('email').value;
+            
+            if (!userId || !email) {
+                showAlert('activarAlert', 'Enlace de activación inválido. Por favor solicite un nuevo enlace de activación.', 'danger');
+                btnActivar.disabled = true;
+            }
         });
     </script>
 }

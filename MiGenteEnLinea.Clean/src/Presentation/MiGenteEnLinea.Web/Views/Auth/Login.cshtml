@@ -21,9 +21,10 @@
             </div>
         }
 
-        <form asp-action="Login" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+        <div id="loginAlert" class="alert" style="display: none;"></div>
+
+        <form id="formLogin" onsubmit="return handleLogin(event)">
+            <input type="hidden" id="returnUrl" value="@ViewData["ReturnUrl"]" />
             
             <div class="form-group">
                 <label for="email">Email</label>
@@ -43,7 +44,10 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-block">Iniciar sesión</button>
+                <button type="submit" id="btnLogin" class="btn btn-primary btn-block">
+                    <span id="loginSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status"></span>
+                    <span id="loginText">Iniciar sesión</span>
+                </button>
             </div>
             <div class="form-group">
                 <a href="@Url.Action("Registrar", "Auth")" class="btn btn-secondary btn-block">Crear Nueva Cuenta</a>
@@ -54,20 +58,23 @@
         </form>
     </div>
 
-    <div id="forgotPasswordForm" class="login-form animated-form animate__animated animate__flipInX">
+    <div id="forgotPasswordForm" class="login-form animated-form animate__animated animate__flipInX" style="display: none;">
         <h4 class="text-center">Recuperar contraseña</h4>
         <hr />
 
-        <form asp-action="RecuperarPassword" method="post">
-            @Html.AntiForgeryToken()
-            
+        <div id="forgotAlert" class="alert" style="display: none;"></div>
+
+        <form id="formForgotPassword" onsubmit="return handleForgotPassword(event)">
             <div class="form-group">
                 <label for="forgotEmail">Correo electrónico</label>
                 <input type="email" id="forgotEmail" name="email" class="form-control" placeholder="Correo electrónico" required />
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-block">Enviar Solicitud</button>
+                <button type="submit" id="btnForgot" class="btn btn-primary btn-block">
+                    <span id="forgotSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status"></span>
+                    <span id="forgotText">Enviar Solicitud</span>
+                </button>
             </div>
 
             <div class="form-group text-center">
@@ -79,6 +86,128 @@
 
 @section Scripts {
     <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5015/api';
+        
+        // ============================================
+        // LOGIN HANDLER
+        // ============================================
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const returnUrl = document.getElementById('returnUrl').value;
+            
+            // Validation
+            if (!email || !password) {
+                showAlert('loginAlert', 'Por favor complete todos los campos', 'danger');
+                return false;
+            }
+            
+            setLoading('login', true);
+            hideAlert('loginAlert');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.accessToken) {
+                    // Store tokens and user data in localStorage
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    localStorage.setItem('userId', data.user.userId);
+                    localStorage.setItem('email', data.user.email);
+                    localStorage.setItem('nombreCompleto', data.user.nombreCompleto);
+                    localStorage.setItem('tipo', data.user.tipo);
+                    localStorage.setItem('planId', data.user.planId || '0');
+                    localStorage.setItem('vencimientoPlan', data.user.vencimientoPlan || '');
+                    localStorage.setItem('roles', JSON.stringify(data.user.roles || []));
+                    
+                    // Show success message
+                    showAlert('loginAlert', '¡Bienvenido! Redirigiendo...', 'success');
+                    
+                    // Redirect based on user type (tipo: 1 = Empleador, 2 = Contratista)
+                    setTimeout(() => {
+                        if (returnUrl && returnUrl !== '') {
+                            window.location.href = returnUrl;
+                        } else if (data.user.tipo === 1 || data.user.tipo === '1') {
+                            window.location.href = '/Empleador';
+                        } else if (data.user.tipo === 2 || data.user.tipo === '2') {
+                            window.location.href = '/Contratista';
+                        } else {
+                            window.location.href = '/';
+                        }
+                    }, 500);
+                    
+                } else if (response.status === 401) {
+                    showAlert('loginAlert', 'Usuario o contraseña incorrectos', 'danger');
+                } else if (response.status === 403) {
+                    // Account not activated
+                    showAlert('loginAlert', 'Su cuenta aún no está activada. Por favor revise su correo electrónico.', 'warning');
+                } else {
+                    const errorMsg = data.message || data.title || 'Error al iniciar sesión';
+                    showAlert('loginAlert', errorMsg, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('loginAlert', 'Error de conexión. Verifique que el servidor esté disponible.', 'danger');
+            } finally {
+                setLoading('login', false);
+            }
+            
+            return false;
+        }
+        
+        // ============================================
+        // FORGOT PASSWORD HANDLER
+        // ============================================
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+            
+            if (!email) {
+                showAlert('forgotAlert', 'Por favor ingrese su correo electrónico', 'danger');
+                return false;
+            }
+            
+            setLoading('forgot', true);
+            hideAlert('forgotAlert');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                // Always show success message (security best practice - don't reveal if email exists)
+                showAlert('forgotAlert', 'Si el correo existe en nuestro sistema, recibirá instrucciones para restablecer su contraseña.', 'success');
+                
+            } catch (error) {
+                console.error('Forgot password error:', error);
+                showAlert('forgotAlert', 'Error de conexión. Intente nuevamente.', 'danger');
+            } finally {
+                setLoading('forgot', false);
+            }
+            
+            return false;
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
         function toggleDivs(hideDivId, showDivId) {
             var hideDiv = document.getElementById(hideDivId);
             var showDiv = document.getElementById(showDivId);
@@ -103,5 +232,37 @@
                 eyeIcon.classList.add("fa-eye");
             }
         }
+        
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+        }
+        
+        function hideAlert(elementId) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.style.display = 'none';
+        }
+        
+        function setLoading(prefix, isLoading) {
+            const btn = document.getElementById(`btn${prefix.charAt(0).toUpperCase() + prefix.slice(1)}`);
+            const spinner = document.getElementById(`${prefix}Spinner`);
+            const text = document.getElementById(`${prefix}Text`);
+            
+            if (btn) btn.disabled = isLoading;
+            if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+            if (text) text.textContent = isLoading ? 'Procesando...' : (prefix === 'login' ? 'Iniciar sesión' : 'Enviar Solicitud');
+        }
+        
+        // Clear stored data if user is on login page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only clear if there's a message indicating logout or session expired
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('logout') === 'true') {
+                localStorage.clear();
+                showAlert('loginAlert', 'Ha cerrado sesión correctamente.', 'success');
+            }
+        });
     </script>
 }

@@ -1,6 +1,6 @@
-using MiGenteEnLinea.Domain.ReadModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using MiGenteEnLinea.Domain.ReadModels;
 
 namespace MiGenteEnLinea.Application.Common.Interfaces;
 

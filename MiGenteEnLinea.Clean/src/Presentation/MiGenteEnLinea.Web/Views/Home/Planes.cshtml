@@ -11,150 +11,46 @@
     </div>
 </div>
 
-<div class="container mt-5">
+<!-- Loading Spinner -->
+<div id="loadingPlanes" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="sr-only">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando planes...</p>
+</div>
+
+<!-- Error Alert -->
+<div id="planesError" class="container mt-5" style="display: none;">
+    <div class="alert alert-danger text-center">
+        <i class="fa fa-exclamation-triangle"></i>
+        <span id="errorMessage">Error al cargar los planes</span>
+        <button class="btn btn-sm btn-outline-danger ml-3" onclick="loadPlanes()">Reintentar</button>
+    </div>
+</div>
+
+<!-- Planes Empleadores -->
+<div id="planesEmpleadoresSection" class="container mt-5" style="display: none;">
     <div class="row text-center">
         <div class="col-12">
             <h2 class="headerText">Planes para Empleadores</h2>
             <hr />
         </div>
     </div>
-
-    <div class="row">
-        <!-- Plan Básico -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-secondary text-white text-center">
-                    <h4 class="mb-0">Plan Básico</h4>
-                </div>
-                <div class="card-body text-center">
-                    <h2 class="card-title pricing-card-title">
-                        RD$ 500 <small class="text-muted">/ mes</small>
-                    </h2>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fa fa-check text-success"></i> Hasta 5 empleados</li>
-                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
-                        <li><i class="fa fa-check text-success"></i> Contratos básicos</li>
-                        <li><i class="fa fa-check text-success"></i> Soporte por email</li>
-                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Abogado Virtual</li>
-                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Reportes avanzados</li>
-                    </ul>
-                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 1 })" class="btn btn-lg btn-block btn-outline-secondary">
-                        Seleccionar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Plan Profesional -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100 border-primary">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0">Plan Profesional</h4>
-                    <span class="badge badge-warning">Más Popular</span>
-                </div>
-                <div class="card-body text-center">
-                    <h2 class="card-title pricing-card-title">
-                        RD$ 1,200 <small class="text-muted">/ mes</small>
-                    </h2>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fa fa-check text-success"></i> Hasta 20 empleados</li>
-                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
-                        <li><i class="fa fa-check text-success"></i> Contratos personalizados</li>
-                        <li><i class="fa fa-check text-success"></i> Soporte prioritario</li>
-                        <li><i class="fa fa-check text-success"></i> Abogado Virtual</li>
-                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Reportes avanzados</li>
-                    </ul>
-                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 2 })" class="btn btn-lg btn-block btn-primary">
-                        Seleccionar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Plan Empresarial -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-success text-white text-center">
-                    <h4 class="mb-0">Plan Empresarial</h4>
-                </div>
-                <div class="card-body text-center">
-                    <h2 class="card-title pricing-card-title">
-                        RD$ 2,500 <small class="text-muted">/ mes</small>
-                    </h2>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fa fa-check text-success"></i> Empleados ilimitados</li>
-                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
-                        <li><i class="fa fa-check text-success"></i> Contratos personalizados</li>
-                        <li><i class="fa fa-check text-success"></i> Soporte 24/7</li>
-                        <li><i class="fa fa-check text-success"></i> Abogado Virtual</li>
-                        <li><i class="fa fa-check text-success"></i> Reportes avanzados</li>
-                    </ul>
-                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 3 })" class="btn btn-lg btn-block btn-outline-success">
-                        Seleccionar
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div id="planesEmpleadoresContainer" class="row">
+        <!-- Plans will be loaded here dynamically -->
     </div>
 </div>
 
-<div class="container mt-5 mb-5">
+<!-- Planes Contratistas -->
+<div id="planesContratistasSection" class="container mt-5 mb-5" style="display: none;">
     <div class="row text-center">
         <div class="col-12">
             <h2 class="headerText">Planes para Contratistas</h2>
             <hr />
         </div>
     </div>
-
-    <div class="row justify-content-center">
-        <!-- Plan Contratista Básico -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-info text-white text-center">
-                    <h4 class="mb-0">Plan Contratista</h4>
-                </div>
-                <div class="card-body text-center">
-                    <h2 class="card-title pricing-card-title">
-                        RD$ 300 <small class="text-muted">/ mes</small>
-                    </h2>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fa fa-check text-success"></i> Perfil profesional</li>
-                        <li><i class="fa fa-check text-success"></i> Visibilidad en directorio</li>
-                        <li><i class="fa fa-check text-success"></i> Recibir calificaciones</li>
-                        <li><i class="fa fa-check text-success"></i> Gestión de servicios</li>
-                        <li><i class="fa fa-check text-success"></i> Soporte por email</li>
-                    </ul>
-                    <a href="@Url.Action("AdquirirPlan", "Contratista", new { planId = 10 })" class="btn btn-lg btn-block btn-info">
-                        Seleccionar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Plan Contratista Premium -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow h-100 border-warning">
-                <div class="card-header bg-warning text-dark text-center">
-                    <h4 class="mb-0">Plan Premium</h4>
-                    <span class="badge badge-dark">Destacado</span>
-                </div>
-                <div class="card-body text-center">
-                    <h2 class="card-title pricing-card-title">
-                        RD$ 600 <small class="text-muted">/ mes</small>
-                    </h2>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li><i class="fa fa-check text-success"></i> Todo del plan básico</li>
-                        <li><i class="fa fa-check text-success"></i> Perfil destacado</li>
-                        <li><i class="fa fa-check text-success"></i> Prioridad en búsquedas</li>
-                        <li><i class="fa fa-check text-success"></i> Badge verificado</li>
-                        <li><i class="fa fa-check text-success"></i> Soporte prioritario</li>
-                    </ul>
-                    <a href="@Url.Action("AdquirirPlan", "Contratista", new { planId = 11 })" class="btn btn-lg btn-block btn-warning">
-                        Seleccionar
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div id="planesContratistasContainer" class="row justify-content-center">
+        <!-- Plans will be loaded here dynamically -->
     </div>
 </div>
 
@@ -207,3 +103,174 @@
     <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="max-width: 200px;" />
     <p class="text-muted mt-2">Pagos seguros con Cardnet</p>
 </div>
+
+@section Scripts {
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5015/api';
+        
+        // Color schemes for plans
+        const colorSchemes = {
+            empleadores: ['secondary', 'primary', 'success', 'info', 'warning'],
+            contratistas: ['info', 'warning', 'success', 'primary']
+        };
+        
+        // Default features (used when API doesn't return features)
+        const defaultFeaturesEmpleador = {
+            1: ['Hasta 5 empleados', 'Gestión de nómina', 'Contratos básicos', 'Soporte por email'],
+            2: ['Hasta 20 empleados', 'Gestión de nómina', 'Contratos personalizados', 'Soporte prioritario', 'Abogado Virtual'],
+            3: ['Empleados ilimitados', 'Gestión de nómina', 'Contratos personalizados', 'Soporte 24/7', 'Abogado Virtual', 'Reportes avanzados']
+        };
+        
+        const defaultFeaturesContratista = {
+            10: ['Perfil profesional', 'Visibilidad en directorio', 'Recibir calificaciones', 'Gestión de servicios', 'Soporte por email'],
+            11: ['Todo del plan básico', 'Perfil destacado', 'Prioridad en búsquedas', 'Badge verificado', 'Soporte prioritario']
+        };
+        
+        // ============================================
+        // LOAD PLANS ON PAGE LOAD
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlanes();
+        });
+        
+        async function loadPlanes() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                // Load both tipos of plans in parallel
+                const [empleadoresResponse, contratistasResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`),
+                    fetch(`${API_BASE_URL}/suscripciones/planes/contratistas`)
+                ]);
+                
+                if (!empleadoresResponse.ok || !contratistasResponse.ok) {
+                    throw new Error('Error al cargar los planes');
+                }
+                
+                const planesEmpleadores = await empleadoresResponse.json();
+                const planesContratistas = await contratistasResponse.json();
+                
+                renderPlanesEmpleadores(planesEmpleadores);
+                renderPlanesContratistas(planesContratistas);
+                
+                showLoading(false);
+                document.getElementById('planesEmpleadoresSection').style.display = 'block';
+                document.getElementById('planesContratistasSection').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading plans:', error);
+                showLoading(false);
+                showError('No se pudieron cargar los planes. Verifique su conexión e intente nuevamente.');
+            }
+        }
+        
+        function renderPlanesEmpleadores(planes) {
+            const container = document.getElementById('planesEmpleadoresContainer');
+            container.innerHTML = '';
+            
+            if (!planes || planes.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted">No hay planes disponibles</div>';
+                return;
+            }
+            
+            planes.forEach((plan, index) => {
+                const colorScheme = colorSchemes.empleadores[index % colorSchemes.empleadores.length];
+                const isPopular = index === 1; // Second plan is "most popular"
+                const features = plan.caracteristicas || defaultFeaturesEmpleador[plan.id] || ['Plan con acceso completo'];
+                
+                const planHtml = `
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow h-100 ${isPopular ? 'border-' + colorScheme : ''}">
+                            <div class="card-header bg-${colorScheme} ${colorScheme === 'warning' ? 'text-dark' : 'text-white'} text-center">
+                                <h4 class="mb-0">${escapeHtml(plan.nombre)}</h4>
+                                ${isPopular ? '<span class="badge badge-warning">Más Popular</span>' : ''}
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="card-title pricing-card-title">
+                                    RD$ ${formatCurrency(plan.precio)} <small class="text-muted">/ ${plan.duracionMeses > 1 ? plan.duracionMeses + ' meses' : 'mes'}</small>
+                                </h2>
+                                <ul class="list-unstyled mt-3 mb-4">
+                                    ${features.map(f => `<li><i class="fa fa-check text-success"></i> ${escapeHtml(f)}</li>`).join('')}
+                                </ul>
+                                <a href="/Empleador/AdquirirPlan?planId=${plan.id}" class="btn btn-lg btn-block ${isPopular ? 'btn-' + colorScheme : 'btn-outline-' + colorScheme}">
+                                    Seleccionar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += planHtml;
+            });
+        }
+        
+        function renderPlanesContratistas(planes) {
+            const container = document.getElementById('planesContratistasContainer');
+            container.innerHTML = '';
+            
+            if (!planes || planes.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted">No hay planes disponibles</div>';
+                return;
+            }
+            
+            planes.forEach((plan, index) => {
+                const colorScheme = colorSchemes.contratistas[index % colorSchemes.contratistas.length];
+                const isPremium = index === 1 || (plan.nombre && plan.nombre.toLowerCase().includes('premium'));
+                const features = plan.caracteristicas || defaultFeaturesContratista[plan.id] || ['Plan con acceso completo'];
+                
+                const planHtml = `
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow h-100 ${isPremium ? 'border-' + colorScheme : ''}">
+                            <div class="card-header bg-${colorScheme} ${colorScheme === 'warning' ? 'text-dark' : 'text-white'} text-center">
+                                <h4 class="mb-0">${escapeHtml(plan.nombre)}</h4>
+                                ${isPremium ? '<span class="badge badge-dark">Destacado</span>' : ''}
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="card-title pricing-card-title">
+                                    RD$ ${formatCurrency(plan.precio)} <small class="text-muted">/ ${plan.duracionMeses > 1 ? plan.duracionMeses + ' meses' : 'mes'}</small>
+                                </h2>
+                                <ul class="list-unstyled mt-3 mb-4">
+                                    ${features.map(f => `<li><i class="fa fa-check text-success"></i> ${escapeHtml(f)}</li>`).join('')}
+                                </ul>
+                                <a href="/Contratista/AdquirirPlan?planId=${plan.id}" class="btn btn-lg btn-block ${isPremium ? 'btn-' + colorScheme : 'btn-outline-' + colorScheme}">
+                                    Seleccionar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += planHtml;
+            });
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function showLoading(show) {
+            document.getElementById('loadingPlanes').style.display = show ? 'block' : 'none';
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('planesError').style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('planesError').style.display = 'none';
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+}

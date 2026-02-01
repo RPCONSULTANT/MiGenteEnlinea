@@ -8,7 +8,8 @@
         .divRegistro {
             width: 60%;
             background-color: white;
-            height: 600px;
+            height: auto;
+            min-height: 600px;
             border-radius: 10px;
             box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
             right: 10%;
@@ -55,40 +56,40 @@
                     <p></p>
 
                     <div id="perfilForm" class="container">
-                        <form asp-action="Registrar" method="post">
-                            @Html.AntiForgeryToken()
-                            
+                        <div id="registerAlert" class="alert" style="display: none;"></div>
+                        
+                        <form id="formRegistrar" onsubmit="return handleRegister(event)">
                             <div class="form-row align-items-center col col-lg-12 col-xs-12">
                                 <div class="col-sm-12 my-1">
-                                    <select name="tipo" class="form-control" required>
+                                    <select id="tipo" name="tipo" class="form-control" required>
                                         <option value="">Seleccione el Tipo de Perfil</option>
                                         <option value="1">Empleador</option>
-                                        <option value="2">Ofertante</option>
+                                        <option value="2">Ofertante/Contratista</option>
                                     </select>
                                 </div>
                                 <div class="col-sm-6 my-1">
                                     <div class="input-group">
-                                        <input type="text" name="nombre" required class="form-control" placeholder="Nombre">
+                                        <input type="text" id="nombre" name="nombre" required class="form-control" placeholder="Nombre">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 my-1">
                                     <div class="input-group">
-                                        <input type="text" name="apellido" required class="form-control" placeholder="Apellido">
+                                        <input type="text" id="apellido" name="apellido" required class="form-control" placeholder="Apellido">
                                     </div>
                                 </div>
                                 <div class="col-sm-12 my-1">
                                     <div class="input-group">
-                                        <input type="email" name="email" required class="form-control" placeholder="example@email.com">
+                                        <input type="email" id="email" name="email" required class="form-control" placeholder="example@email.com">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 my-1">
                                     <div class="input-group">
-                                        <input type="text" name="telefono1" required class="form-control" placeholder="Teléfono 1">
+                                        <input type="text" id="telefono1" name="telefono1" required class="form-control" placeholder="Teléfono 1">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 my-1">
                                     <div class="input-group">
-                                        <input type="text" name="telefono2" class="form-control" placeholder="Teléfono 2">
+                                        <input type="text" id="telefono2" name="telefono2" class="form-control" placeholder="Teléfono 2">
                                     </div>
                                 </div>
 
@@ -103,12 +104,19 @@
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">@@</div>
                                         </div>
-                                        <input type="text" name="usuario" required class="form-control" placeholder="Nombre de Usuario">
+                                        <input type="text" id="usuario" name="usuario" required class="form-control" placeholder="Nombre de Usuario">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-12 col-lg-12 my-2">
-                                    <button type="submit" class="form-control btn btn-primary">Registrar Cuenta</button>
+                                    <button type="submit" id="btnRegistrar" class="form-control btn btn-primary">
+                                        <span id="registerSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status"></span>
+                                        <span id="registerText">Registrar Cuenta</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-sm-12 col-lg-12 my-1 text-center">
+                                    <a href="@Url.Action("Login", "Auth")" class="text-primary">¿Ya tienes cuenta? Inicia sesión</a>
                                 </div>
                             </div>
                         </form>
@@ -125,7 +133,7 @@
                             </div>
                             <div class="col col-lg6">
                                 <p style="color: white; text-align: center">La comunidad mas completa de profesionales, donde podras gestionar tus empleados y encontrar personal calificado para cubrir tus necesidades.</p>
-                                <button class="btn btn-success form-control">Conocer más...</button>
+                                <a href="@Url.Action("Planes", "Home")" class="btn btn-success form-control">Ver Planes</a>
                             </div>
                         </div>
                     </div>
@@ -136,3 +144,136 @@
 </div>
 
 <div class="form-control" style="background-image: url(/images/back1.jpg); height: 700px;"></div>
+
+@section Scripts {
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5015/api';
+        
+        // ============================================
+        // REGISTER HANDLER
+        // ============================================
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            // Get form values
+            const tipo = document.getElementById('tipo').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const apellido = document.getElementById('apellido').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const telefono1 = document.getElementById('telefono1').value.trim();
+            const telefono2 = document.getElementById('telefono2').value.trim();
+            const usuario = document.getElementById('usuario').value.trim();
+            
+            // Basic validation
+            if (!tipo || !nombre || !apellido || !email || !telefono1 || !usuario) {
+                showAlert('registerAlert', 'Por favor complete todos los campos requeridos', 'danger');
+                return false;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (!emailRegex.test(email)) {
+                showAlert('registerAlert', 'Por favor ingrese un correo electrónico válido', 'danger');
+                return false;
+            }
+            
+            setLoading(true);
+            hideAlert('registerAlert');
+            
+            try {
+                // Build the registration payload
+                const payload = {
+                    tipo: parseInt(tipo),
+                    nombre: nombre,
+                    apellido: apellido,
+                    email: email,
+                    telefono1: telefono1,
+                    telefono2: telefono2 || null,
+                    usuario: usuario
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok || response.status === 201) {
+                    // Success - show message and redirect to login
+                    showAlert('registerAlert', '¡Cuenta creada exitosamente! Revise su correo electrónico para activar su cuenta.', 'success');
+                    
+                    // Clear form
+                    document.getElementById('formRegistrar').reset();
+                    
+                    // Redirect to login after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Login", "Auth")';
+                    }, 3000);
+                    
+                } else if (response.status === 400) {
+                    // Validation error
+                    let errorMsg = 'Error de validación';
+                    if (data.errors) {
+                        // Get first error message
+                        const errors = Object.values(data.errors).flat();
+                        errorMsg = errors[0] || errorMsg;
+                    } else if (data.message) {
+                        errorMsg = data.message;
+                    } else if (data.title) {
+                        errorMsg = data.title;
+                    }
+                    showAlert('registerAlert', errorMsg, 'danger');
+                    
+                } else if (response.status === 409) {
+                    // Email or user already exists
+                    showAlert('registerAlert', 'El correo electrónico o nombre de usuario ya está registrado', 'warning');
+                    
+                } else {
+                    const errorMsg = data.message || data.title || 'Error al registrar la cuenta';
+                    showAlert('registerAlert', errorMsg, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Register error:', error);
+                showAlert('registerAlert', 'Error de conexión. Verifique que el servidor esté disponible.', 'danger');
+            } finally {
+                setLoading(false);
+            }
+            
+            return false;
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            
+            // Scroll to alert
+            alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function hideAlert(elementId) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.style.display = 'none';
+        }
+        
+        function setLoading(isLoading) {
+            const btn = document.getElementById('btnRegistrar');
+            const spinner = document.getElementById('registerSpinner');
+            const text = document.getElementById('registerText');
+            
+            if (btn) btn.disabled = isLoading;
+            if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+            if (text) text.textContent = isLoading ? 'Registrando...' : 'Registrar Cuenta';
+        }
+    </script>
+}

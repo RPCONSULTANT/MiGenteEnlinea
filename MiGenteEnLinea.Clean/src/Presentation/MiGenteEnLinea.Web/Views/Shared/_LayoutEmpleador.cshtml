@@ -139,7 +139,7 @@ Tema: Argon Dashboard 2.0 *@
             <ul class="navbar-nav justify-content-end">
                 <!-- Menu Principal -->
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Empleador" asp-action="Dashboard">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Empleador" asp-action="Index">
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="ni ni-tv-2 text-primary text-sm opacity-10"></i>
                         </div>
@@ -166,7 +166,7 @@ Tema: Argon Dashboard 2.0 *@
                 </li>
                 <!-- Directorio -->
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Empleador" asp-action="Index">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Buscador" ? "active" : "")" asp-controller="Empleador" asp-action="Buscador">
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="ni ni-like-2 text-success text-sm opacity-10"></i>
                         </div>

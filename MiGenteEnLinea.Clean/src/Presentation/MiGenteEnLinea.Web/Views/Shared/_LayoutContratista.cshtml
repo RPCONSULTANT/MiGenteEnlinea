@@ -1,5 +1,5 @@
 @* Layout para dashboard de Contratistas Basado en:
-FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
+FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
 <!DOCTYPE html>
 <html>
   <head>
@@ -21,11 +21,10 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-      @font-face {
+      @@font-face {
         font-family: "Gurajada";
         src: url(/fonts/Gurajada-Regular.ttf);
       }
-
       .headerText {
         font-family: "Gurajada", Gurajada;
       }
@@ -109,29 +108,22 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
               >
                 <i class="ni ni-credit-card text-info text-sm opacity-10"></i>
               </div>
-              <span class="nav-link-text ms-1">Suscripciones</span>
-            </a>
-          </li>
-          <li class="nav-item mt-3">
-            <h6
-              class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6"
-            >
-              Cuenta
-            </h6>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" asp-controller="Auth" asp-action="Logout">
-              <div
-                class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center"
-              >
-                <i
-                  class="ni ni-button-power text-danger text-sm opacity-10"
-                ></i>
-              </div>
-              <span class="nav-link-text ms-1">Cerrar Sesión</span>
+              <span class="nav-link-text ms-1">Mi Suscripción</span>
             </a>
           </li>
         </ul>
+      </div>
+      <!-- Sidebar Footer -->
+      <div class="sidenav-footer mx-3">
+        <div class="card card-plain shadow-none" id="sidenavCard">
+          <div class="card-body text-center p-3 w-100 pt-0">
+            <div class="docs-info">
+              <h6 class="mb-0">¿Necesitas ayuda?</h6>
+              <p class="text-xs font-weight-bold mb-0">Contáctanos</p>
+            </div>
+          </div>
+        </div>
+        <a asp-controller="Home" asp-action="FAQ" class="btn btn-primary btn-sm w-100 mb-3">Preguntas Frecuentes</a>
       </div>
     </aside>
 
@@ -168,19 +160,18 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
             class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4"
             id="navbar"
           >
-            <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-              <div class="input-group">
-                <span class="input-group-text text-body"
-                  ><i class="fas fa-search" aria-hidden="true"></i
-                ></span>
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Buscar..."
-                />
-              </div>
-            </div>
+            <div class="ms-md-auto pe-md-3 d-flex align-items-center"></div>
             <ul class="navbar-nav justify-content-end">
+              <li class="nav-item d-flex align-items-center">
+                <a
+                  asp-controller="Auth"
+                  asp-action="Logout"
+                  class="nav-link text-white font-weight-bold px-0"
+                >
+                  <i class="fa fa-sign-out-alt me-sm-1"></i>
+                  <span class="d-sm-inline d-none">Cerrar Sesión</span>
+                </a>
+              </li>
               <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                 <a
                   href="javascript:;"
@@ -199,7 +190,23 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
         </div>
       </nav>
 
-      @RenderBody()
+      <!-- Banner -->
+      <div class="container-fluid">
+        <div
+          class="page-header min-height-300 border-radius-xl mt-4"
+          style="
+            background-image: url(&quot;/images/bannerADM1.jpg&quot;);
+            background-position-y: 50%;
+          "
+        >
+          <span class="mask bg-gradient-primary opacity-6"></span>
+        </div>
+      </div>
+
+      <!-- Page Content -->
+      <div class="container-fluid py-4" style="margin-top: -100px">
+        @RenderBody()
+      </div>
 
       <!-- Footer -->
       <footer class="footer pt-3">
@@ -209,8 +216,8 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
               <div
                 class="copyright text-center text-sm text-muted text-lg-start"
               >
-                © @DateTime.Now.Year Mi Gente en línea. Diseño y Desarrollo
-                IntDoSystem, SRL
+                © @DateTime.Now.Year Mi Gente en línea. Todos los derechos
+                reservados.
               </div>
             </div>
             <div class="col-lg-6">
@@ -218,20 +225,10 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
                 class="nav nav-footer justify-content-center justify-content-lg-end"
               >
                 <li class="nav-item">
-                  <a
-                    asp-controller="Home"
-                    asp-action="FAQ"
-                    class="nav-link text-muted"
-                    >FAQ</a
-                  >
+                  <a asp-controller="Home" asp-action="FAQ" class="nav-link text-muted">FAQ</a>
                 </li>
                 <li class="nav-item">
-                  <a
-                    asp-controller="Home"
-                    asp-action="Terminos"
-                    class="nav-link text-muted"
-                    >Términos</a
-                  >
+                  <a asp-controller="Home" asp-action="Terminos" class="nav-link text-muted">Términos</a>
                 </li>
               </ul>
             </div>
@@ -240,12 +237,11 @@ FRONT_Publicado/Contratista/ContratistasM.Master y Argon Dashboard Theme *@
       </footer>
     </main>
 
-    <!-- Argon Dashboard Scripts -->
+    <!-- Scripts -->
     <script src="~/lib/argon/js/core/popper.min.js"></script>
     <script src="~/lib/argon/js/core/bootstrap.min.js"></script>
-    <script src="~/lib/argon/js/plugins/perfect-scrollbar.min.js"></script>
-    <script src="~/lib/argon/js/plugins/smooth-scrollbar.min.js"></script>
     <script src="~/lib/argon/js/argon-dashboard.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
   </body>

@@ -206,10 +206,37 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5015/api';
         var planId = '@planId';
+        var planData = null;
         
         $(document).ready(function() {
-            // Cargar información del plan
+            // Check if user is authenticated
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                Swal.fire({
+                    title: 'Sesión Requerida',
+                    text: 'Debe iniciar sesión para adquirir un plan',
+                    icon: 'warning',
+                    confirmButtonText: 'Ir al Login'
+                }).then(() => {
+                    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.href);
+                });
+                return;
+            }
+            
+            // Pre-fill user data
+            const email = localStorage.getItem('email');
+            const nombreCompleto = localStorage.getItem('nombreCompleto');
+            if (email) $('#email').val(email);
+            if (nombreCompleto) {
+                const parts = nombreCompleto.split(' ');
+                if (parts.length >= 1) $('#nombre').val(parts[0]);
+                if (parts.length >= 2) $('#apellido').val(parts.slice(1).join(' '));
+            }
+            
+            // Cargar información del plan desde API
             cargarInfoPlan();
             
             // Formatear número de tarjeta
@@ -232,55 +259,163 @@
                 }
             });
             
+            // Formatear teléfono
+            $('#telefono').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length > 10) value = value.substr(0, 10);
+                var formatted = '';
+                if (value.length >= 3) {
+                    formatted = '(' + value.substr(0, 3) + ') ';
+                    if (value.length >= 6) {
+                        formatted += value.substr(3, 3) + '-' + value.substr(6);
+                    } else {
+                        formatted += value.substr(3);
+                    }
+                } else {
+                    formatted = value;
+                }
+                $(this).val(formatted);
+            });
+            
             // Procesar pago
             $('#btnPagar').on('click', function() {
-                // Validar formulario
-                if (!validarFormulario()) return;
+                procesarPago();
+            });
+        });
+        
+        async function cargarInfoPlan() {
+            try {
+                // Cargar planes desde API
+                const response = await fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`);
                 
-                // Mostrar loading
-                $('#loadingOverlay').show();
+                if (!response.ok) {
+                    throw new Error('Error al cargar planes');
+                }
                 
-                // TODO: Llamar API de Cardnet para procesar el pago
-                var datosTransaccion = {
-                    planId: planId,
-                    nombreTarjeta: $('#nombreTarjeta').val(),
-                    numeroTarjeta: $('#numeroTarjeta').val().replace(/\s/g, ''),
-                    mesVencimiento: $('#mesVencimiento').val(),
-                    anoVencimiento: $('#anoVencimiento').val(),
-                    cvv: $('#cvv').val(),
-                    email: $('#email').val(),
-                    telefono: $('#telefono').val()
+                const planes = await response.json();
+                planData = planes.find(p => p.id == planId);
+                
+                if (!planData) {
+                    // Fallback a datos locales si no se encuentra en API
+                    const planesLocal = {
+                        '1': { id: 1, nombre: 'Eres Mi Gente', precio: 495, duracionMeses: 12 },
+                        '2': { id: 2, nombre: 'Somos Mi Gente', precio: 1695, duracionMeses: 12 },
+                        '3': { id: 3, nombre: 'Mi Gente Somos Todos', precio: 3750, duracionMeses: 12 }
+                    };
+                    planData = planesLocal[planId] || planesLocal['1'];
+                }
+                
+                actualizarUI();
+                
+            } catch (error) {
+                console.error('Error loading plan:', error);
+                // Fallback
+                const planesLocal = {
+                    '1': { id: 1, nombre: 'Eres Mi Gente', precio: 495, duracionMeses: 12 },
+                    '2': { id: 2, nombre: 'Somos Mi Gente', precio: 1695, duracionMeses: 12 },
+                    '3': { id: 3, nombre: 'Mi Gente Somos Todos', precio: 3750, duracionMeses: 12 }
+                };
+                planData = planesLocal[planId] || planesLocal['1'];
+                actualizarUI();
+            }
+        }
+        
+        function actualizarUI() {
+            $('#nombrePlan').text(planData.nombre);
+            const duracion = planData.duracionMeses > 1 ? planData.duracionMeses + ' meses' : '1 mes';
+            $('#subtotal').text('RD$' + planData.precio.toLocaleString());
+            $('#total').text('RD$' + planData.precio.toLocaleString());
+        }
+        
+        async function procesarPago() {
+            // Validar formulario
+            if (!validarFormulario()) return;
+            
+            const accessToken = localStorage.getItem('accessToken');
+            const userId = localStorage.getItem('userId');
+            
+            if (!accessToken || !userId) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            // Mostrar loading
+            $('#loadingOverlay').show();
+            $('#btnPagar').prop('disabled', true);
+            
+            try {
+                // Preparar datos de la transacción
+                const datosTransaccion = {
+                    userId: userId,
+                    planId: parseInt(planId),
+                    tipoUsuario: 'Empleador',
+                    tarjeta: {
+                        nombreTitular: $('#nombreTarjeta').val(),
+                        numero: $('#numeroTarjeta').val().replace(/\s/g, ''),
+                        mesVencimiento: parseInt($('#mesVencimiento').val()),
+                        anoVencimiento: parseInt($('#anoVencimiento').val()),
+                        cvv: $('#cvv').val()
+                    },
+                    contacto: {
+                        nombre: $('#nombre').val(),
+                        apellido: $('#apellido').val(),
+                        email: $('#email').val(),
+                        telefono: $('#telefono').val().replace(/\D/g, '')
+                    }
                 };
                 
-                // Simular procesamiento
-                setTimeout(function() {
-                    $('#loadingOverlay').hide();
+                // Llamar API para procesar pago
+                // NOTE: El endpoint de Cardnet aún no está implementado completamente
+                // Por ahora creamos la suscripción directamente
+                const response = await fetch(`${API_BASE_URL}/suscripciones`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        planId: parseInt(planId),
+                        duracionMeses: planData.duracionMeses || 12
+                    })
+                });
+                
+                const result = await response.json();
+                
+                $('#loadingOverlay').hide();
+                
+                if (response.ok || response.status === 201) {
+                    // Update local storage with new plan
+                    localStorage.setItem('planId', planId);
+                    const vencimiento = new Date();
+                    vencimiento.setMonth(vencimiento.getMonth() + (planData.duracionMeses || 12));
+                    localStorage.setItem('vencimientoPlan', vencimiento.toISOString());
                     
                     Swal.fire({
-                        title: '¡Pago Exitoso!',
-                        html: '<i class="fa fa-check-circle fa-5x text-success mb-3"></i><br>Tu suscripción ha sido activada correctamente.',
+                        title: '¡Suscripción Activada!',
+                        html: '<i class="fa fa-check-circle fa-5x text-success mb-3"></i><br>Tu suscripción al plan <strong>' + planData.nombre + '</strong> ha sido activada correctamente.',
                         icon: 'success',
                         confirmButtonText: 'Ir al Dashboard',
                         allowOutsideClick: false
                     }).then((result) => {
                         window.location.href = '/Empleador/Index';
                     });
-                }, 3000);
-            });
-        });
-        
-        function cargarInfoPlan() {
-            // Información de planes
-            var planes = {
-                '1': { nombre: 'Eres Mi Gente', precio: 495 },
-                '2': { nombre: 'Somos Mi Gente', precio: 1695 },
-                '3': { nombre: 'Mi Gente Somos Todos', precio: 3750 }
-            };
-            
-            var plan = planes[planId] || planes['1'];
-            $('#nombrePlan').text(plan.nombre);
-            $('#subtotal').text('RD$' + plan.precio.toLocaleString());
-            $('#total').text('RD$' + plan.precio.toLocaleString());
+                } else if (response.status === 401) {
+                    Swal.fire('Sesión Expirada', 'Por favor inicie sesión nuevamente.', 'warning')
+                        .then(() => window.location.href = '/Auth/Login');
+                } else {
+                    const errorMsg = result.message || result.title || 'Error al procesar la suscripción';
+                    Swal.fire('Error', errorMsg, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Payment error:', error);
+                $('#loadingOverlay').hide();
+                Swal.fire('Error', 'Error de conexión. Por favor intente nuevamente.', 'error');
+            } finally {
+                $('#btnPagar').prop('disabled', false);
+            }
         }
         
         function validarFormulario() {
@@ -305,6 +440,21 @@
             var numeroTarjeta = $('#numeroTarjeta').val().replace(/\s/g, '');
             if (numeroTarjeta.length < 15) {
                 Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
+                return false;
+            }
+            
+            // Validar CVV
+            var cvv = $('#cvv').val();
+            if (cvv.length < 3 || cvv.length > 4) {
+                Swal.fire('Error', 'El CVV debe tener 3 o 4 dígitos.', 'error');
+                return false;
+            }
+            
+            // Validar email
+            var email = $('#email').val();
+            var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (!emailRegex.test(email)) {
+                Swal.fire('Error', 'El correo electrónico no es válido.', 'error');
                 return false;
             }
             

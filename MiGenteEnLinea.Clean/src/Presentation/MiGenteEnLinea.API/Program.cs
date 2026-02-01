@@ -177,7 +177,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevelopmentPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:4200", "http://localhost:5173")
+        policy.WithOrigins(
+                "http://localhost:3000", 
+                "http://localhost:4200", 
+                "http://localhost:5173",
+                "http://localhost:5244",  // MiGenteEnLinea.Web
+                "https://localhost:5244"  // MiGenteEnLinea.Web HTTPS
+            )
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
