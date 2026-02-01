@@ -444,7 +444,7 @@
         let descuentosAdicionales = [];
         
         function getAuthToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         }
         
         function getEmpleadoIdFromUrl() {
@@ -1002,57 +1002,297 @@
         }
         
         // ============================================
-        // VER CONTRATO
+        // VER CONTRATO - Auto-detecta tipo basado en perfil del empleador
         // ============================================
-        function verContrato() {
-            const empleadoId = getEmpleadoIdFromUrl();
-            Swal.fire({
-                title: 'Ver Contrato',
-                html: `
-                    <p>Seleccione el tipo de contrato a generar:</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" onclick="generarContrato('persona-fisica')">
-                            <i class="fas fa-user me-2"></i>Contrato Persona Física
-                        </button>
-                        <button class="btn btn-info" onclick="generarContrato('empresa')">
-                            <i class="fas fa-building me-2"></i>Contrato Empresa
-                        </button>
-                    </div>
-                `,
-                showConfirmButton: false,
-                showCancelButton: true,
-                cancelButtonText: 'Cerrar'
-            });
-        }
-        
-        function generarContrato(tipo) {
+        async function verContrato() {
             const empleadoId = getEmpleadoIdFromUrl();
             const token = getAuthToken();
-            // In a real implementation, this would call an API to generate the contract PDF
+            
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            // Mostrar loading mientras obtenemos el tipo de empleador
+            Swal.fire({
+                title: 'Preparando Contrato...',
+                text: 'Por favor espere',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            try {
+                // Obtener el perfil del empleador para determinar el tipo de contrato
+                const userId = localStorage.getItem('userId');
+                const perfilResponse = await fetch(`${API_BASE_URL}/empleadores/perfil/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!perfilResponse.ok) {
+                    throw new Error('No se pudo obtener el perfil del empleador');
+                }
+                
+                const perfil = await perfilResponse.json();
+                
+                // TipoIdentificacion: 1 = Cédula (Persona Física), 3 = RNC (Empresa)
+                // También verificar NombreComercial como indicador de empresa
+                const esEmpresa = perfil.tipoIdentificacion === 3 || 
+                                  (perfil.nombreComercial && perfil.nombreComercial.trim() !== '');
+                const tipoContrato = esEmpresa ? 'empresa' : 'persona-fisica';
+                
+                // Generar contrato automáticamente con el tipo detectado
+                await generarContrato(tipoContrato);
+                
+            } catch (error) {
+                console.error('Error obteniendo perfil:', error);
+                // Si hay error, mostrar el diálogo de selección como fallback
+                Swal.fire({
+                    title: 'Seleccione Tipo de Contrato',
+                    html: `
+                        <p>No se pudo detectar automáticamente el tipo de contrato. Por favor seleccione:</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="generarContrato('persona-fisica')">
+                                <i class="fas fa-user me-2"></i>Contrato Persona Física
+                            </button>
+                            <button class="btn btn-info text-white" onclick="generarContrato('empresa')">
+                                <i class="fas fa-building me-2"></i>Contrato Empresa
+                            </button>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'Cerrar'
+                });
+            }
+        }
+        
+        async function generarContrato(tipo) {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            Swal.close();
+            
             Swal.fire({
                 title: 'Generando Contrato...',
-                text: 'El contrato se está generando',
+                text: 'Por favor espere mientras se genera el PDF',
                 icon: 'info',
-                timer: 2000,
-                showConfirmButton: false
-            }).then(() => {
-                Swal.fire('Info', 'Funcionalidad de generación de contratos en desarrollo', 'info');
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/contrato?tipoContrato=${tipo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Error al generar contrato');
+                }
+                
+                // Get the PDF blob and open it
+                const blob = await response.blob();
+                const pdfUrl = window.URL.createObjectURL(blob);
+                window.open(pdfUrl, '_blank');
+                
+                Swal.fire({
+                    title: '¡Contrato Generado!',
+                    text: 'El PDF se ha abierto en una nueva ventana',
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                console.error('Error generating contract:', error);
+                Swal.fire('Error', error.message || 'No se pudo generar el contrato', 'error');
+            }
         }
         
-        function verRecibo(pagoId) {
-            // Open receipt detail
-            window.open(`/Empleador/ImprimirRecibo?id=${pagoId}`, 'ReciboWindow', 'width=800,height=600');
-        }
-        
-        function imprimirRecibo(pagoId) {
-            // Print receipt
+        async function verRecibo(pagoId) {
             const token = getAuthToken();
-            window.open(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, '_blank');
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener recibo');
+                }
+                
+                const blob = await response.blob();
+                const pdfUrl = window.URL.createObjectURL(blob);
+                window.open(pdfUrl, '_blank');
+            } catch (error) {
+                console.error('Error viewing receipt:', error);
+                Swal.fire('Error', 'No se pudo abrir el recibo', 'error');
+            }
         }
         
-        function imprimirDescargo() {
-            Swal.fire('Info', 'Funcionalidad de impresión de descargo en desarrollo', 'info');
+        async function imprimirRecibo(pagoId) {
+            // Same as verRecibo - opens PDF for printing
+            await verRecibo(pagoId);
+        }
+        
+        async function imprimirDescargo() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            // Check if employee is inactive first
+            if (currentEmpleado && currentEmpleado.activo === true) {
+                Swal.fire({
+                    title: 'Empleado Activo',
+                    text: 'El empleado debe estar dado de baja para generar el recibo de descargo.',
+                    icon: 'warning'
+                });
+                return;
+            }
+            
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            // Mostrar loading mientras obtenemos el tipo de empleador
+            Swal.fire({
+                title: 'Preparando Descargo...',
+                text: 'Por favor espere',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            try {
+                // Obtener el perfil del empleador para determinar el tipo
+                const userId = localStorage.getItem('userId');
+                const perfilResponse = await fetch(`${API_BASE_URL}/empleadores/perfil/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!perfilResponse.ok) {
+                    throw new Error('No se pudo obtener el perfil del empleador');
+                }
+                
+                const perfil = await perfilResponse.json();
+                
+                // TipoIdentificacion: 1 = Cédula (Persona Física), 3 = RNC (Empresa)
+                const esEmpresa = perfil.tipoIdentificacion === 3 || 
+                                  (perfil.nombreComercial && perfil.nombreComercial.trim() !== '');
+                const tipoContrato = esEmpresa ? 'empresa' : 'persona-fisica';
+                
+                // Generar descargo automáticamente con el tipo detectado
+                await generarDescargo(tipoContrato);
+                
+            } catch (error) {
+                console.error('Error obteniendo perfil:', error);
+                // Si hay error, mostrar el diálogo de selección como fallback
+                Swal.fire({
+                    title: 'Seleccione Tipo de Contrato',
+                    html: `
+                        <p>No se pudo detectar automáticamente el tipo. Por favor seleccione:</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="generarDescargo('persona-fisica')">
+                                <i class="fas fa-user me-2"></i>Persona Física
+                            </button>
+                            <button class="btn btn-info text-white" onclick="generarDescargo('empresa')">
+                                <i class="fas fa-building me-2"></i>Empresa
+                            </button>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'Cerrar'
+                });
+            }
+        }
+        
+        async function generarDescargo(tipo) {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            Swal.close();
+            
+            Swal.fire({
+                title: 'Generando Descargo...',
+                text: 'Por favor espere mientras se genera el PDF',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/descargo?tipoContrato=${tipo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Error al generar descargo');
+                }
+                
+                // Get the PDF blob and open it
+                const blob = await response.blob();
+                const pdfUrl = window.URL.createObjectURL(blob);
+                window.open(pdfUrl, '_blank');
+                
+                Swal.fire({
+                    title: '¡Descargo Generado!',
+                    text: 'El PDF se ha abierto en una nueva ventana',
+                    icon: 'success',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                console.error('Error generating descargo:', error);
+                Swal.fire('Error', error.message || 'No se pudo generar el descargo', 'error');
+            }
         }
         
         // ============================================

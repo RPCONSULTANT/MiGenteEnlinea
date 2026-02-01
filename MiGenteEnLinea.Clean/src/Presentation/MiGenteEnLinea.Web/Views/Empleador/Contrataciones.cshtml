@@ -461,7 +461,7 @@
         });
         
         function getAuthToken() {
-            return localStorage.getItem('authToken');
+            return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         }
         
         // ============================================

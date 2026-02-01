@@ -41,12 +41,14 @@ using MiGenteEnLinea.Application.Features.Empleados.Queries.GetVistaContratacion
 using MiGenteEnLinea.Application.Features.Empleados.Queries.GetReciboHeaderByPagoId;
 using MiGenteEnLinea.Application.Features.Empleados.Queries.ConsultarPadron;
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
+using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Application.Features.Authentication.Queries.GetProfileById;
 
 namespace MiGenteEnLinea.API.Controllers;
 
 /// <summary>
 /// Controller REST API para gestión completa de empleados permanentes.
-/// Incluye CRUD, remuneraciones extras, procesamiento de nómina y consulta de Padrón Nacional.
+/// Incluye CRUD, remuneraciones extras, procesamiento de nómina, consulta de Padrón Nacional, y generación de contratos PDF.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -56,11 +58,16 @@ public class EmpleadosController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<EmpleadosController> _logger;
+    private readonly IPdfService _pdfService;
 
-    public EmpleadosController(IMediator mediator, ILogger<EmpleadosController> logger)
+    public EmpleadosController(
+        IMediator mediator, 
+        ILogger<EmpleadosController> logger,
+        IPdfService pdfService)
     {
         _mediator = mediator;
         _logger = logger;
+        _pdfService = pdfService;
     }
 
     // ========================================
@@ -1098,6 +1105,285 @@ public class EmpleadosController : ControllerBase
         _logger.LogInformation("Deducciones TSS obtenidas: {Count}", deducciones.Count);
 
         return Ok(deducciones);
+    }
+
+    // ========================================
+    // GENERACIÓN DE DOCUMENTOS PDF
+    // ========================================
+
+    /// <summary>
+    /// Genera PDF del contrato de trabajo para un empleado.
+    /// Migrado desde: PrintViewer.aspx.cs + fichaEmpleado.aspx.cs (imprimirContratoPersonaFisica)
+    /// </summary>
+    /// <param name="id">ID del empleado</param>
+    /// <param name="tipoContrato">Tipo de contrato: "persona-fisica" o "empresa" (default: persona-fisica)</param>
+    /// <returns>Archivo PDF del contrato de trabajo</returns>
+    /// <response code="200">PDF generado exitosamente</response>
+    /// <response code="404">Empleado no encontrado</response>
+    /// <response code="401">No autenticado</response>
+    /// <remarks>
+    /// Ejemplo:
+    ///     GET /api/empleados/101/contrato?tipoContrato=persona-fisica
+    ///     GET /api/empleados/101/contrato?tipoContrato=empresa
+    /// 
+    /// El PDF incluye:
+    /// - Datos del empleador (nombre, cédula/RNC, dirección)
+    /// - Datos del empleado (nombre, cédula, dirección, puesto, salario)
+    /// - Fecha de inicio del contrato
+    /// - Cláusulas legales estándar según Código de Trabajo RD
+    /// 
+    /// Response headers:
+    /// - Content-Type: application/pdf
+    /// - Content-Disposition: attachment; filename="contrato-{id}.pdf"
+    /// </remarks>
+    [HttpGet("{id}/contrato")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GenerarContratoPdf(int id, [FromQuery] string tipoContrato = "persona-fisica")
+    {
+        _logger.LogInformation(
+            "Generando contrato PDF para empleado: {EmpleadoId}, Tipo: {TipoContrato}", 
+            id, tipoContrato);
+
+        try
+        {
+            // 1. Obtener UserId del usuario autenticado
+            var userId = GetUserId();
+            
+            // 2. Obtener datos del empleado
+            var empleadoQuery = new GetEmpleadoByIdQuery(userId, id);
+            var empleado = await _mediator.Send(empleadoQuery);
+            
+            if (empleado == null)
+            {
+                return NotFound(new { error = $"Empleado con ID {id} no encontrado" });
+            }
+
+            // 3. Obtener datos del empleador (perfil del usuario autenticado)
+            var perfilQuery = new GetProfileByIdQuery { UserId = userId };
+            var perfil = await _mediator.Send(perfilQuery);
+            
+            if (perfil == null)
+            {
+                return NotFound(new { error = "Perfil del empleador no encontrado" });
+            }
+
+            // 3. Determinar datos del empleador según tipo
+            string empleadorNombre;
+            string empleadorRnc;
+
+            if (tipoContrato == "empresa" && !string.IsNullOrEmpty(perfil.NombreComercial))
+            {
+                // Tipo empresa: usar datos comerciales
+                empleadorNombre = perfil.NombreComercial;
+                empleadorRnc = perfil.Identificacion ?? "N/A";
+            }
+            else
+            {
+                // Tipo persona física: usar datos personales
+                empleadorNombre = $"{perfil.Nombre} {perfil.Apellido}".Trim();
+                empleadorRnc = perfil.Identificacion ?? "N/A";
+            }
+
+            // 4. Generar PDF del contrato
+            // Convert DateOnly? to DateTime for PDF service
+            DateTime fechaInicio = empleado.FechaInicio.HasValue 
+                ? empleado.FechaInicio.Value.ToDateTime(TimeOnly.MinValue) 
+                : DateTime.Today;
+                
+            var pdfBytes = _pdfService.GenerarContratoTrabajo(
+                empleadorNombre: empleadorNombre,
+                empleadorRnc: empleadorRnc,
+                empleadoNombre: $"{empleado.Nombre} {empleado.Apellido}".Trim(),
+                empleadoCedula: empleado.Identificacion ?? "N/A",
+                puesto: empleado.Posicion ?? "No especificado",
+                salario: empleado.Salario,
+                fechaInicio: fechaInicio
+            );
+
+            _logger.LogInformation(
+                "Contrato PDF generado exitosamente para empleado {EmpleadoId}. Tamaño: {Size} bytes",
+                id, pdfBytes.Length);
+
+            return File(pdfBytes, "application/pdf", $"contrato-{id}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generando contrato PDF para empleado {EmpleadoId}", id);
+            return StatusCode(500, new { error = "Error al generar el contrato PDF" });
+        }
+    }
+
+    /// <summary>
+    /// Genera PDF del recibo de descargo por terminación de contrato.
+    /// Usado cuando un empleado es dado de baja.
+    /// Migrado desde: PrintViewer.aspx.cs (ReciboDescargoPersonaFisica_Empleador1)
+    /// </summary>
+    /// <param name="id">ID del empleado</param>
+    /// <param name="tipoContrato">Tipo de contrato: "persona-fisica" o "empresa"</param>
+    /// <returns>Archivo PDF del descargo</returns>
+    /// <response code="200">PDF generado exitosamente</response>
+    /// <response code="404">Empleado no encontrado</response>
+    /// <response code="400">Empleado no está dado de baja</response>
+    /// <remarks>
+    /// Este documento es el recibo de descargo que firma el empleado
+    /// al terminar su relación laboral, indicando que recibió todas
+    /// sus prestaciones laborales.
+    /// </remarks>
+    [HttpGet("{id}/descargo")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GenerarDescargoPdf(int id, [FromQuery] string tipoContrato = "persona-fisica")
+    {
+        _logger.LogInformation(
+            "Generando descargo PDF para empleado: {EmpleadoId}, Tipo: {TipoContrato}", 
+            id, tipoContrato);
+
+        try
+        {
+            // 1. Obtener UserId del usuario autenticado
+            var userId = GetUserId();
+            
+            // 2. Obtener datos del empleado
+            var empleadoQuery = new GetEmpleadoByIdQuery(userId, id);
+            var empleado = await _mediator.Send(empleadoQuery);
+            
+            if (empleado == null)
+            {
+                return NotFound(new { error = $"Empleado con ID {id} no encontrado" });
+            }
+
+            // Verificar que el empleado está inactivo (dado de baja)
+            if (empleado.Activo == true)
+            {
+                return BadRequest(new { error = "El empleado debe estar dado de baja para generar el descargo" });
+            }
+
+            // 3. Obtener datos del empleador
+            var perfilQuery = new GetProfileByIdQuery { UserId = userId };
+            var perfil = await _mediator.Send(perfilQuery);
+            
+            if (perfil == null)
+            {
+                return NotFound(new { error = "Perfil del empleador no encontrado" });
+            }
+
+            // 3. Preparar datos para el descargo
+            string empleadorNombre;
+            string empleadorRnc;
+
+            if (tipoContrato == "empresa" && !string.IsNullOrEmpty(perfil.NombreComercial))
+            {
+                empleadorNombre = perfil.NombreComercial;
+                empleadorRnc = perfil.Identificacion ?? "N/A";
+            }
+            else
+            {
+                empleadorNombre = $"{perfil.Nombre} {perfil.Apellido}".Trim();
+                empleadorRnc = perfil.Identificacion ?? "N/A";
+            }
+
+            // 4. Generar HTML del descargo y convertir a PDF
+            // Use Prestaciones if available (liquidation amount), otherwise use salary
+            var montoPrestaciones = empleado.Prestaciones ?? empleado.Salario;
+            
+            var descargoHtml = GenerarDescargoHtml(
+                empleadorNombre: empleadorNombre,
+                empleadorRnc: empleadorRnc,
+                empleadoNombre: $"{empleado.Nombre} {empleado.Apellido}".Trim(),
+                empleadoCedula: empleado.Identificacion ?? "N/A",
+                empleadoDireccion: empleado.Direccion ?? "N/A",
+                montoPrestaciones: montoPrestaciones,
+                fechaBaja: empleado.FechaSalida ?? DateTime.Today
+            );
+
+            var pdfBytes = _pdfService.ConvertHtmlToPdf(descargoHtml);
+
+            _logger.LogInformation(
+                "Descargo PDF generado exitosamente para empleado {EmpleadoId}. Tamaño: {Size} bytes",
+                id, pdfBytes.Length);
+
+            return File(pdfBytes, "application/pdf", $"descargo-{id}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generando descargo PDF para empleado {EmpleadoId}", id);
+            return StatusCode(500, new { error = "Error al generar el descargo PDF" });
+        }
+    }
+
+    /// <summary>
+    /// Genera HTML template para el recibo de descargo.
+    /// </summary>
+    private static string GenerarDescargoHtml(
+        string empleadorNombre,
+        string empleadorRnc,
+        string empleadoNombre,
+        string empleadoCedula,
+        string empleadoDireccion,
+        decimal montoPrestaciones,
+        DateTime fechaBaja)
+    {
+        return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Recibo de Descargo</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+        h1 {{ text-align: center; color: #333; }}
+        .content {{ text-align: justify; margin-bottom: 20px; }}
+        .firma {{ margin-top: 60px; text-align: center; }}
+        .firma-linea {{ border-top: 1px solid #000; width: 250px; margin: 40px auto 5px; padding-top: 5px; }}
+    </style>
+</head>
+<body>
+    <h1>RECIBO DE DESCARGO</h1>
+    
+    <div class='content'>
+        <p>
+            Yo, <strong>{empleadoNombre}</strong>, mayor de edad, portador(a) de la cédula de identidad 
+            número <strong>{empleadoCedula}</strong>, domiciliado(a) en <strong>{empleadoDireccion}</strong>,
+            República Dominicana, por medio del presente documento declaro:
+        </p>
+
+        <p>
+            Que he recibido de <strong>{empleadorNombre}</strong>, identificación/RNC: <strong>{empleadorRnc}</strong>, 
+            la suma de <strong>RD$ {montoPrestaciones:N2}</strong> por concepto de:
+        </p>
+
+        <ul>
+            <li>Vacaciones</li>
+            <li>Salario de días laborados</li>
+            <li>Preaviso</li>
+            <li>Cesantía</li>
+            <li>Bonificación proporcional</li>
+            <li>Cualquier otro concepto vinculado al contrato de trabajo</li>
+        </ul>
+
+        <p>
+            En consecuencia, otorgo el más amplio finiquito que en derecho proceda a mi ex empleador,
+            declarando que no tengo nada más que reclamar por ningún concepto relacionado con la
+            relación laboral que existió entre nosotros.
+        </p>
+
+        <p>
+            Hecho y firmado en Santo Domingo, Distrito Nacional, República Dominicana,
+            a los {fechaBaja.Day} días del mes de {fechaBaja:MMMM} del año {fechaBaja.Year}.
+        </p>
+    </div>
+
+    <div class='firma'>
+        <div class='firma-linea'>
+            {empleadoNombre}<br>
+            Cédula: {empleadoCedula}
+        </div>
+    </div>
+</body>
+</html>";
     }
 
     // ========================================

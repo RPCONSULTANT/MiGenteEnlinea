@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Domain.Entities.Empleados;
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +34,35 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             throw new NotFoundException("Credencial", request.UserId);
         }
 
-        // PASO 2: Validar que la identificación no esté duplicada para este empleador
+        // PASO 2: Validar límite de empleados según el plan del empleador
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+        var suscripcionActiva = await _context.Suscripciones
+            .Where(s => s.UserId == request.UserId && s.Vencimiento > hoy)
+            .OrderByDescending(s => s.Vencimiento)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (suscripcionActiva == null)
+        {
+            throw new ValidationException("No tiene una suscripción activa. Por favor adquiera un plan para continuar.");
+        }
+
+        var plan = await _context.PlanesEmpleadores
+            .FirstOrDefaultAsync(p => p.PlanId == suscripcionActiva.PlanId, cancellationToken);
+
+        if (plan != null && plan.LimiteEmpleados > 0)
+        {
+            var empleadosActuales = await _context.Empleados
+                .CountAsync(e => e.UserId == request.UserId && e.Activo, cancellationToken);
+
+            if (empleadosActuales >= plan.LimiteEmpleados)
+            {
+                throw new ValidationException(
+                    $"Ha alcanzado el límite de {plan.LimiteEmpleados} empleado(s) permitidos en su plan '{plan.Nombre}'. " +
+                    "Actualice su plan para agregar más empleados.");
+            }
+        }
+
+        // PASO 3: Validar que la identificación no esté duplicada para este empleador
         var duplicateExists = await _context.Empleados
             .AnyAsync(e => e.UserId == request.UserId && 
                            e.Identificacion == request.Identificacion,
@@ -44,7 +74,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
                 $"Ya existe un empleado con la identificación {request.Identificacion}");
         }
 
-        // PASO 3: Crear empleado usando factory method del dominio
+        // PASO 4: Crear empleado usando factory method del dominio
         var empleado = Empleado.Create(
             userId: request.UserId,
             identificacion: request.Identificacion,
@@ -54,11 +84,11 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             periodoPago: request.PeriodoPago
         );
 
-        // PASO 4: Actualizar fecha de inicio
+        // PASO 5: Actualizar fecha de inicio
         var fechaInicioDateOnly = DateOnly.FromDateTime(request.FechaInicio);
         empleado.ActualizarFechaInicio(fechaInicioDateOnly);
 
-        // PASO 5: Actualizar información personal si se proporciona
+        // PASO 6: Actualizar información personal si se proporciona
         if (request.EstadoCivil.HasValue || request.Nacimiento.HasValue || !string.IsNullOrEmpty(request.Alias))
         {
             var nacimientoDateOnly = request.Nacimiento.HasValue 
@@ -74,7 +104,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 6: Actualizar información de contacto
+        // PASO 7: Actualizar información de contacto
         if (!string.IsNullOrEmpty(request.Telefono1) || 
             !string.IsNullOrEmpty(request.Telefono2))
         {
@@ -86,7 +116,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 7: Actualizar dirección
+        // PASO 8: Actualizar dirección
         if (!string.IsNullOrEmpty(request.Direccion) ||
             !string.IsNullOrEmpty(request.Provincia) ||
             !string.IsNullOrEmpty(request.Municipio))
@@ -98,7 +128,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 8: Actualizar posición si se proporciona
+        // PASO 9: Actualizar posición si se proporciona
         if (!string.IsNullOrEmpty(request.Posicion))
         {
             empleado.ActualizarPosicion(
@@ -108,7 +138,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 8: Configurar TSS y días de pago
+        // PASO 10: Configurar TSS y días de pago
         // Nota: Estos campos se actualizan directamente porque no tienen métodos domain específicos
         // TODO: Considerar agregar método domain si la lógica se complica
         if (request.DiasPago.HasValue)
@@ -117,13 +147,13 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             // empleado.DiasPago = request.DiasPago.Value;
         }
 
-        // PASO 9: Asignar foto si se proporciona
+        // PASO 11: Asignar foto si se proporciona
         if (!string.IsNullOrEmpty(request.Foto))
         {
             // empleado.Foto = request.Foto;
         }
 
-        // PASO 10: Guardar en base de datos
+        // PASO 12: Guardar en base de datos
         await _context.Empleados.AddAsync(empleado, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 

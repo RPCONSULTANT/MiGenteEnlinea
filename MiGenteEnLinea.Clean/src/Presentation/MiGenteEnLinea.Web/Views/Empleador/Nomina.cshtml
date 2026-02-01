@@ -401,7 +401,7 @@
         const pageSize = 20;
         
         function getAuthToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
         }
         
         // ============================================
@@ -925,8 +925,33 @@
             window.open(`/Empleador/ImprimirRecibo?id=${pagoId}`, 'ReciboWindow', 'width=800,height=600');
         }
         
-        function descargarPdf(pagoId) {
-            window.open(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, '_blank');
+        async function descargarPdf(pagoId) {
+            const token = getAuthToken();
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener PDF');
+                }
+                
+                const blob = await response.blob();
+                const pdfUrl = window.URL.createObjectURL(blob);
+                window.open(pdfUrl, '_blank');
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                Swal.fire('Error', 'No se pudo descargar el PDF', 'error');
+            }
         }
         
         function exportarExcel() {

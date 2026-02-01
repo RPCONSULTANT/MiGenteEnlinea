@@ -3,111 +3,90 @@
     Layout = "_LayoutEmpleador";
 }
 
-<div class="container-fluid mt-4">
-    <h2 style="color:white">Elige el Plan Ideal para Tu Negocio</h2>
-    <p style="color:lightgray">Selecciona el plan que mejor se adapte a tus necesidades y empieza a gestionar tu nómina de forma profesional.</p>
-    <hr />
-</div>
-
-<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
-    <div class="row justify-content-center">
-        <!-- Plan Básico -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow border-primary">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h4 class="mb-0">Eres Mi Gente</h4>
-                    <small>Ideal para uso personal</small>
-                </div>
-                <div class="card-body text-center">
-                    <div class="display-4 text-primary mb-3">
-                        RD$495
+<section id="pricing" class="pricing-content section-padding">
+    <div class="container">
+        <div class="section-title text-center">
+            <h2 style="color:white">Nuestros Planes</h2>
+            <p style="color:white">Para acceder y disfrutar de los beneficios que te ofrece Mi Gente en Línea, debes adquirir uno de nuestros planes</p>
+        </div>
+        <div class="row text-center" id="planesContainer">
+            <!-- Plan 1 - Eres Mi Gente -->
+            <div class="col-lg-4 col-sm-6 col-xs-12 mb-4">
+                <div class="pricing_design">
+                    <div class="single-pricing">
+                        <div class="price-head">
+                            <h4>Eres Mi Gente</h4>
+                            <h2>RD$495.00</h2>
+                            <span>/Anual</span>
+                        </div>
+                        <ul>
+                            <li><b>1</b> Administrador</li>
+                            <li><b>1</b> Registro de Empleado</li>
+                            <li>Consultas Ilimitadas</li>
+                            <li><b>12</b> Meses de Data Histórica</li>
+                            <li style="color: #ccc;"><s>Usuarios de Consulta</s></li>
+                            <li style="color: #ccc;"><s>Nómina TSS</s></li>
+                        </ul>
+                        <button class="price_btn" onclick="seleccionarPlan(1, 'Eres Mi Gente', 495)">
+                            <i class="fa fa-shopping-cart me-2"></i>Adquirir
+                        </button>
                     </div>
-                    <p class="text-muted">por año</p>
-                    <hr>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> 1 Usuario Administrador</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> 1 Empleado</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Recibos de Pago</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Contratos Laborales</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Cálculo de Prestaciones</li>
-                        <li class="mb-2"><i class="fa fa-times text-danger me-2"></i> Usuarios de Consulta</li>
-                        <li class="mb-2"><i class="fa fa-times text-danger me-2"></i> Nómina TSS</li>
-                    </ul>
-                </div>
-                <div class="card-footer text-center py-3">
-                    <button class="btn btn-primary btn-lg w-100" onclick="seleccionarPlan(1, 'Eres Mi Gente', 495)">
-                        <i class="fa fa-shopping-cart"></i> Seleccionar
-                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Plan Profesional -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow border-success" style="transform: scale(1.05);">
-                <div class="card-header bg-success text-white text-center py-4">
-                    <span class="badge bg-warning text-dark mb-2">MÁS POPULAR</span>
-                    <h4 class="mb-0">Somos Mi Gente</h4>
-                    <small>Para pequeñas empresas</small>
-                </div>
-                <div class="card-body text-center">
-                    <div class="display-4 text-success mb-3">
-                        RD$1,695
+            <!-- Plan 2 - Somos Mi Gente -->
+            <div class="col-lg-4 col-sm-6 col-xs-12 mb-4">
+                <div class="pricing_design">
+                    <div class="single-pricing" style="transform: scale(1.05);">
+                        <span class="badge bg-warning text-dark mb-3" style="position: relative; top: -15px;">MÁS POPULAR</span>
+                        <div class="price-head">
+                            <h4>Somos Mi Gente</h4>
+                            <h2>RD$1,695.00</h2>
+                            <span>/Anual</span>
+                        </div>
+                        <ul>
+                            <li><b>1</b> Administrador</li>
+                            <li><b>1</b> Usuario de Consulta</li>
+                            <li><b>5</b> Registros de Empleados</li>
+                            <li>Consultas Ilimitadas</li>
+                            <li><b>12</b> Meses de Data Histórica</li>
+                            <li style="color: #ccc;"><s>Nómina TSS</s></li>
+                        </ul>
+                        <button class="price_btn" onclick="seleccionarPlan(2, 'Somos Mi Gente', 1695)">
+                            <i class="fa fa-shopping-cart me-2"></i>Adquirir
+                        </button>
                     </div>
-                    <p class="text-muted">por año</p>
-                    <hr>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> 1 Usuario Administrador</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> <strong>1 Usuario de Consulta</strong></li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> <strong>Hasta 5 Empleados</strong></li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Recibos de Pago</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Contratos Laborales</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Cálculo de Prestaciones</li>
-                        <li class="mb-2"><i class="fa fa-times text-danger me-2"></i> Nómina TSS</li>
-                    </ul>
-                </div>
-                <div class="card-footer text-center py-3">
-                    <button class="btn btn-success btn-lg w-100" onclick="seleccionarPlan(2, 'Somos Mi Gente', 1695)">
-                        <i class="fa fa-shopping-cart"></i> Seleccionar
-                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Plan Empresarial -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow border-warning">
-                <div class="card-header bg-warning text-dark text-center py-4">
-                    <h4 class="mb-0">Mi Gente Somos Todos</h4>
-                    <small>Solución empresarial completa</small>
-                </div>
-                <div class="card-body text-center">
-                    <div class="display-4 text-warning mb-3">
-                        RD$3,750
+            <!-- Plan 3 - Mi Gente Somos Todos -->
+            <div class="col-lg-4 col-sm-6 col-xs-12 mb-4">
+                <div class="pricing_design">
+                    <div class="single-pricing">
+                        <div class="price-head">
+                            <h4>Mi Gente Somos Todos</h4>
+                            <h2>RD$3,750.00</h2>
+                            <span>/Anual</span>
+                        </div>
+                        <ul>
+                            <li><b>1</b> Administrador</li>
+                            <li><b>2</b> Usuarios de Consulta</li>
+                            <li><b>15</b> Registros de Empleados</li>
+                            <li>Consultas Ilimitadas</li>
+                            <li><b>12</b> Meses de Data Histórica</li>
+                            <li><b>Nómina</b> Pre-diseñada para TSS</li>
+                        </ul>
+                        <button class="price_btn" onclick="seleccionarPlan(3, 'Mi Gente Somos Todos', 3750)">
+                            <i class="fa fa-shopping-cart me-2"></i>Adquirir
+                        </button>
                     </div>
-                    <p class="text-muted">por año</p>
-                    <hr>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> 1 Usuario Administrador</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> <strong>2 Usuarios de Consulta</strong></li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> <strong>Hasta 15 Empleados</strong></li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Recibos de Pago</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Contratos Laborales</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> Cálculo de Prestaciones</li>
-                        <li class="mb-2"><i class="fa fa-check text-success me-2"></i> <strong>Nómina TSS Completa</strong></li>
-                    </ul>
-                </div>
-                <div class="card-footer text-center py-3">
-                    <button class="btn btn-warning btn-lg w-100 text-dark" onclick="seleccionarPlan(3, 'Mi Gente Somos Todos', 3750)">
-                        <i class="fa fa-shopping-cart"></i> Seleccionar
-                    </button>
                 </div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Comparación de Planes -->
-    <div class="row mt-5">
+<!-- Comparación de Planes -->
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <div class="row mt-3">
         <div class="col-12">
             <h3 class="text-center mb-4">Comparación de Planes</h3>
             <div class="table-responsive">
@@ -115,17 +94,17 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Características</th>
-                            <th class="bg-primary text-white">Eres Mi Gente</th>
-                            <th class="bg-success text-white">Somos Mi Gente</th>
-                            <th class="bg-warning">Mi Gente Somos Todos</th>
+                            <th style="background-color: #00176B; color: white;">Eres Mi Gente</th>
+                            <th style="background-color: #00176B; color: white;">Somos Mi Gente</th>
+                            <th style="background-color: #00176B; color: white;">Mi Gente Somos Todos</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><strong>Precio Anual</strong></td>
-                            <td>RD$495</td>
-                            <td>RD$1,695</td>
-                            <td>RD$3,750</td>
+                            <td>RD$495.00</td>
+                            <td>RD$1,695.00</td>
+                            <td>RD$3,750.00</td>
                         </tr>
                         <tr>
                             <td>Usuarios Administradores</td>
@@ -170,10 +149,10 @@
                             <td><i class="fa fa-check text-success"></i></td>
                         </tr>
                         <tr>
-                            <td>Soporte Prioritario</td>
-                            <td><i class="fa fa-times text-danger"></i></td>
-                            <td><i class="fa fa-check text-success"></i></td>
-                            <td><i class="fa fa-check text-success"></i></td>
+                            <td>Data Histórica</td>
+                            <td>12 Meses</td>
+                            <td>12 Meses</td>
+                            <td>12 Meses</td>
                         </tr>
                     </tbody>
                 </table>
@@ -231,8 +210,6 @@
         <div class="col-12 text-center">
             <p class="text-muted">Pago seguro procesado por:</p>
             <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="height: 50px;" class="me-3">
-            <img src="~/images/visa.png" alt="Visa" style="height: 40px;" class="me-2" onerror="this.style.display='none'">
-            <img src="~/images/mastercard.png" alt="Mastercard" style="height: 40px;" onerror="this.style.display='none'">
         </div>
     </div>
 </div>
@@ -241,8 +218,8 @@
 <div class="modal fade" id="modalCheckout" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fa fa-credit-card"></i> Finalizar Compra</h5>
+            <div class="modal-header" style="background: #00176B; color: white;">
+                <h5 class="modal-title"><i class="fa fa-credit-card me-2"></i>Finalizar Compra</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -251,7 +228,7 @@
                     <div class="col-md-5">
                         <div class="card bg-light">
                             <div class="card-body">
-                                <h5>Resumen del Pedido</h5>
+                                <h5><i class="fa fa-receipt me-2"></i>Resumen del Pedido</h5>
                                 <hr>
                                 <p><strong>Plan:</strong> <span id="resumenPlan">-</span></p>
                                 <p><strong>Período:</strong> 1 Año</p>
@@ -260,42 +237,49 @@
                                     <span>Subtotal:</span>
                                     <span id="resumenSubtotal">RD$0.00</span>
                                 </div>
-                                <div class="d-flex justify-content-between">
-                                    <span>ITBIS (18%):</span>
-                                    <span id="resumenItbis">Incluido</span>
+                                <div class="d-flex justify-content-between text-muted">
+                                    <span>ITBIS:</span>
+                                    <span>Incluido</span>
                                 </div>
                                 <hr>
                                 <div class="d-flex justify-content-between">
-                                    <strong>Total:</strong>
-                                    <strong id="resumenTotal">RD$0.00</strong>
+                                    <strong style="font-size: 1.2em;">Total:</strong>
+                                    <strong style="font-size: 1.2em; color: #00176B;" id="resumenTotal">RD$0.00</strong>
                                 </div>
                             </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="height: 40px;">
                         </div>
                     </div>
 
                     <!-- Formulario de pago -->
                     <div class="col-md-7">
-                        <h5><i class="fa fa-lock"></i> Información de Pago</h5>
-                        <p class="text-muted small">Tu información está protegida con encriptación SSL.</p>
+                        <h5><i class="fa fa-lock me-2"></i>Información de Pago Seguro</h5>
+                        <p class="text-muted small">Tu información está protegida con encriptación SSL de 256 bits.</p>
                         <form id="formPago">
+                            <input type="hidden" id="planId" value="">
                             <div class="mb-3">
-                                <label class="form-label">Nombre en la Tarjeta</label>
+                                <label class="form-label">Nombre en la Tarjeta *</label>
                                 <input type="text" class="form-control" id="nombreTarjeta" required placeholder="Tal como aparece en la tarjeta">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Número de Tarjeta</label>
-                                <input type="text" class="form-control" id="numeroTarjeta" required maxlength="16" placeholder="0000 0000 0000 0000">
+                                <label class="form-label">Número de Tarjeta *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="numeroTarjeta" required maxlength="19" placeholder="0000 0000 0000 0000">
+                                    <span class="input-group-text"><i class="fa fa-credit-card"></i></span>
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Vencimiento</label>
+                                        <label class="form-label">Vencimiento *</label>
                                         <input type="text" class="form-control" id="vencimiento" required maxlength="5" placeholder="MM/AA">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">CVV</label>
+                                        <label class="form-label">CVV *</label>
                                         <input type="password" class="form-control" id="cvv" required maxlength="4" placeholder="***">
                                     </div>
                                 </div>
@@ -318,9 +302,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success btn-lg" id="btnProcesarPago">
-                    <i class="fa fa-lock"></i> Pagar Ahora
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-lg" style="background: #00176B; color: white;" id="btnProcesarPago">
+                    <i class="fa fa-lock me-2"></i>Pagar Ahora
                 </button>
             </div>
         </div>
@@ -330,78 +316,183 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const API_BASE_URL = 'http://localhost:5015/api';
         var planSeleccionado = null;
-        
+
+        function getAuthToken() {
+            return localStorage.getItem('accessToken');
+        }
+
         function seleccionarPlan(planId, nombre, precio) {
             planSeleccionado = { id: planId, nombre: nombre, precio: precio };
-            
+
+            $('#planId').val(planId);
             $('#resumenPlan').text(nombre);
-            $('#resumenSubtotal').text('RD$' + precio.toLocaleString());
-            $('#resumenTotal').text('RD$' + precio.toLocaleString());
-            
+            $('#resumenSubtotal').text('RD$' + precio.toLocaleString('es-DO', { minimumFractionDigits: 2 }));
+            $('#resumenTotal').text('RD$' + precio.toLocaleString('es-DO', { minimumFractionDigits: 2 }));
+
             $('#modalCheckout').modal('show');
         }
-        
-        $(document).ready(function() {
-            // Formatear número de tarjeta
-            $('#numeroTarjeta').on('input', function() {
+
+        $(document).ready(function () {
+            // Cargar planes desde el backend (opcional para obtener precios actualizados)
+            cargarPlanes();
+
+            // Formatear número de tarjeta con espacios
+            $('#numeroTarjeta').on('input', function () {
                 var value = $(this).val().replace(/\D/g, '');
-                $(this).val(value);
+                var formatted = value.replace(/(.{4})/g, '$1 ').trim();
+                $(this).val(formatted);
             });
-            
-            // Formatear vencimiento
-            $('#vencimiento').on('input', function() {
+
+            // Formatear vencimiento MM/AA
+            $('#vencimiento').on('input', function () {
                 var value = $(this).val().replace(/\D/g, '');
                 if (value.length >= 2) {
                     value = value.substring(0, 2) + '/' + value.substring(2, 4);
                 }
                 $(this).val(value);
             });
-            
-            // Procesar pago
-            $('#btnProcesarPago').on('click', function() {
-                if (!$('#chkTerminos').is(':checked') || !$('#chkAutorizacion').is(':checked')) {
-                    Swal.fire('Error', 'Debe aceptar los términos y autorizar el cargo.', 'error');
-                    return;
-                }
-                
-                // Validar campos
-                var nombre = $('#nombreTarjeta').val();
-                var numero = $('#numeroTarjeta').val();
-                var vencimiento = $('#vencimiento').val();
-                var cvv = $('#cvv').val();
-                
-                if (!nombre || !numero || !vencimiento || !cvv) {
-                    Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
-                    return;
-                }
-                
-                if (numero.length < 15) {
-                    Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
-                    return;
-                }
-                
-                // Mostrar procesando
-                Swal.fire({
-                    title: 'Procesando pago...',
-                    html: '<div class="spinner-border text-primary" role="status"></div><br><br>Por favor no cierre esta ventana.',
-                    allowOutsideClick: false,
-                    showConfirmButton: false
-                });
-                
-                // TODO: Llamar API de Cardnet para procesar el pago
-                setTimeout(function() {
-                    $('#modalCheckout').modal('hide');
-                    Swal.fire({
-                        title: '¡Pago Exitoso!',
-                        text: 'Tu suscripción ha sido activada correctamente.',
-                        icon: 'success',
-                        confirmButtonText: 'Continuar'
-                    }).then((result) => {
-                        window.location.href = '/Empleador/MiSuscripcion';
-                    });
-                }, 3000);
+
+            // Solo números para CVV
+            $('#cvv').on('input', function () {
+                var value = $(this).val().replace(/\D/g, '');
+                $(this).val(value);
             });
+
+            // Procesar pago
+            $('#btnProcesarPago').on('click', procesarPago);
         });
+
+        async function cargarPlanes() {
+            const token = getAuthToken();
+            // Los planes son públicos, no requieren token
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const planes = await response.json();
+                    console.log('Planes cargados desde backend:', planes);
+                    // Los planes se pueden actualizar dinámicamente si es necesario
+                }
+            } catch (error) {
+                console.log('Usando planes estáticos (backend no disponible)');
+            }
+        }
+
+        async function procesarPago() {
+            // Validaciones
+            if (!$('#chkTerminos').is(':checked') || !$('#chkAutorizacion').is(':checked')) {
+                Swal.fire('Error', 'Debe aceptar los términos y autorizar el cargo.', 'error');
+                return;
+            }
+
+            var nombre = $('#nombreTarjeta').val().trim();
+            var numero = $('#numeroTarjeta').val().replace(/\s/g, '');
+            var vencimiento = $('#vencimiento').val();
+            var cvv = $('#cvv').val();
+
+            if (!nombre || !numero || !vencimiento || !cvv) {
+                Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
+                return;
+            }
+
+            if (numero.length < 15 || numero.length > 16) {
+                Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
+                return;
+            }
+
+            if (cvv.length < 3) {
+                Swal.fire('Error', 'El CVV debe tener al menos 3 dígitos.', 'error');
+                return;
+            }
+
+            // Verificar formato MM/AA
+            if (!/^\d{2}\/\d{2}$/.test(vencimiento)) {
+                Swal.fire('Error', 'El formato de vencimiento debe ser MM/AA.', 'error');
+                return;
+            }
+
+            // Mostrar procesando
+            Swal.fire({
+                title: 'Procesando pago...',
+                html: '<div class="spinner-border" style="color: #00176B;" role="status"></div><br><br>Por favor no cierre esta ventana.<br><small>Conectando con Cardnet...</small>',
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            const token = getAuthToken();
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            try {
+                // Preparar datos del pago
+                const userId = localStorage.getItem('userId');
+                const pagoData = {
+                    planId: planSeleccionado.id,
+                    nombreTarjeta: nombre,
+                    numeroTarjeta: numero,
+                    mesExpiracion: parseInt(vencimiento.split('/')[0]),
+                    anioExpiracion: parseInt('20' + vencimiento.split('/')[1]),
+                    cvv: cvv,
+                    monto: planSeleccionado.precio
+                };
+
+                // Por ahora, crear la suscripción directamente
+                // TODO: Integrar con Cardnet para procesar el pago real
+                const suscripcionData = {
+                    userId: userId,
+                    planId: planSeleccionado.id,
+                    tipoSuscripcion: 'Empleador',
+                    mesesDuracion: 12
+                };
+
+                const response = await fetch(`${API_BASE_URL}/suscripciones`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(suscripcionData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error al crear la suscripción');
+                }
+
+                const result = await response.json();
+
+                $('#modalCheckout').modal('hide');
+                Swal.fire({
+                    title: '¡Suscripción Activada!',
+                    html: `<p>Tu suscripción al plan <strong>${planSeleccionado.nombre}</strong> ha sido activada correctamente.</p>
+                           <p class="text-muted small">Tu plan estará activo por 12 meses.</p>`,
+                    icon: 'success',
+                    confirmButtonText: 'Continuar',
+                    confirmButtonColor: '#00176B'
+                }).then((result) => {
+                    window.location.href = '/Empleador/Dashboard';
+                });
+
+            } catch (error) {
+                console.error('Error procesando suscripción:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo procesar la suscripción. Por favor intente nuevamente.',
+                    icon: 'error',
+                    confirmButtonColor: '#00176B'
+                });
+            }
+        }
     </script>
 }
