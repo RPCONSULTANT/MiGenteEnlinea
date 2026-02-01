@@ -9,6 +9,8 @@ namespace MiGenteEnLinea.Application.Features.Authentication.Commands.Register;
 /// <remarks>
 /// Réplica de SuscripcionesService.GuardarPerfil() del Legacy
 /// Crea: Cuenta, Credencial, Contratista (si tipo=2), Suscripción inicial
+/// FLUJO LEGACY: El usuario se registra SIN contraseña, luego activa su cuenta
+/// y en ese momento crea la contraseña.
 /// </remarks>
 public sealed record RegisterCommand : IRequest<RegisterResult>
 {
@@ -18,9 +20,11 @@ public sealed record RegisterCommand : IRequest<RegisterResult>
     public required string Email { get; init; }
     
     /// <summary>
-    /// Contraseña sin hashear (se hasheará con BCrypt en el handler)
+    /// Contraseña sin hashear (OPCIONAL - se crea en la activación)
+    /// En el flujo Legacy, el usuario crea la contraseña al activar la cuenta.
+    /// Si viene vacía o null, la cuenta queda pendiente de activación.
     /// </summary>
-    public required string Password { get; init; }
+    public string? Password { get; init; }
     
     /// <summary>
     /// Nombre del usuario
@@ -49,7 +53,8 @@ public sealed record RegisterCommand : IRequest<RegisterResult>
     
     /// <summary>
     /// URL del host para generar el link de activación
-    /// Ejemplo: "https://migenteenlinea.com"
+    /// Ejemplo: "https://migenteenlinea.com" o "http://localhost:5244"
+    /// Si no se proporciona, se usa un valor por defecto
     /// </summary>
-    public required string Host { get; init; }
+    public string? Host { get; init; }
 }

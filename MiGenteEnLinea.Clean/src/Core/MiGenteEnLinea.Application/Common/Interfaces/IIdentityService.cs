@@ -40,11 +40,16 @@ public interface IIdentityService
     /// Registra un nuevo usuario en el sistema
     /// </summary>
     /// <param name="email">Email del usuario</param>
-    /// <param name="password">Contraseña</param>
+    /// <param name="password">Contraseña (opcional - si es null, la cuenta queda pendiente de activación)</param>
     /// <param name="nombreCompleto">Nombre completo</param>
     /// <param name="tipo">Tipo de usuario ("1" Empleador, "2" Contratista)</param>
     /// <returns>ID del usuario creado</returns>
-    Task<string> RegisterAsync(string email, string password, string nombreCompleto, string tipo);
+    /// <remarks>
+    /// FLUJO LEGACY: El usuario se registra sin contraseña, luego activa su cuenta
+    /// y en ese momento crea la contraseña usando ActivateAccountAsync o SetPasswordAsync.
+    /// Si password es null, se genera un password temporal que el usuario deberá cambiar.
+    /// </remarks>
+    Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo);
 
     /// <summary>
     /// Verifica si un usuario existe por email

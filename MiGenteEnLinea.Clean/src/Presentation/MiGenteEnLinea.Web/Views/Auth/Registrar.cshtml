@@ -183,6 +183,7 @@
             
             try {
                 // Build the registration payload
+                // FLUJO LEGACY: No se envía password aquí - se crea en la activación
                 const payload = {
                     tipo: parseInt(tipo),
                     nombre: nombre,
@@ -190,7 +191,7 @@
                     email: email,
                     telefono1: telefono1,
                     telefono2: telefono2 || null,
-                    usuario: usuario
+                    host: window.location.origin  // Host para el link de activación
                 };
                 
                 const response = await fetch(`${API_BASE_URL}/auth/register`, {

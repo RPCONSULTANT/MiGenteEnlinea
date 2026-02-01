@@ -302,26 +302,46 @@ public class IdentityService : IIdentityService
         _logger.LogInformation("Refresh token revoked for user {UserId}", tokenEntity.UserId);
     }
 
-    public async Task<string> RegisterAsync(string email, string password, string nombreCompleto, string tipo)
+    public async Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
     {
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
         {
-            throw new InvalidOperationException("El email ya est� registrado");
+            throw new InvalidOperationException("El email ya está registrado");
         }
 
         var user = new ApplicationUser
         {
             UserName = email,
             Email = email,
-            EmailConfirmed = false,
+            EmailConfirmed = false, // FLUJO LEGACY: Cuenta no confirmada hasta que active
             NombreCompleto = nombreCompleto,
             Tipo = tipo,
             PlanID = 0,
             FechaCreacion = DateTime.UtcNow
         };
 
-        var result = await _userManager.CreateAsync(user, password);
+        IdentityResult result;
+        
+        if (string.IsNullOrEmpty(password))
+        {
+            // FLUJO LEGACY: Registro sin contraseña
+            // El usuario creará su contraseña cuando active la cuenta
+            // Crear usuario sin password (Identity permite esto con CreateAsync sin password)
+            result = await _userManager.CreateAsync(user);
+            
+            if (result.Succeeded)
+            {
+                _logger.LogInformation(
+                    "User registered without password (Legacy flow). Email: {Email}. User must set password during activation.",
+                    email);
+            }
+        }
+        else
+        {
+            // Registro con contraseña (flujo moderno)
+            result = await _userManager.CreateAsync(user, password);
+        }
 
         if (!result.Succeeded)
         {

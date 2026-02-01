@@ -140,7 +140,7 @@ public class LegacyIdentityService : IIdentityService
         throw new NotImplementedException("Revoke token no implementado aún en sistema Legacy");
     }
 
-    public async Task<string> RegisterAsync(string email, string password, string nombreCompleto, string tipo)
+    public async Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
     {
         // Este método NO se usa - el registro se hace a través de RegisterCommandHandler
         // que tiene lógica mucho más compleja (crear Perfile, Credencial, Contratista, etc.)

@@ -126,10 +126,16 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
 
             // 3.2 Crear Credencial (tabla Credenciales - usada en lógica de negocio)
             var email = Domain.ValueObjects.Email.Create(request.Email);
+            
+            // FLUJO LEGACY: Si no hay password, guardar hash vacío (se establecerá en activación)
+            var passwordHash = string.IsNullOrEmpty(request.Password) 
+                ? string.Empty  // Se establecerá cuando el usuario active la cuenta
+                : _passwordHasher.HashPassword(request.Password);
+            
             var credencial = Credencial.Create(
                 userId: userId,
                 email: email!,
-                passwordHash: _passwordHasher.HashPassword(request.Password)
+                passwordHash: passwordHash
             );
 
             await _unitOfWork.Credenciales.AddAsync(credencial, cancellationToken);
@@ -176,7 +182,13 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
         // ================================================================================
         try
         {
-            var activationUrl = $"{request.Host}/Activar.aspx?userID={userId}&email={request.Email}";
+            // Usar host proporcionado o valor por defecto
+            var host = string.IsNullOrEmpty(request.Host) 
+                ? "http://localhost:5244" 
+                : request.Host.TrimEnd('/');
+            
+            // URL para el nuevo sistema MVC (no Activar.aspx del Legacy)
+            var activationUrl = $"{host}/Auth/Activar?userId={userId}&email={Uri.EscapeDataString(request.Email)}";
 
             await _emailService.SendActivationEmailAsync(
                 toEmail: request.Email,
