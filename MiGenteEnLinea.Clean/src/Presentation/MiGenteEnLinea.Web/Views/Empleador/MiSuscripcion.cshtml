@@ -1,0 +1,340 @@
+@{
+    ViewData["Title"] = "Mi Suscripción";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <h2 style="color:white">Mi Suscripción</h2>
+    <hr />
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <!-- Información del Plan Actual -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fa fa-star"></i> Plan Actual</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 id="nombrePlan" class="text-primary">Plan Básico</h3>
+                            <p class="lead" id="descripcionPlan">Gestiona tu nómina de forma sencilla</p>
+                            <hr>
+                            <p><strong>Fecha de Inicio:</strong> <span id="fechaInicio">01/01/2024</span></p>
+                            <p><strong>Próximo Pago:</strong> <span id="proximoPago" class="text-warning">01/01/2025</span></p>
+                            <p><strong>Estado:</strong> <span class="badge bg-success" id="estadoPlan">Activo</span></p>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="display-1 text-primary">
+                                <span id="precioPlan">RD$495</span>
+                            </div>
+                            <p class="text-muted">por año</p>
+                            <hr>
+                            <h5>Características:</h5>
+                            <ul class="list-unstyled" id="caracteristicasPlan">
+                                <li><i class="fa fa-check text-success"></i> 1 Usuario Administrador</li>
+                                <li><i class="fa fa-check text-success"></i> 1 Empleado</li>
+                                <li><i class="fa fa-check text-success"></i> Recibos de Pago</li>
+                                <li><i class="fa fa-check text-success"></i> Contratos Laborales</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a asp-controller="Empleador" asp-action="AdquirirPlan" class="btn btn-success">
+                            <i class="fa fa-arrow-up"></i> Mejorar Plan
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" id="btnCancelarSuscripcion">
+                            <i class="fa fa-times"></i> Cancelar Suscripción
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fa fa-info-circle"></i> Resumen de Uso</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Empleados Registrados</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 50%;" id="barraEmpleados">1/2</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Usuarios de Consulta</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 0%;" id="barraUsuarios">0/0</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nóminas Procesadas (Este Mes)</label>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 10%;" id="barraNominas">1</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="text-muted small">
+                        <i class="fa fa-lightbulb"></i> Si necesitas más empleados o usuarios, considera mejorar tu plan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Historial de Facturación -->
+    <h3><i class="fa fa-history"></i> Historial de Facturación</h3>
+    <p class="text-muted">Revisa todos tus pagos y facturas anteriores.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered" id="gridPagos">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Descripción</th>
+                    <th>Método de Pago</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>01/01/2024</td>
+                    <td>Suscripción Anual - Plan Básico</td>
+                    <td>Visa ****1234</td>
+                    <td>RD$495.00</td>
+                    <td><span class="badge bg-success">Pagado</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="verFactura(1)">
+                            <i class="fa fa-file-pdf"></i> Ver Factura
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Anterior</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+
+    <hr class="my-5">
+
+    <!-- Métodos de Pago -->
+    <h3><i class="fa fa-credit-card"></i> Métodos de Pago</h3>
+    <p class="text-muted">Administra tus métodos de pago guardados.</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fa fa-credit-card fa-2x text-primary"></i>
+                            <span class="ms-2">Visa ****1234</span>
+                        </div>
+                        <span class="badge bg-primary">Principal</span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">Vence: 12/2025</p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarTarjeta(1)">
+                        <i class="fa fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-dashed" style="border-style: dashed;">
+                <div class="card-body text-center">
+                    <button class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalAgregarTarjeta">
+                        <i class="fa fa-plus"></i> Agregar Tarjeta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Tarjeta -->
+<div class="modal fade" id="modalAgregarTarjeta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Agregar Nueva Tarjeta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre en la Tarjeta</label>
+                    <input type="text" class="form-control" id="nombreTarjeta" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Número de Tarjeta</label>
+                    <input type="text" class="form-control" id="numeroTarjeta" maxlength="16" placeholder="0000 0000 0000 0000" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de Vencimiento</label>
+                            <input type="text" class="form-control" id="vencimiento" placeholder="MM/AA" maxlength="5" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">CVV</label>
+                            <input type="password" class="form-control" id="cvv" maxlength="4" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkPrincipal">
+                    <label class="form-check-label" for="chkPrincipal">Establecer como método de pago principal</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarTarjeta">
+                    <i class="fa fa-save"></i> Guardar Tarjeta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Suscripción -->
+<div class="modal fade" id="modalCancelarSuscripcion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Cancelar Suscripción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> 
+                    <strong>¿Estás seguro que deseas cancelar tu suscripción?</strong>
+                </p>
+                <p>Al cancelar tu suscripción:</p>
+                <ul>
+                    <li>Perderás acceso a todas las funcionalidades al vencer tu período actual.</li>
+                    <li>Tus datos se conservarán por 30 días adicionales.</li>
+                    <li>Podrás reactivar tu cuenta en cualquier momento.</li>
+                </ul>
+                <div class="mb-3">
+                    <label class="form-label">¿Por qué deseas cancelar?</label>
+                    <select class="form-select" id="motivoCancelacion" required>
+                        <option value="">-- Seleccione un motivo --</option>
+                        <option value="precio">El precio es muy alto</option>
+                        <option value="funcionalidades">No tiene las funcionalidades que necesito</option>
+                        <option value="competencia">Encontré una mejor alternativa</option>
+                        <option value="temporal">No lo necesito temporalmente</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="divOtroMotivo" style="display:none;">
+                    <label class="form-label">Especifique:</label>
+                    <textarea class="form-control" id="otroMotivo" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, mantener mi suscripción</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarCancelacion">
+                    <i class="fa fa-times"></i> Sí, cancelar suscripción
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar datos de suscripción desde API
+            // TODO: Implementar carga de datos
+            
+            // Mostrar modal de cancelación
+            $('#btnCancelarSuscripcion').on('click', function() {
+                $('#modalCancelarSuscripcion').modal('show');
+            });
+            
+            // Toggle otro motivo
+            $('#motivoCancelacion').on('change', function() {
+                if ($(this).val() === 'otro') {
+                    $('#divOtroMotivo').show();
+                } else {
+                    $('#divOtroMotivo').hide();
+                }
+            });
+            
+            // Confirmar cancelación
+            $('#btnConfirmarCancelacion').on('click', function() {
+                var motivo = $('#motivoCancelacion').val();
+                if (!motivo) {
+                    Swal.fire('Error', 'Por favor seleccione un motivo de cancelación.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para cancelar suscripción
+                $('#modalCancelarSuscripcion').modal('hide');
+                Swal.fire({
+                    title: 'Suscripción Cancelada',
+                    text: 'Tu suscripción ha sido cancelada. Tendrás acceso hasta el final de tu período actual.',
+                    icon: 'info',
+                    confirmButtonText: 'Entendido'
+                });
+            });
+            
+            // Guardar tarjeta
+            $('#btnGuardarTarjeta').on('click', function() {
+                // TODO: Validar y enviar a API
+                $('#modalAgregarTarjeta').modal('hide');
+                Swal.fire('Éxito', 'La tarjeta ha sido agregada correctamente.', 'success');
+            });
+        });
+        
+        function verFactura(facturaId) {
+            // TODO: Abrir factura en nueva ventana o descargar PDF
+            window.open('/Empleador/Factura/' + facturaId, '_blank');
+        }
+        
+        function eliminarTarjeta(tarjetaId) {
+            Swal.fire({
+                title: '¿Eliminar tarjeta?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // TODO: Llamar API para eliminar
+                    Swal.fire('Eliminada', 'La tarjeta ha sido eliminada.', 'success');
+                }
+            });
+        }
+    </script>
+}

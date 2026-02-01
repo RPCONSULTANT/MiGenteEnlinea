@@ -1,150 +1,342 @@
 @{
-    ViewData["Title"] = "Empleados";
+    ViewData["Title"] = "Mi Gente en Linea";
     Layout = "_LayoutEmpleador";
 }
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="headerText">Mis Empleados</h2>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarEmpleado">
-                    <i class="fa fa-plus"></i> Agregar Empleado
+<div class="container bg-white col col-md-12 col-xs-12 pt-2" style="border-radius: 5px;">
+    <div class="mb-3">
+        <h2>Gestión de Colaboradores Fijos</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="tabsEmpleados" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="empleadosActivos-tab" data-bs-toggle="tab" href="#empleadosActivos" role="tab" aria-controls="empleadosActivos" aria-selected="true">Colaboradores Activos</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="empleadosInactivos-tab" data-bs-toggle="tab" href="#empleadosInactivos" role="tab" aria-controls="empleadosInactivos" aria-selected="false">Colaboradores Inactivos</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="tabContent">
+        <!-- Tab Colaboradores Activos -->
+        <div class="tab-pane fade show active" id="empleadosActivos" role="tabpanel" aria-labelledby="empleadosActivos-tab">
+            <div>
+                <p>Registrar y gestiona tus colaboradores de una manera centralizada y simple.</p>
+            </div>
+            <hr />
+            <div class="row button-group">
+                <button class="bg-primary col-xs-12 col-md-2 mx-1 btn btn-secondary" id="btnNew" type="button" data-bs-toggle="modal" data-bs-target="#registroEmpleadoModal">
+                    <span class="fa fa-plus"></span> Registrar Nuevo
                 </button>
+                <button class="bg-secondary col-xs-12 col-md-3 mx-1 btn btn-secondary" id="btnNomina" type="button" onclick="window.location.href='@Url.Action("Nomina", "Empleador")'">
+                    <span class="fa fa-money"></span> Gestión de Nómina
+                </button>
+                <button class="bg-warning col-xs-12 col-md-2 mx-1 btn btn-secondary" id="btnExportar" type="button">
+                    <span class="fa fa-file"></span> Exportar
+                </button>
+            </div>
+            <hr />
+
+            <!-- Grid Empleados Activos -->
+            <div class="card">
+                <table class="table table-bordered table-sm table-striped" id="gridEmpleados">
+                    <thead>
+                        <tr>
+                            <th scope="col">Identificacion</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Inicio</th>
+                            <th scope="col">salario</th>
+                            <th scope="col">periodo Pago</th>
+                            <th scope="col">Fecha Salida</th>
+                            <th scope="col">#</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="date" class="form-control form-control-sm" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="date" class="form-control form-control-sm" /></td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8">
+                                <div>No data to display</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <hr />
+        </div>
+
+        <!-- Tab Colaboradores Inactivos -->
+        <div class="tab-pane fade" id="empleadosInactivos" role="tabpanel" aria-labelledby="empleadosInactivos-tab">
+            <div>
+                <p>Registrar y gestiona tus empleados de una manera centralizada y simple.</p>
+            </div>
+            <hr />
+            <div class="row button-group">
+                <button class="bg-primary col-xs-12 col-md-2 mx-1 btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#registroEmpleadoModal">
+                    <span class="fa fa-plus"></span> Registrar Nuevo
+                </button>
+                <button class="bg-warning col-xs-12 col-md-2 mx-1 btn btn-secondary" type="button">
+                    <span class="fa fa-file"></span> Exportar
+                </button>
+            </div>
+            <hr />
+
+            <!-- Grid Empleados Inactivos -->
+            <div class="card">
+                <table class="table table-bordered table-sm table-striped" id="gridInactivos">
+                    <thead>
+                        <tr>
+                            <th scope="col">Identificacion</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Inicio</th>
+                            <th scope="col">salario</th>
+                            <th scope="col">periodo Pago</th>
+                            <th scope="col">Registro</th>
+                            <th scope="col">#</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="date" class="form-control form-control-sm" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="text" class="form-control form-control-sm" placeholder="" /></td>
+                            <td><input type="date" class="form-control form-control-sm" /></td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8">
+                                <div>No data to display</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <hr />
         </div>
     </div>
 </div>
 
-<!-- Search and Filter -->
-<div class="container-fluid mb-4">
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Buscar por nombre o cédula..." id="searchEmpleado" />
-                </div>
-                <div class="col-md-3">
-                    <select class="form-control" id="filterEstado">
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activos</option>
-                        <option value="inactivo">Inactivos</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-control" id="filterDepartamento">
-                        <option value="">Todos los departamentos</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-secondary btn-block">
-                        <i class="fa fa-search"></i> Buscar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Empleados Table -->
-<div class="container-fluid">
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Foto</th>
-                            <th>Nombre</th>
-                            <th>Cédula</th>
-                            <th>Cargo</th>
-                            <th>Salario</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaEmpleados">
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">
-                                <i class="fa fa-users fa-3x mb-3"></i>
-                                <p>No hay empleados registrados.</p>
-                                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarEmpleado">
-                                    <i class="fa fa-plus"></i> Agregar tu primer empleado
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Agregar Empleado -->
-<div class="modal fade" id="modalAgregarEmpleado" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+<!-- Modal Registro de Empleado -->
+<div class="modal fade" id="registroEmpleadoModal" tabindex="-1" aria-labelledby="registroEmpleadoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Agregar Nuevo Empleado</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title" id="registroEmpleadoModalLabel">Registro de Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="formAgregarEmpleado">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Cédula</label>
-                                <input type="text" class="form-control" name="cedula" placeholder="00000000000" required />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Nombre Completo</label>
-                                <input type="text" class="form-control" name="nombre" placeholder="Nombre y Apellido" required />
-                            </div>
+                <div class="focus">
+                    <div class="mb-3">
+                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaDeIngreso" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="identificacion" class="form-label"># Identificación</label>
+                        <input type="text" class="form-control" id="txtIdentificacion" />
+                    </div>
+
+                    <div class="mb-3">
+                        <button class="btn btn-secondary w-100" id="btnBuscarCedula" type="button">Validar Cedula</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="apellido" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="alias" class="form-label">Alias/Apodo</label>
+                        <input type="text" class="form-control" id="alias" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ddlEstadoCivil" class="form-label">Estado Civil</label>
+                        <select class="form-select" id="ddlEstadoCivil">
+                            <option value="1">Soltero(a)</option>
+                            <option value="2">Casado(a)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nacimiento" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" id="nacimiento" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="direccion" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="direccion" maxlength="250" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="provincia" class="form-label">Provincia</label>
+                        <input type="text" class="form-control" id="provincia" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="municipio" class="form-label">Municipio</label>
+                        <input type="text" class="form-control" id="municipio" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telefono1" class="form-label">Teléfono 1</label>
+                        <input type="text" class="form-control" id="telefono1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telefono2" class="form-label">Teléfono 2</label>
+                        <input type="text" class="form-control" id="telefono2" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="posicion" class="form-label">Posicion que Ocupa</label>
+                        <input type="text" class="form-control" id="posicion" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="salario" class="form-label">Salario Bruto</label>
+                        <input type="text" class="form-control" id="salario" value="0.00" />
+                    </div>
+
+                    <hr />
+                    <a>Otras Remuneraciones</a>
+
+                    <div class="mb-3">
+                        <label for="nombreRemuneracion1" class="form-label">Descripcion</label>
+                        <input type="text" class="form-control" id="nombreRemuneracion1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="montoRemuneracion1" class="form-label">Monto</label>
+                        <input type="text" class="form-control" id="montoRemuneracion1" value="0.00" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nombreRemuneracion2" class="form-label">Descripcion</label>
+                        <input type="text" class="form-control" id="nombreRemuneracion2" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="montoRemuneracion2" class="form-label">Monto</label>
+                        <input type="text" class="form-control" id="montoRemuneracion2" value="0.00" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nombreRemuneracion3" class="form-label">Descripcion</label>
+                        <input type="text" class="form-control" id="nombreRemuneracion3" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="montoRemuneracion3" class="form-label">Monto</label>
+                        <input type="text" class="form-control" id="montoRemuneracion3" value="0.00" />
+                    </div>
+
+                    <hr />
+
+                    <div class="mb-3">
+                        <label for="chkDeducciones" class="form-label">Aplica para Deducciones TSS</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkDeducciones" />
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Cargo</label>
-                                <input type="text" class="form-control" name="cargo" placeholder="Cargo o Posición" required />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Salario Base</label>
-                                <input type="number" class="form-control" name="salario" placeholder="0.00" required />
-                            </div>
-                        </div>
+
+                    <div class="mb-3">
+                        <label for="periodos" class="form-label">Periodo de Pago</label>
+                        <select class="form-select" id="periodos">
+                            <option value="1">Semanal</option>
+                            <option value="2" selected>Quincenal</option>
+                            <option value="3">Mensual</option>
+                        </select>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Fecha de Ingreso</label>
-                                <input type="date" class="form-control" name="fechaIngreso" required />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Tipo de Contrato</label>
-                                <select class="form-control" name="tipoContrato">
-                                    <option value="indefinido">Indefinido</option>
-                                    <option value="temporal">Temporal</option>
-                                    <option value="obra">Por Obra</option>
-                                </select>
-                            </div>
-                        </div>
+
+                    <hr />
+                    <a>Contacto de Emergencia</a>
+
+                    <div class="mb-3">
+                        <label for="nombreContacto" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombreContacto" />
                     </div>
-                </form>
+
+                    <div class="mb-3">
+                        <label for="telefonoContacto" class="form-label">Telefono</label>
+                        <input type="text" class="form-control" id="telefonoContacto" />
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary">Guardar Empleado</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="bg-success btn btn-secondary" id="btnCrear" type="button">Guardar</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Tipo de Gestión -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title" id="exampleModalLabel">Tipo de Gestion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <a href="@Url.Action("Empleados", "Empleador")" class="btn btn-primary btn-lg mb-3">Colaboradores Fijos</a>
+                <a href="@Url.Action("ContratacionesTemporales", "Empleador")" class="btn btn-secondary btn-lg">Contrataciones Temporales</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function registroEmpleadoModal() {
+            var modal = document.getElementById('registroEmpleadoModal');
+            if (modal) {
+                var modalBootstrap = new bootstrap.Modal(modal);
+                modalBootstrap.show();
+            } else {
+                console.error('El modal no se encontró en la página.');
+            }
+        }
+
+        // Validar Cedula
+        document.getElementById('btnBuscarCedula').addEventListener('click', function() {
+            var cedula = document.getElementById('txtIdentificacion').value;
+            if (cedula.length !== 11) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'La cédula debe tener 11 dígitos',
+                    icon: 'error'
+                });
+                return;
+            }
+            // TODO: Call API to validate cedula
+            console.log('Validating cedula:', cedula);
+        });
+
+        // Guardar empleado
+        document.getElementById('btnCrear').addEventListener('click', function() {
+            // TODO: Validate and save employee via API
+            console.log('Saving employee...');
+        });
+    </script>
+}

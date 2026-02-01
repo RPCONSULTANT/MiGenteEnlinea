@@ -1,0 +1,302 @@
+@{
+    ViewData["Title"] = "Mi Perfil";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <h2 style="color:white">Mi Perfil de Empleador</h2>
+    <hr />
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <h3>Información de la Cuenta</h3>
+    <p class="text-muted">Administra la información de tu perfil y credenciales de acceso.</p>
+
+    <!-- Tipo de Cuenta -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <label class="form-label"><strong>Tipo de Cuenta:</strong></label>
+            <div class="btn-group ms-3" role="group">
+                <input type="radio" class="btn-check" name="tipoCuenta" id="tipoPersonaFisica" value="1" checked>
+                <label class="btn btn-outline-primary" for="tipoPersonaFisica">Persona Física</label>
+
+                <input type="radio" class="btn-check" name="tipoCuenta" id="tipoEmpresa" value="2">
+                <label class="btn btn-outline-primary" for="tipoEmpresa">Empresa</label>
+            </div>
+        </div>
+    </div>
+
+    <form id="formPerfil">
+        <div class="row">
+            <!-- Columna Izquierda -->
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Datos Personales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3" id="divRNC" style="display:none;">
+                            <label for="txtRNC" class="form-label">RNC</label>
+                            <input type="text" class="form-control" id="txtRNC" maxlength="9" placeholder="000000000">
+                        </div>
+                        <div class="mb-3" id="divCedula">
+                            <label for="txtCedula" class="form-label">Cédula</label>
+                            <input type="text" class="form-control" id="txtCedula" maxlength="11" placeholder="00000000000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtNombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="txtNombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtApellido" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="txtApellido" required>
+                        </div>
+                        <div class="mb-3" id="divNombreComercial" style="display:none;">
+                            <label for="txtNombreComercial" class="form-label">Nombre Comercial</label>
+                            <input type="text" class="form-control" id="txtNombreComercial">
+                        </div>
+                        <div class="mb-3" id="divRepresentante" style="display:none;">
+                            <label for="txtRepresentante" class="form-label">Representante Legal</label>
+                            <input type="text" class="form-control" id="txtRepresentante">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha -->
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Contacto</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="txtEmail" class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" id="txtEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtTelefono1" class="form-label">Teléfono 1</label>
+                            <input type="tel" class="form-control" id="txtTelefono1" placeholder="(000) 000-0000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtTelefono2" class="form-label">Teléfono 2</label>
+                            <input type="tel" class="form-control" id="txtTelefono2" placeholder="(000) 000-0000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="txtDireccion" class="form-label">Dirección</label>
+                            <textarea class="form-control" id="txtDireccion" rows="2" maxlength="250"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ddlProvincia" class="form-label">Provincia</label>
+                            <select class="form-select" id="ddlProvincia">
+                                <option value="">-- Seleccione --</option>
+                                <!-- Provincias se cargan via API -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <button type="button" class="btn btn-success btn-lg" id="btnGuardar">
+                    <i class="fa fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <hr class="my-5">
+
+    <!-- Gestión de Credenciales -->
+    <h3>Gestión de Credenciales</h3>
+    <p class="text-muted">Administra los usuarios con acceso a tu cuenta.</p>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario">
+                <i class="fa fa-plus"></i> Agregar Usuario
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered" id="gridCredenciales">
+            <thead class="table-dark">
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th style="width: 150px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        Solo usted tiene acceso a esta cuenta.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Cambiar Contraseña -->
+    <h3>Cambiar Contraseña</h3>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="txtPasswordActual" class="form-label">Contraseña Actual</label>
+                        <input type="password" class="form-control" id="txtPasswordActual" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="txtPasswordNueva" class="form-label">Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="txtPasswordNueva" required minlength="8">
+                        <small class="text-muted">Mínimo 8 caracteres, debe incluir mayúsculas, minúsculas y números.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="txtPasswordConfirmar" class="form-label">Confirmar Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="txtPasswordConfirmar" required>
+                    </div>
+                    <button type="button" class="btn btn-warning" id="btnCambiarPassword">
+                        <i class="fa fa-key"></i> Cambiar Contraseña
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-labelledby="modalNuevoUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalNuevoUsuarioLabel">Agregar Nuevo Usuario</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoUsuario">
+                    <div class="mb-3">
+                        <label for="nuevoEmail" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="nuevoEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevoNombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nuevoNombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevoRol" class="form-label">Rol</label>
+                        <select class="form-select" id="nuevoRol" required>
+                            <option value="consulta">Solo Consulta</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevoPassword" class="form-label">Contraseña Temporal</label>
+                        <input type="password" class="form-control" id="nuevoPassword" required minlength="8">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnCrearUsuario">
+                    <i class="fa fa-user-plus"></i> Crear Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar datos del perfil desde API
+            // TODO: Implementar carga de datos
+            
+            // Toggle tipo de cuenta
+            $('input[name="tipoCuenta"]').on('change', function() {
+                var tipo = $(this).val();
+                if (tipo === '1') {
+                    // Persona Física
+                    $('#divRNC').hide();
+                    $('#divCedula').show();
+                    $('#divNombreComercial').hide();
+                    $('#divRepresentante').hide();
+                } else {
+                    // Empresa
+                    $('#divRNC').show();
+                    $('#divCedula').hide();
+                    $('#divNombreComercial').show();
+                    $('#divRepresentante').show();
+                }
+            });
+            
+            // Guardar perfil
+            $('#btnGuardar').on('click', function() {
+                // TODO: Validar y enviar a API
+                Swal.fire({
+                    title: 'Guardando...',
+                    text: 'Por favor espere',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Simular guardado
+                setTimeout(function() {
+                    Swal.fire('Éxito', 'Los cambios han sido guardados correctamente.', 'success');
+                }, 1000);
+            });
+            
+            // Cambiar contraseña
+            $('#btnCambiarPassword').on('click', function() {
+                var actual = $('#txtPasswordActual').val();
+                var nueva = $('#txtPasswordNueva').val();
+                var confirmar = $('#txtPasswordConfirmar').val();
+                
+                if (!actual || !nueva || !confirmar) {
+                    Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
+                    return;
+                }
+                
+                if (nueva !== confirmar) {
+                    Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
+                    return;
+                }
+                
+                if (nueva.length < 8) {
+                    Swal.fire('Error', 'La contraseña debe tener al menos 8 caracteres.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para cambiar contraseña
+                Swal.fire('Éxito', 'La contraseña ha sido cambiada correctamente.', 'success');
+            });
+            
+            // Crear nuevo usuario
+            $('#btnCrearUsuario').on('click', function() {
+                var email = $('#nuevoEmail').val();
+                var nombre = $('#nuevoNombre').val();
+                var rol = $('#nuevoRol').val();
+                var password = $('#nuevoPassword').val();
+                
+                if (!email || !nombre || !password) {
+                    Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para crear usuario
+                $('#modalNuevoUsuario').modal('hide');
+                Swal.fire('Éxito', 'El usuario ha sido creado. Se ha enviado un correo con las credenciales.', 'success');
+            });
+        });
+    </script>
+}

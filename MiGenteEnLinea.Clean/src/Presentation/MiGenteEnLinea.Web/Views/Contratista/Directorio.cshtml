@@ -1,0 +1,343 @@
+@{
+    ViewData["Title"] = "Directorio de Empleadores";
+    Layout = "_LayoutContratista";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="pagetitle">
+                <h1>Directorio de Empleadores</h1>
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Contratista</a></li>
+                        <li class="breadcrumb-item active">Directorio</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar Empleador</label>
+                            <input type="text" class="form-control" id="txtBuscar" placeholder="Nombre o empresa...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sector</label>
+                            <select class="form-select" id="ddlSector">
+                                <option value="">Todos los sectores</option>
+                                <option value="comercio">Comercio</option>
+                                <option value="servicios">Servicios</option>
+                                <option value="construccion">Construcción</option>
+                                <option value="manufactura">Manufactura</option>
+                                <option value="hogar">Hogar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Zona</label>
+                            <select class="form-select" id="ddlZona">
+                                <option value="">Todas las zonas</option>
+                                <option value="DN">Distrito Nacional</option>
+                                <option value="SD">Santo Domingo</option>
+                                <option value="SN">Santiago</option>
+                                <option value="LP">La Vega</option>
+                                <option value="PP">Puerto Plata</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="btnBuscar">
+                                <i class="fa fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row" id="resultadosContainer">
+        <!-- Empleador Card 1 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-building fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">Constructora ABC, SRL</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Distrito Nacional</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Construcción</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-dark ms-2">4.0</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleador Card 2 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-success text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-home fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">María García</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santo Domingo Este</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Hogar</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-half-alt"></i>
+                        <span class="text-dark ms-2">4.5</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleador Card 3 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-info text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-store fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">Comercial El Progreso</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santiago</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Comercio</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <span class="text-dark ms-2">5.0</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleador Card 4 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-warning text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-utensils fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">Restaurante Don Pepe</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Distrito Nacional</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Servicios</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-dark ms-2">3.0</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleador Card 5 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-danger text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-cogs fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">Industrias Metálicas, SA</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> La Vega</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Manufactura</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-dark ms-2">4.0</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleador Card 6 -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa fa-user fa-2x"></i>
+                    </div>
+                    <h5 class="card-title">Carlos Rodríguez</h5>
+                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santo Domingo Norte</p>
+                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Hogar</p>
+                    <div class="text-warning mb-3">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-half-alt"></i>
+                        <span class="text-dark ms-2">4.5</span>
+                    </div>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-ver-empleador">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Empleador -->
+<div class="modal fade" id="modalEmpleador" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa fa-building"></i> Perfil del Empleador</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 120px; height: 120px;">
+                            <i class="fa fa-building fa-3x"></i>
+                        </div>
+                        <h4 id="modalNombre">Constructora ABC, SRL</h4>
+                        <p class="text-muted" id="modalSector">Construcción</p>
+                        <div class="text-warning">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-dark ms-2">4.0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table">
+                            <tr>
+                                <th>RNC/Cédula:</th>
+                                <td id="modalRNC">123456789</td>
+                            </tr>
+                            <tr>
+                                <th>Ubicación:</th>
+                                <td id="modalUbicacion">Distrito Nacional</td>
+                            </tr>
+                            <tr>
+                                <th>Teléfono:</th>
+                                <td id="modalTelefono">809-555-0123</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td id="modalEmail">contacto@empresa.com</td>
+                            </tr>
+                            <tr>
+                                <th>Miembro desde:</th>
+                                <td id="modalMiembro">Enero 2024</td>
+                            </tr>
+                            <tr>
+                                <th>Contrataciones realizadas:</th>
+                                <td id="modalContrataciones">15</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" class="btn btn-success" id="btnContactar">
+                    <i class="fab fa-whatsapp"></i> Contactar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Ver empleador
+            $('.btn-ver-empleador').on('click', function() {
+                $('#modalEmpleador').modal('show');
+            });
+
+            // Buscar
+            $('#btnBuscar').on('click', function() {
+                Swal.fire({
+                    title: 'Buscando...',
+                    text: 'Por favor espere',
+                    timer: 1500,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            });
+        });
+    </script>
+}

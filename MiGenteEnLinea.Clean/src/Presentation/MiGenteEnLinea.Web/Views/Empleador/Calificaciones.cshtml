@@ -1,0 +1,409 @@
+@{
+    ViewData["Title"] = "Calificaciones";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <h2 style="color:white">Gestión de Calificaciones</h2>
+    <p style="color:lightgray">Califica a los contratistas que has contratado y consulta sus perfiles profesionales.</p>
+    <hr />
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <div class="row">
+        <!-- Calificar Perfil -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fa fa-star"></i> Calificar Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Califica el desempeño de un contratista con quien hayas trabajado.</p>
+                    <button class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#modalCalificar">
+                        <i class="fa fa-plus"></i> Nueva Calificación
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultar Perfil -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fa fa-search"></i> Consultar Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Busca y consulta el perfil de un profesional antes de contratarlo.</p>
+                    <button class="btn btn-info btn-lg w-100" data-bs-toggle="modal" data-bs-target="#modalConsultar">
+                        <i class="fa fa-search"></i> Buscar Perfil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Mis Calificaciones Realizadas -->
+    <h4><i class="fa fa-history"></i> Mis Calificaciones Realizadas</h4>
+    <p class="text-muted">Historial de calificaciones que has otorgado a contratistas.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered" id="gridCalificaciones">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Identificación</th>
+                    <th>Nombre</th>
+                    <th>Puntualidad</th>
+                    <th>Conocimientos</th>
+                    <th>Cumplimiento</th>
+                    <th>Recomendación</th>
+                    <th>Promedio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        <i class="fa fa-star-half-alt fa-3x mb-3 d-block"></i>
+                        No has realizado calificaciones aún.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Calificar -->
+<div class="modal fade" id="modalCalificar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa fa-star"></i> Calificar Contratista</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Buscar contratista -->
+                <div class="mb-4">
+                    <label class="form-label">Buscar Contratista por Identificación</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="txtBuscarContratista" placeholder="Ingrese cédula o RNC...">
+                        <button class="btn btn-primary" type="button" id="btnBuscarContratista">
+                            <i class="fa fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Información del contratista -->
+                <div id="divInfoContratista" style="display:none;">
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2 text-center">
+                                    <img id="fotoContratista" src="~/images/default-avatar.png" class="rounded-circle" style="width:80px; height:80px; object-fit:cover;">
+                                </div>
+                                <div class="col-md-10">
+                                    <h5 id="nombreContratista">Nombre del Contratista</h5>
+                                    <p class="text-muted mb-1" id="servicioContratista">Servicio Profesional</p>
+                                    <p class="mb-0"><small>Cédula: <span id="cedulaContratista">000-0000000-0</span></small></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de calificación -->
+                    <form id="formCalificacion">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label"><strong>Puntualidad</strong></label>
+                                    <div class="rating-container" id="ratingPuntualidad">
+                                        <i class="fa fa-star star" data-value="1"></i>
+                                        <i class="fa fa-star star" data-value="2"></i>
+                                        <i class="fa fa-star star" data-value="3"></i>
+                                        <i class="fa fa-star star" data-value="4"></i>
+                                        <i class="fa fa-star star" data-value="5"></i>
+                                    </div>
+                                    <input type="hidden" id="valorPuntualidad" value="0">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label"><strong>Conocimientos</strong></label>
+                                    <div class="rating-container" id="ratingConocimientos">
+                                        <i class="fa fa-star star" data-value="1"></i>
+                                        <i class="fa fa-star star" data-value="2"></i>
+                                        <i class="fa fa-star star" data-value="3"></i>
+                                        <i class="fa fa-star star" data-value="4"></i>
+                                        <i class="fa fa-star star" data-value="5"></i>
+                                    </div>
+                                    <input type="hidden" id="valorConocimientos" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label"><strong>Cumplimiento</strong></label>
+                                    <div class="rating-container" id="ratingCumplimiento">
+                                        <i class="fa fa-star star" data-value="1"></i>
+                                        <i class="fa fa-star star" data-value="2"></i>
+                                        <i class="fa fa-star star" data-value="3"></i>
+                                        <i class="fa fa-star star" data-value="4"></i>
+                                        <i class="fa fa-star star" data-value="5"></i>
+                                    </div>
+                                    <input type="hidden" id="valorCumplimiento" value="0">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label"><strong>Recomendación</strong></label>
+                                    <div class="rating-container" id="ratingRecomendacion">
+                                        <i class="fa fa-star star" data-value="1"></i>
+                                        <i class="fa fa-star star" data-value="2"></i>
+                                        <i class="fa fa-star star" data-value="3"></i>
+                                        <i class="fa fa-star star" data-value="4"></i>
+                                        <i class="fa fa-star star" data-value="5"></i>
+                                    </div>
+                                    <input type="hidden" id="valorRecomendacion" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Comentario (Opcional)</strong></label>
+                            <textarea class="form-control" id="txtComentario" rows="3" maxlength="500" placeholder="Escriba un comentario sobre su experiencia..."></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarCalificacion" disabled>
+                    <i class="fa fa-save"></i> Guardar Calificación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Consultar Perfil -->
+<div class="modal fade" id="modalConsultar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fa fa-search"></i> Consultar Perfil Profesional</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Ingrese la Identificación del Profesional</label>
+                    <input type="text" class="form-control" id="txtConsultarId" placeholder="Cédula o RNC...">
+                </div>
+                <button class="btn btn-info w-100" id="btnConsultarPerfil">
+                    <i class="fa fa-search"></i> Consultar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Resultado Perfil -->
+<div class="modal fade" id="modalResultadoPerfil" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fa fa-user"></i> Perfil Profesional</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <img id="perfilFoto" src="~/images/default-avatar.png" class="rounded-circle mb-3" style="width:120px; height:120px; object-fit:cover;">
+                    <h3 id="perfilNombre">Nombre del Profesional</h3>
+                    <p class="text-muted" id="perfilServicio">Servicio Profesional</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Calificaciones Promedio</h5>
+                        <div class="mb-2">
+                            <span class="me-2">Puntualidad:</span>
+                            <span class="text-warning" id="promPuntualidad">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="far fa-star"></i>
+                            </span>
+                            <span class="badge bg-primary">4.0</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="me-2">Conocimientos:</span>
+                            <span class="text-warning" id="promConocimientos">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                            </span>
+                            <span class="badge bg-primary">5.0</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="me-2">Cumplimiento:</span>
+                            <span class="text-warning" id="promCumplimiento">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="far fa-star"></i>
+                            </span>
+                            <span class="badge bg-primary">4.0</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="me-2">Recomendación:</span>
+                            <span class="text-warning" id="promRecomendacion">
+                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i>
+                            </span>
+                            <span class="badge bg-primary">4.5</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Estadísticas</h5>
+                        <p><strong>Total de Calificaciones:</strong> <span id="totalCalificaciones">15</span></p>
+                        <p><strong>Promedio General:</strong> <span class="badge bg-success fs-5" id="promedioGeneral">4.4</span></p>
+                        <p><strong>Miembro desde:</strong> <span id="fechaRegistro">Enero 2023</span></p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>Servicios que Ofrece</h5>
+                <div id="listaServicios">
+                    <span class="badge bg-secondary me-1 mb-1">Plomería</span>
+                    <span class="badge bg-secondary me-1 mb-1">Electricidad</span>
+                    <span class="badge bg-secondary me-1 mb-1">Pintura</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="contactarPerfil()">
+                    <i class="fa fa-phone"></i> Contactar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-container {
+        font-size: 1.5rem;
+    }
+    .rating-container .star {
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .rating-container .star.selected,
+    .rating-container .star.hover {
+        color: #ffc107;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar historial de calificaciones
+            // TODO: Llamar API
+            
+            // Sistema de estrellas
+            $('.rating-container .star').on('click', function() {
+                var container = $(this).parent();
+                var value = $(this).data('value');
+                var inputId = container.attr('id').replace('rating', 'valor');
+                
+                container.find('.star').removeClass('selected');
+                container.find('.star').each(function() {
+                    if ($(this).data('value') <= value) {
+                        $(this).addClass('selected');
+                    }
+                });
+                
+                $('#' + inputId).val(value);
+                verificarFormulario();
+            });
+            
+            $('.rating-container .star').on('mouseenter', function() {
+                var container = $(this).parent();
+                var value = $(this).data('value');
+                
+                container.find('.star').removeClass('hover');
+                container.find('.star').each(function() {
+                    if ($(this).data('value') <= value) {
+                        $(this).addClass('hover');
+                    }
+                });
+            });
+            
+            $('.rating-container').on('mouseleave', function() {
+                $(this).find('.star').removeClass('hover');
+            });
+            
+            // Buscar contratista para calificar
+            $('#btnBuscarContratista').on('click', function() {
+                var identificacion = $('#txtBuscarContratista').val();
+                if (!identificacion) {
+                    Swal.fire('Error', 'Ingrese una identificación para buscar.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para buscar contratista
+                // Simulación
+                $('#divInfoContratista').show();
+                $('#nombreContratista').text('Juan Pérez');
+                $('#servicioContratista').text('Electricista');
+                $('#cedulaContratista').text(identificacion);
+                $('#btnGuardarCalificacion').prop('disabled', false);
+            });
+            
+            // Guardar calificación
+            $('#btnGuardarCalificacion').on('click', function() {
+                var puntualidad = $('#valorPuntualidad').val();
+                var conocimientos = $('#valorConocimientos').val();
+                var cumplimiento = $('#valorCumplimiento').val();
+                var recomendacion = $('#valorRecomendacion').val();
+                
+                if (puntualidad == 0 || conocimientos == 0 || cumplimiento == 0 || recomendacion == 0) {
+                    Swal.fire('Error', 'Por favor califique todas las categorías.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para guardar calificación
+                $('#modalCalificar').modal('hide');
+                Swal.fire('Éxito', 'La calificación ha sido guardada correctamente.', 'success');
+                
+                // Limpiar formulario
+                limpiarFormularioCalificacion();
+            });
+            
+            // Consultar perfil
+            $('#btnConsultarPerfil').on('click', function() {
+                var identificacion = $('#txtConsultarId').val();
+                if (!identificacion) {
+                    Swal.fire('Error', 'Ingrese una identificación para consultar.', 'error');
+                    return;
+                }
+                
+                // TODO: Llamar API para obtener perfil
+                $('#modalConsultar').modal('hide');
+                $('#modalResultadoPerfil').modal('show');
+            });
+        });
+        
+        function verificarFormulario() {
+            var puntualidad = $('#valorPuntualidad').val();
+            var conocimientos = $('#valorConocimientos').val();
+            var cumplimiento = $('#valorCumplimiento').val();
+            var recomendacion = $('#valorRecomendacion').val();
+            
+            if (puntualidad > 0 && conocimientos > 0 && cumplimiento > 0 && recomendacion > 0) {
+                $('#btnGuardarCalificacion').prop('disabled', false);
+            }
+        }
+        
+        function limpiarFormularioCalificacion() {
+            $('#txtBuscarContratista').val('');
+            $('#divInfoContratista').hide();
+            $('.rating-container .star').removeClass('selected');
+            $('[id^=valor]').val(0);
+            $('#txtComentario').val('');
+            $('#btnGuardarCalificacion').prop('disabled', true);
+        }
+        
+        function contactarPerfil() {
+            // TODO: Implementar contacto
+            Swal.fire('Información', 'Se mostrará la información de contacto del profesional.', 'info');
+        }
+    </script>
+}

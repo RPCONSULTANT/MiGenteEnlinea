@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = "Mi Suscripción";
+    Layout = "_LayoutContratista";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="pagetitle">
+                <h1>Gestión de Suscripción</h1>
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Contratista</a></li>
+                        <li class="breadcrumb-item active">Mi Suscripción</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <!-- Plan Actual -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fa fa-star"></i> Plan Actual</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="text-primary" id="planNombre">Mi Gente, Soy yo</h3>
+                    <h2 class="text-dark">RD$495.00 <small class="text-muted">/Anual</small></h2>
+                    <hr>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="fa fa-check text-success me-2"></i> <strong>1</strong> Administrador</li>
+                        <li><i class="fa fa-check text-success me-2"></i> <strong>1</strong> Registro de Perfil Profesional</li>
+                        <li><i class="fa fa-check text-success me-2"></i> Consultas Ilimitadas</li>
+                        <li><i class="fa fa-check text-success me-2"></i> Registro de Portafolio</li>
+                        <li><i class="fa fa-check text-success me-2"></i> Adquisición de Reputación por Rating</li>
+                        <li><i class="fa fa-check text-success me-2"></i> <strong>12</strong> Meses de Data Histórica</li>
+                    </ul>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <strong>Fecha Inicio</strong>
+                            <p class="text-muted" id="fechaInicio">01/01/2025</p>
+                        </div>
+                        <div class="col-6">
+                            <strong>Fecha Vencimiento</strong>
+                            <p class="text-danger" id="fechaVencimiento">01/01/2026</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-success" id="alertActivo">
+                        <i class="fa fa-check-circle"></i> Suscripción Activa
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fa fa-sync"></i> Renovar Suscripción</h5>
+                </div>
+                <div class="card-body">
+                    <p>Tu suscripción vence pronto. Renueva ahora para mantener tu perfil visible en el directorio.</p>
+                    <a href="@Url.Action("AdquirirPlan", "Contratista")" class="btn btn-success btn-lg w-100">
+                        <i class="fa fa-credit-card"></i> Renovar Ahora
+                    </a>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fa fa-history"></i> Historial de Pagos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Plan</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>01/01/2025</td>
+                                    <td>Mi Gente, Soy yo</td>
+                                    <td>RD$495.00</td>
+                                    <td><span class="badge bg-success">Pagado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>01/01/2024</td>
+                                    <td>Mi Gente, Soy yo</td>
+                                    <td>RD$450.00</td>
+                                    <td><span class="badge bg-success">Pagado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Perfil -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fa fa-chart-bar"></i> Estadísticas de Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <i class="fa fa-eye fa-3x text-primary mb-2"></i>
+                                <h4>150</h4>
+                                <p class="text-muted">Visitas al Perfil</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <i class="fa fa-star fa-3x text-warning mb-2"></i>
+                                <h4>4.5</h4>
+                                <p class="text-muted">Calificación Promedio</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <i class="fa fa-comments fa-3x text-success mb-2"></i>
+                                <h4>25</h4>
+                                <p class="text-muted">Calificaciones Recibidas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <i class="fa fa-briefcase fa-3x text-info mb-2"></i>
+                                <h4>12</h4>
+                                <p class="text-muted">Contrataciones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+}

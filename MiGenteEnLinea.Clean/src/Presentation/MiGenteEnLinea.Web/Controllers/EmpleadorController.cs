@@ -96,4 +96,20 @@ public class EmpleadorController : Controller
     {
         return View();
     }
+
+    /// <summary>
+    /// FAQ - Frequently Asked Questions
+    /// </summary>
+    public IActionResult FAQ()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Buscador - Search for contractors/professionals
+    /// </summary>
+    public IActionResult Buscador()
+    {
+        return View();
+    }
 }

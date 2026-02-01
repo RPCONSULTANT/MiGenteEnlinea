@@ -1,0 +1,204 @@
+@{
+    ViewData["Title"] = "Gestión de Nómina";
+    Layout = "_LayoutEmpleador";
+}
+
+<h2 style="color:white">Administra la Nomina de tu Gente</h2>
+<hr />
+<div style="background-color:white; padding-block:5px; padding-left:10px;">
+    <div class="container mt-5">
+        <h2>Gestión de Nómina</h2>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mt-3" id="myTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="novedad-tab" data-bs-toggle="tab" href="#novedad" role="tab" aria-controls="novedad" aria-selected="true">Novedad</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="historico-tab" data-bs-toggle="tab" href="#historico" role="tab" aria-controls="historico" aria-selected="false">Histórico</a>
+            </li>
+        </ul>
+
+        <!-- Contenido de los tabs -->
+        <div class="tab-content mt-3" id="myTabContent">
+            <!-- Tab Novedad -->
+            <div class="tab-pane fade show active" id="novedad" role="tabpanel" aria-labelledby="novedad-tab">
+                <div class="row">
+                    <div class="container">
+                        <div class="row mt-3">
+                            <div class="col-md-2">
+                                <label for="fechaPago" class="form-label">Fecha del Pago:</label>
+                                <input type="date" class="form-control" id="fechaPago" />
+                            </div>
+                            <div class="col-md-3">
+                                <label for="ddlEmpleado" class="form-label">Seleccionar Empleado:</label>
+                                <select class="form-select" id="ddlEmpleado">
+                                    <option value="">-- Seleccione --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="txtSalario" class="form-label">Salario:</label>
+                                <input type="text" class="form-control" id="txtSalario" value="0.00" onkeypress="return soloNumeros(event)" />
+                            </div>
+                            <div class="col-md-2">
+                                <label for="txtDescuento" class="form-label">Descuento</label>
+                                <input type="text" class="form-control" id="txtDescuento" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label for="txtDescripcion" class="form-label">Descripcion del Descuento:</label>
+                                <input type="text" class="form-control" id="txtDescripcion" />
+                            </div>
+                            <div class="col-md-4">
+                                <a style="color:white">.</a>
+                                <br />
+                                <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <table class="table table-bordered table-sm" id="gridNomina">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Empleado</th>
+                                                <th scope="col">Fecha del Pago</th>
+                                                <th scope="col">Monto</th>
+                                                <th scope="col">#</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="4">
+                                                    <div>No data to display</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Histórico -->
+            <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                <div class="row">
+                    <div class="container mt-3">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Desde:</label>
+                                <input type="date" class="form-control" id="fechaDesde" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Hasta:</label>
+                                <input type="date" class="form-control" id="fechaHasta" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Empleado:</label>
+                                <select class="form-select" id="filtroEmpleado">
+                                    <option value="">-- Todos --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-secondary w-100" id="btnFiltrar">
+                                    <i class="fa fa-search"></i> Filtrar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <table class="table table-bordered table-sm" id="gridHistorico">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Fecha</th>
+                                        <th scope="col">Empleado</th>
+                                        <th scope="col">Concepto</th>
+                                        <th scope="col">Monto</th>
+                                        <th scope="col">Estado</th>
+                                        <th scope="col">#</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6">
+                                            <div>No data to display</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar lista de empleados
+            // TODO: Llamar API para obtener empleados
+            
+            // Agregar a nómina
+            $('#btnAgregar').on('click', function() {
+                var empleado = $('#ddlEmpleado').val();
+                var fecha = $('#fechaPago').val();
+                var salario = $('#txtSalario').val();
+                var descuento = $('#txtDescuento').val();
+                
+                if (!empleado || !fecha || !salario) {
+                    Swal.fire('Error', 'Por favor complete todos los campos requeridos.', 'error');
+                    return;
+                }
+                
+                // TODO: Agregar a la tabla de nómina
+                Swal.fire('Agregado', 'El registro ha sido agregado a la nómina.', 'success');
+            });
+            
+            // Procesar nómina
+            $('#btnProcesarNomina').on('click', function() {
+                Swal.fire({
+                    title: 'Procesar Nómina',
+                    text: '¿Estás seguro que deseas procesar la nómina?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, procesar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // TODO: Llamar API para procesar nómina
+                        Swal.fire('Éxito', 'La nómina ha sido procesada correctamente.', 'success');
+                    }
+                });
+            });
+            
+            // Filtrar histórico
+            $('#btnFiltrar').on('click', function() {
+                // TODO: Llamar API con filtros
+            });
+            
+            // Exportar
+            $('#btnExportar').on('click', function() {
+                // TODO: Exportar a Excel
+                Swal.fire('Exportando', 'El archivo se está descargando...', 'info');
+            });
+        });
+        
+        function soloNumeros(event) {
+            var charCode = (event.which) ? event.which : event.keyCode;
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                return false;
+            }
+            return true;
+        }
+    </script>
+}

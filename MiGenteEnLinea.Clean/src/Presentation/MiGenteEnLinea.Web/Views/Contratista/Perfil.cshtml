@@ -1,0 +1,339 @@
+@{
+    ViewData["Title"] = "Mi Perfil Profesional";
+    Layout = "_LayoutContratista";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-dark">Administrar Perfil Profesional</h3>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <!-- Columna Foto de Perfil -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="~/images/default-avatar.png" class="rounded-circle mb-3" id="profileImage" alt="Imagen de perfil" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h5 class="card-title">Imagen de Perfil</h5>
+                    <input type="file" class="form-control mb-3" id="fileUpload" accept="image/*" />
+                    <div class="mb-3">
+                        <label class="form-label">Calificación de Perfil</label>
+                        <div class="text-warning fs-4" id="ratingDisplay">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+                        <span class="text-muted" id="ratingValue">4.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Datos -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header p-0">
+                    <ul class="nav nav-tabs" id="perfilTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datosGenerales" type="button">
+                                Datos Generales
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="servicios-tab" data-bs-toggle="tab" data-bs-target="#servicios" type="button">
+                                Catálogo de Servicios
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="perfilTabsContent">
+                        <!-- Tab Datos Generales -->
+                        <div class="tab-pane fade show active" id="datosGenerales" role="tabpanel">
+                            <form id="formPerfil">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Título de Perfil</label>
+                                            <input type="text" class="form-control" id="txtTitulo" placeholder="Ingrese el título de su publicación" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Sector Profesional</label>
+                                            <select class="form-select" id="ddlSector">
+                                                <option value="">-- Seleccione --</option>
+                                                <option value="1">Electricidad</option>
+                                                <option value="2">Plomería</option>
+                                                <option value="3">Carpintería</option>
+                                                <option value="4">Pintura</option>
+                                                <option value="5">Jardinería</option>
+                                                <option value="6">Limpieza</option>
+                                                <option value="7">Albañilería</option>
+                                                <option value="8">Mecánica</option>
+                                                <option value="9">Cocina</option>
+                                                <option value="10">Cuidado de Niños</option>
+                                                <option value="11">Cuidado de Adultos Mayores</option>
+                                                <option value="12">Otro</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Presentación</label>
+                                            <textarea class="form-control" id="txtPresentacion" rows="4" placeholder="Agregue una breve presentación para que sus posibles clientes le conozcan mejor."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="txtEmail" />
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Años de Experiencia</label>
+                                                    <input type="number" class="form-control" id="txtExperiencia" min="0" max="50" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Provincia</label>
+                                                    <select class="form-select" id="ddlProvincia">
+                                                        <option value="">-- Seleccione --</option>
+                                                        <option value="DN">Distrito Nacional</option>
+                                                        <option value="SD">Santo Domingo</option>
+                                                        <option value="SN">Santiago</option>
+                                                        <option value="LP">La Vega</option>
+                                                        <option value="PP">Puerto Plata</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tipo de Perfil</label>
+                                                    <select class="form-select" id="ddlTipoPerfil">
+                                                        <option value="1">Persona Física</option>
+                                                        <option value="2">Empresa</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">RNC/Cédula</label>
+                                                    <input type="text" class="form-control" id="txtIdentificacion" maxlength="11" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" id="divPersonaFisica">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Nombre</label>
+                                                    <input type="text" class="form-control" id="txtNombre" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Apellido</label>
+                                                    <input type="text" class="form-control" id="txtApellido" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row" id="divEmpresa" style="display: none;">
+                                            <div class="col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Razón Social</label>
+                                                    <input type="text" class="form-control" id="txtRazonSocial" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Teléfono 1</label>
+                                                    <input type="tel" class="form-control" id="txtTelefono1" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">¿WhatsApp?</label>
+                                                    <div class="form-check mt-2">
+                                                        <input class="form-check-input" type="checkbox" id="chkWhatsapp1">
+                                                        <label class="form-check-label" for="chkWhatsapp1">Sí</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Teléfono 2</label>
+                                                    <input type="tel" class="form-control" id="txtTelefono2" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">¿WhatsApp?</label>
+                                                    <div class="form-check mt-2">
+                                                        <input class="form-check-input" type="checkbox" id="chkWhatsapp2">
+                                                        <label class="form-check-label" for="chkWhatsapp2">Sí</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tab Servicios -->
+                        <div class="tab-pane fade" id="servicios" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-10">
+                                    <label class="form-label">Descripción de Servicio</label>
+                                    <input type="text" class="form-control" id="txtServicio" placeholder="Ingrese la descripción del servicio que ofrece" />
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary w-100" id="btnAgregarServicio">
+                                        <i class="fa fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                            <hr>
+                            <h5>Mis Servicios</h5>
+                            <table class="table table-hover" id="tablaServicios">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th style="width: 120px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Instalaciones eléctricas residenciales</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger btn-remover"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reparación de luminarias</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger btn-remover"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="button" class="btn btn-success" id="btnGuardar">
+                        <i class="fa fa-save"></i> Guardar Información
+                    </button>
+                    <button type="button" class="btn btn-warning ms-2" id="btnActivar" style="display: none;">
+                        <i class="fa fa-check"></i> Activar Perfil
+                    </button>
+                    <button type="button" class="btn btn-danger ms-2" id="btnDesactivar">
+                        <i class="fa fa-times"></i> Desactivar Perfil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cambiar imagen de perfil
+            $('#fileUpload').on('change', function() {
+                var input = this;
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#profileImage').attr('src', e.target.result);
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            });
+
+            // Cambiar tipo de perfil
+            $('#ddlTipoPerfil').on('change', function() {
+                if ($(this).val() === '1') {
+                    $('#divPersonaFisica').show();
+                    $('#divEmpresa').hide();
+                } else {
+                    $('#divPersonaFisica').hide();
+                    $('#divEmpresa').show();
+                }
+            });
+
+            // Agregar servicio
+            $('#btnAgregarServicio').on('click', function() {
+                var servicio = $('#txtServicio').val().trim();
+                if (servicio === '') {
+                    Swal.fire('Error', 'Ingrese una descripción del servicio', 'warning');
+                    return;
+                }
+                
+                var row = `<tr>
+                    <td>${servicio}</td>
+                    <td><button class="btn btn-sm btn-danger btn-remover"><i class="fa fa-trash"></i></button></td>
+                </tr>`;
+                $('#tablaServicios tbody').append(row);
+                $('#txtServicio').val('');
+            });
+
+            // Remover servicio
+            $(document).on('click', '.btn-remover', function() {
+                $(this).closest('tr').remove();
+            });
+
+            // Guardar perfil
+            $('#btnGuardar').on('click', function() {
+                // TODO: Llamar API para guardar perfil
+                Swal.fire({
+                    title: 'Perfil Actualizado',
+                    text: 'Tu perfil ha sido actualizado correctamente.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            // Activar perfil
+            $('#btnActivar').on('click', function() {
+                Swal.fire({
+                    title: 'Perfil Activado',
+                    text: 'Todos los miembros de la comunidad podrán ver tu perfil en el directorio.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+                $('#btnActivar').hide();
+                $('#btnDesactivar').show();
+            });
+
+            // Desactivar perfil
+            $('#btnDesactivar').on('click', function() {
+                Swal.fire({
+                    title: '¿Desactivar perfil?',
+                    text: 'Tu perfil no será visible en el directorio.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, desactivar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire('Perfil Desactivado', 'Nadie podrá ver tu perfil publicado en el directorio.', 'info');
+                        $('#btnDesactivar').hide();
+                        $('#btnActivar').show();
+                    }
+                });
+            });
+        });
+    </script>
+}

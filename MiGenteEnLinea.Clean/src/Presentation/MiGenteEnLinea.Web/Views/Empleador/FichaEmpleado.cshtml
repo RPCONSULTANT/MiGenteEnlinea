@@ -1,0 +1,437 @@
+@{
+    ViewData["Title"] = "Ficha de Empleado";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="Empleados">Empleados</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Ficha de Empleado</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="container-fluid">
+    <h2 id="NombreEmpleado" class="text-dark">Empleado</h2>
+
+    <div class="bg-white pt-5 pb-5">
+        <div class="container">
+            <!-- Mensaje de empleado inactivo -->
+            <div id="divMensajeInactivo" class="alert alert-warning" style="display:none">
+                <h4 class="alert-heading">Este empleado se encuentra desactivado</h4>
+                <p>El empleado está desactivado y no puede realizar tareas en este momento. ¿Deseas imprimir el descargo?</p>
+                <button id="btnImprimirDescargo" class="btn btn-primary">Imprimir Descargo</button>
+            </div>
+
+            <div class="row">
+                <!-- Información del Empleado -->
+                <div class="col-md-12 mt-1">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h4 class="card-title">Información del Empleado</h4>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p><strong>Fecha de Registro:</strong> <span id="fechaRegistro">01/01/2024</span></p>
+                                    <p><strong>Fecha de Inicio:</strong> <span id="fechaInicio">15/01/2024</span></p>
+                                    <p><strong>Identificación:</strong> <span id="identificacion">000-0000000-0</span></p>
+                                    <p><strong>Nombre:</strong> <span id="nombreCompleto">Nombre Apellido</span></p>
+                                    <p><strong>Salario:</strong> <span id="salario">RD$0.00</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Dirección:</strong> <span id="htmlDireccion">Dirección</span></p>
+                                    <p><strong>Provincia:</strong> <span id="htmlProvincia">Provincia</span></p>
+                                    <p><strong>Municipio:</strong> <span id="htmlMunicipio">Municipio</span></p>
+                                    <p><strong>Contacto Emergencia:</strong> <span id="htmlEmergencia">N/A</span></p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="chkTss" disabled>
+                                        <label class="form-check-label" for="chkTss">Aplica para deducciones TSS</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <p><strong>Teléfono 1:</strong> <span id="telefono1">(000)-000-0000</span></p>
+                                    <p><strong>Teléfono 2:</strong> <span id="telefono2">(000)-000-0000</span></p>
+                                    <p><strong>Período de Pago:</strong> <span id="periodoPago">Quincenal</span></p>
+                                    <p><strong style="color:red">Contrato:</strong> <a class="btn btn-primary" style="color:white;font-weight:bold" href="#" id="btnContrato">Ver Contrato</a></p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="chkActivo" disabled checked>
+                                        <label class="form-check-label" for="chkActivo">Activo</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <img id="fotoEmpleado" src="~/images/default-avatar.png" alt="Foto" class="img-thumbnail" style="max-width: 150px;">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <button class="btn btn-primary me-2" id="btnEditarPerfil" type="button" data-bs-toggle="modal" data-bs-target="#registroEmpleadoModal">Editar</button>
+                                    <button type="button" class="btn btn-danger me-2" id="btnBaja">Dar de Baja</button>
+                                    <button id="btnPago" class="btn btn-success me-2" type="button" data-bs-toggle="modal" data-bs-target="#modalPago">Realizar Pago</button>
+                                    <button class="btn btn-info" type="button" data-bs-toggle="modal" id="btnNota" data-bs-target="#agregarNotaModal">Agregar Nota</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de Pagos -->
+                <div class="col-md-12 mt-3">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h4 class="card-title">Historial de Pagos</h4>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered" id="gridPagos">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha Registro</th>
+                                            <th>Fecha Pago</th>
+                                            <th>Tipo</th>
+                                            <th>Monto</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">No hay pagos registrados</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de Notas -->
+                <div class="col-md-12 mt-3">
+                    <div class="card shadow" style="max-height: 300px; overflow-y: auto;">
+                        <div class="card-body">
+                            <h4 class="card-title">Historial de Notas</h4>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered" id="gridNotas">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:20%">Fecha</th>
+                                            <th>Nota</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted">No hay notas registradas</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Nota -->
+<div class="modal fade" id="agregarNotaModal" tabindex="-1" aria-labelledby="agregarNotaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarNotaModalLabel">Agregar Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <textarea id="txtNota" class="form-control" maxlength="200" placeholder="Ingrese la nota" rows="4"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnGuardarNota" class="btn btn-primary">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Empleado -->
+<div class="modal fade" id="registroEmpleadoModal" tabindex="-1" aria-labelledby="registroEmpleadoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registroEmpleadoModalLabel">Editar Empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarEmpleado">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fechaDeIngreso" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="fechaDeIngreso" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="txtIdentificacion" class="form-label"># Identificación</label>
+                                <input type="text" class="form-control" id="txtIdentificacion" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalNombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="modalNombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="apellido" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="apellido" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="alias" class="form-label">Alias/Apodo</label>
+                                <input type="text" class="form-control" id="alias">
+                            </div>
+                            <div class="mb-3">
+                                <label for="ddlEstadoCivil" class="form-label">Estado Civil</label>
+                                <select class="form-select" id="ddlEstadoCivil">
+                                    <option value="1">Soltero(a)</option>
+                                    <option value="2">Casado(a)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-control" id="nacimiento" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="direccion" maxlength="250" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="provincia" class="form-label">Provincia</label>
+                                <input type="text" class="form-control" id="provincia" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="municipio" class="form-label">Municipio</label>
+                                <input type="text" class="form-control" id="municipio" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalTelefono1" class="form-label">Teléfono 1</label>
+                                <input type="text" class="form-control" id="modalTelefono1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalTelefono2" class="form-label">Teléfono 2</label>
+                                <input type="text" class="form-control" id="modalTelefono2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="posicion" class="form-label">Posición que Ocupa</label>
+                                <input type="text" class="form-control" id="posicion" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modalSalario" class="form-label">Salario Bruto</label>
+                                <input type="number" class="form-control" id="modalSalario" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodos" class="form-label">Período de Pago</label>
+                        <select class="form-select" id="periodos">
+                            <option value="1">Semanal</option>
+                            <option value="2" selected>Quincenal</option>
+                            <option value="3">Mensual</option>
+                        </select>
+                    </div>
+                    <hr>
+                    <h6>Contacto de Emergencia</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombreContacto" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombreContacto">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefonoContacto" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefonoContacto">
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Otras Remuneraciones</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <input type="text" class="form-control" id="nombreRemuneracion1">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="montoRemuneracion1" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="chkDeducciones">
+                        <label class="form-check-label" for="chkDeducciones">Aplica para Deducciones TSS</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnCrear" class="btn btn-success">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Realizar Pago -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Realizar Pago a Empleado</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12 mb-3">
+                        <label>Concepto de Pago</label>
+                        <select class="form-select" id="ddlConceptoPago">
+                            <option selected>Pago de Salario</option>
+                            <option>Regalía Pascual</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 col-sm-12 mb-3">
+                        <label>Fecha de Pago</label>
+                        <input type="date" class="form-control" id="fechaPago" required>
+                    </div>
+                    <div class="col-lg-5 col-sm-12 mb-3">
+                        <label>Tipo de Pago</label>
+                        <select class="form-select" id="ddlTipoPago">
+                            <option value="1" selected>Periodo Completo</option>
+                            <option value="2">Fracción de Periodo</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-sm-12 mb-3">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-primary w-100" id="btnContinuar">Continuar</button>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-lg-7 col-sm-12 mb-3">
+                        <label>Descuento (Descripción)</label>
+                        <input type="text" class="form-control" id="descripcionDescuento">
+                    </div>
+                    <div class="col-lg-3 col-sm-12 mb-3">
+                        <label>Monto</label>
+                        <input type="number" class="form-control" id="montoDescuento" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="col-lg-2 col-sm-12 mb-3">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-danger w-100" id="btnNuevoDescuento"><i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
+                <label>Detalle</label>
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="gridDetallePago">
+                        <thead>
+                            <tr>
+                                <th style="width:70%">Concepto</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Salario Base</td>
+                                <td>RD$0.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th>Total a Pagar</th>
+                                <th id="totalPagar">RD$0.00</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" id="btnGenerar">Procesar Pago</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Cargar datos del empleado desde API
+            var empleadoId = '@ViewData["EmpleadoId"]';
+            if (empleadoId && empleadoId !== '') {
+                // TODO: Cargar datos del empleado via API
+                // fetch(`/api/empleados/${empleadoId}`)...
+            }
+            
+            // Dar de baja
+            $('#btnBaja').on('click', function() {
+                Swal.fire({
+                    title: 'Dar de Baja',
+                    text: '¿Estás seguro que deseas dar de baja a este empleado?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, dar de baja',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // TODO: Llamar API para dar de baja
+                        Swal.fire('Completado', 'El empleado ha sido dado de baja.', 'success');
+                    }
+                });
+            });
+            
+            // Guardar nota
+            $('#btnGuardarNota').on('click', function() {
+                var nota = $('#txtNota').val();
+                if (nota.trim() === '') {
+                    Swal.fire('Error', 'Por favor ingrese una nota.', 'error');
+                    return;
+                }
+                // TODO: Llamar API para guardar nota
+                $('#agregarNotaModal').modal('hide');
+                Swal.fire('Guardado', 'La nota ha sido guardada exitosamente.', 'success');
+            });
+            
+            // Procesar pago
+            $('#btnGenerar').on('click', function() {
+                Swal.fire({
+                    title: 'Confirmar Pago',
+                    text: '¿Estás seguro que deseas procesar este pago?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, procesar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // TODO: Llamar API para procesar pago
+                        $('#modalPago').modal('hide');
+                        Swal.fire('Éxito', 'El pago ha sido procesado correctamente.', 'success');
+                    }
+                });
+            });
+        });
+        
+        function AbrirPopupImprimirRecibo(pagoID, userID, documento) {
+            var url = '/Empleador/ImprimirRecibo?documento=' + encodeURIComponent(documento) + '&id=' + encodeURIComponent(pagoID) + '&userID=' + encodeURIComponent(userID);
+            var ventanaPopup = window.open(url, 'PopupWindow', 'width=800,height=600,location=no');
+        }
+    </script>
+}

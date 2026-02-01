@@ -1,0 +1,375 @@
+@{
+    ViewData["Title"] = "Abogado Virtual";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <h2 style="color:white"><i class="fa fa-robot"></i> Abogado Virtual</h2>
+    <p style="color:lightgray">Tu asistente legal impulsado por inteligencia artificial para consultas laborales.</p>
+    <hr />
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <div class="row">
+        <!-- Panel de Chat -->
+        <div class="col-md-8">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fa fa-robot"></i>
+                        <strong>Asistente Legal IA</strong>
+                    </div>
+                    <button class="btn btn-sm btn-light" id="btnNuevaConversacion">
+                        <i class="fa fa-plus"></i> Nueva Conversación
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Área de mensajes -->
+                    <div id="chatContainer" style="height: 450px; overflow-y: auto; padding: 20px; background: #f8f9fa;">
+                        <!-- Mensaje de bienvenida -->
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fa fa-robot"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="bg-white rounded p-3 shadow-sm">
+                                    <p class="mb-0">
+                                        ¡Hola! Soy tu asistente legal virtual. Estoy aquí para ayudarte con consultas relacionadas al 
+                                        <strong>Código de Trabajo de la República Dominicana</strong>. 
+                                    </p>
+                                    <p class="mb-0 mt-2">
+                                        Puedo asistirte con temas como:
+                                    </p>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Cálculo de prestaciones laborales</li>
+                                        <li>Derechos y obligaciones del empleador</li>
+                                        <li>Contratos de trabajo</li>
+                                        <li>Vacaciones y licencias</li>
+                                        <li>Terminación de contratos</li>
+                                        <li>Salarios y deducciones</li>
+                                    </ul>
+                                    <p class="mb-0 mt-2 text-muted">
+                                        <small><i class="fa fa-info-circle"></i> Recuerda que mis respuestas son orientativas. Para casos específicos, consulta con un abogado.</small>
+                                    </p>
+                                </div>
+                                <small class="text-muted">Abogado Virtual • Ahora</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="txtPregunta" placeholder="Escribe tu pregunta aquí..." maxlength="500">
+                        <button class="btn btn-primary" type="button" id="btnEnviar">
+                            <i class="fa fa-paper-plane"></i> Enviar
+                        </button>
+                    </div>
+                    <small class="text-muted">Presiona Enter para enviar</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="col-md-4">
+            <!-- Preguntas frecuentes -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fa fa-question-circle"></i> Preguntas Sugeridas</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Cómo se calculan las prestaciones laborales?">
+                            <i class="fa fa-calculator text-primary me-2"></i> ¿Cómo calcular prestaciones?
+                        </button>
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Cuántos días de vacaciones corresponden según la ley?">
+                            <i class="fa fa-umbrella-beach text-success me-2"></i> Días de vacaciones
+                        </button>
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Cómo se calcula la regalía pascual?">
+                            <i class="fa fa-gift text-danger me-2"></i> Cálculo de regalía pascual
+                        </button>
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Qué dice la ley sobre el despido justificado?">
+                            <i class="fa fa-user-minus text-warning me-2"></i> Despido justificado
+                        </button>
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Cuáles son las deducciones obligatorias TSS?">
+                            <i class="fa fa-percentage text-info me-2"></i> Deducciones TSS
+                        </button>
+                        <button class="list-group-item list-group-item-action pregunta-sugerida" data-pregunta="¿Qué debe contener un contrato de trabajo?">
+                            <i class="fa fa-file-contract text-secondary me-2"></i> Contrato de trabajo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial -->
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fa fa-history"></i> Historial de Consultas</h6>
+                </div>
+                <div class="card-body p-0" style="max-height: 200px; overflow-y: auto;">
+                    <div class="list-group list-group-flush" id="historialConsultas">
+                        <div class="list-group-item text-center text-muted">
+                            <small>No hay consultas previas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="alert alert-warning mt-4">
+                <h6><i class="fa fa-exclamation-triangle"></i> Aviso Legal</h6>
+                <small>
+                    Este asistente proporciona información general basada en el Código de Trabajo de la República Dominicana. 
+                    Las respuestas no constituyen asesoría legal profesional. Para situaciones específicas, 
+                    consulte con un abogado laboralista.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .mensaje-usuario {
+        background-color: #007bff;
+        color: white;
+    }
+    .mensaje-bot {
+        background-color: white;
+    }
+    .typing-indicator {
+        display: inline-block;
+    }
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: #6c757d;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0s; }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Enviar pregunta
+            $('#btnEnviar').on('click', function() {
+                enviarPregunta();
+            });
+            
+            $('#txtPregunta').on('keypress', function(e) {
+                if (e.which === 13) {
+                    enviarPregunta();
+                }
+            });
+            
+            // Preguntas sugeridas
+            $('.pregunta-sugerida').on('click', function() {
+                var pregunta = $(this).data('pregunta');
+                $('#txtPregunta').val(pregunta);
+                enviarPregunta();
+            });
+            
+            // Nueva conversación
+            $('#btnNuevaConversacion').on('click', function() {
+                Swal.fire({
+                    title: '¿Nueva conversación?',
+                    text: 'Se borrará el historial actual del chat.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, iniciar nueva',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#chatContainer').html(getMensajeBienvenida());
+                    }
+                });
+            });
+        });
+        
+        function enviarPregunta() {
+            var pregunta = $('#txtPregunta').val().trim();
+            if (!pregunta) return;
+            
+            // Agregar mensaje del usuario
+            agregarMensaje(pregunta, 'usuario');
+            $('#txtPregunta').val('');
+            
+            // Mostrar indicador de escritura
+            mostrarTyping();
+            
+            // TODO: Llamar API de OpenAI
+            // Simular respuesta
+            setTimeout(function() {
+                ocultarTyping();
+                var respuesta = generarRespuestaSimulada(pregunta);
+                agregarMensaje(respuesta, 'bot');
+                
+                // Agregar al historial
+                agregarAlHistorial(pregunta);
+            }, 2000);
+        }
+        
+        function agregarMensaje(texto, tipo) {
+            var html = '';
+            var hora = new Date().toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
+            
+            if (tipo === 'usuario') {
+                html = `
+                    <div class="d-flex mb-3 justify-content-end">
+                        <div class="flex-grow-1 me-3 text-end">
+                            <div class="mensaje-usuario rounded p-3 d-inline-block" style="max-width: 80%;">
+                                <p class="mb-0">${texto}</p>
+                            </div>
+                            <br><small class="text-muted">Tú • ${hora}</small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fa fa-user"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fa fa-robot"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="mensaje-bot rounded p-3 shadow-sm" style="max-width: 80%;">
+                                <p class="mb-0">${texto}</p>
+                            </div>
+                            <small class="text-muted">Abogado Virtual • ${hora}</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            $('#chatContainer').append(html);
+            $('#chatContainer').scrollTop($('#chatContainer')[0].scrollHeight);
+        }
+        
+        function mostrarTyping() {
+            var html = `
+                <div class="d-flex mb-3" id="typingIndicator">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="mensaje-bot rounded p-3 shadow-sm d-inline-block">
+                            <div class="typing-indicator">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#chatContainer').append(html);
+            $('#chatContainer').scrollTop($('#chatContainer')[0].scrollHeight);
+        }
+        
+        function ocultarTyping() {
+            $('#typingIndicator').remove();
+        }
+        
+        function generarRespuestaSimulada(pregunta) {
+            // Respuestas simuladas para demostración
+            var preguntaLower = pregunta.toLowerCase();
+            
+            if (preguntaLower.includes('prestaciones')) {
+                return 'Las prestaciones laborales en República Dominicana incluyen: <br><br>' +
+                    '<strong>1. Cesantía:</strong> Se calcula según la antigüedad del trabajador.<br>' +
+                    '<strong>2. Preaviso:</strong> De 7 a 28 días según el tiempo de servicio.<br>' +
+                    '<strong>3. Vacaciones:</strong> Días no disfrutados prorrateados.<br>' +
+                    '<strong>4. Salario de Navidad:</strong> Proporcional al tiempo trabajado.<br><br>' +
+                    '¿Deseas que profundice en alguno de estos conceptos?';
+            } else if (preguntaLower.includes('vacaciones')) {
+                return 'Según el Código de Trabajo dominicano (Art. 177), los trabajadores tienen derecho a:<br><br>' +
+                    '<strong>14 días laborables</strong> de vacaciones anuales remuneradas después de un año de servicio continuo.<br><br>' +
+                    'El salario vacacional debe pagarse el día anterior al inicio de las vacaciones e incluye los salarios ordinarios correspondientes.';
+            } else if (preguntaLower.includes('regalía') || preguntaLower.includes('navidad')) {
+                return 'La regalía pascual o salario de Navidad (Art. 219) se calcula así:<br><br>' +
+                    '<strong>Fórmula:</strong> (Salario mensual ÷ 12) × meses trabajados<br><br>' +
+                    'Debe pagarse a más tardar el 20 de diciembre. El monto máximo está topado a 5 salarios mínimos.';
+            } else if (preguntaLower.includes('despido')) {
+                return 'El despido puede ser:<br><br>' +
+                    '<strong>Justificado (Art. 88):</strong> Por faltas graves del trabajador. No genera indemnización.<br><br>' +
+                    '<strong>Injustificado (Desahucio):</strong> Sin causa imputable al trabajador. Genera derecho a prestaciones laborales completas.<br><br>' +
+                    '¿Necesitas información sobre algún caso específico?';
+            } else if (preguntaLower.includes('tss') || preguntaLower.includes('deducciones')) {
+                return 'Las deducciones TSS obligatorias son:<br><br>' +
+                    '<strong>Del empleado:</strong><br>' +
+                    '• AFP: 2.87% del salario<br>' +
+                    '• SFS: 3.04% del salario<br><br>' +
+                    '<strong>Del empleador:</strong><br>' +
+                    '• AFP: 7.10% del salario<br>' +
+                    '• SFS: 7.09% del salario<br>' +
+                    '• SRL: 1.0-1.4% del salario<br>' +
+                    '• INFOTEP: 1% del salario';
+            } else {
+                return 'Gracias por tu consulta. Basándome en el Código de Trabajo de la República Dominicana, puedo indicarte que este es un tema importante.<br><br>' +
+                    'Para darte una respuesta más precisa, ¿podrías proporcionarme más detalles sobre tu situación específica?<br><br>' +
+                    '<em>Recuerda que para casos complejos, es recomendable consultar con un abogado laboralista.</em>';
+            }
+        }
+        
+        function agregarAlHistorial(pregunta) {
+            var html = `
+                <button class="list-group-item list-group-item-action text-truncate" onclick="cargarPregunta('${pregunta.replace(/'/g, "\\'")}')">
+                    <small>${pregunta}</small>
+                </button>
+            `;
+            
+            // Remover mensaje vacío si existe
+            if ($('#historialConsultas .text-muted').length > 0) {
+                $('#historialConsultas').html('');
+            }
+            
+            $('#historialConsultas').prepend(html);
+        }
+        
+        function cargarPregunta(pregunta) {
+            $('#txtPregunta').val(pregunta);
+            $('#txtPregunta').focus();
+        }
+        
+        function getMensajeBienvenida() {
+            return `
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa fa-robot"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <p class="mb-0">
+                                ¡Hola! Soy tu asistente legal virtual. Estoy aquí para ayudarte con consultas relacionadas al 
+                                <strong>Código de Trabajo de la República Dominicana</strong>. 
+                            </p>
+                            <p class="mb-0 mt-2">¿En qué puedo ayudarte hoy?</p>
+                        </div>
+                        <small class="text-muted">Abogado Virtual • Ahora</small>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+}

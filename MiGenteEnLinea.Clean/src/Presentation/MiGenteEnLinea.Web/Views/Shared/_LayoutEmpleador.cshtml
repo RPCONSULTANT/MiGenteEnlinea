@@ -1,19 +1,30 @@
 @* Layout para dashboard de Empleadores
-Basado en: FRONT_Publicado/Empleador/comunity.Master *@
+EXACTO al: FRONT_Publicado/Empleador/dashboard.Master
+Tema: Argon Dashboard 2.0 *@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Mi Gente en línea</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>@ViewData["Title"] - Mi Gente en Linea</title>
 
-    <!-- Bootstrap 4 -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
-    <!-- Font Awesome -->
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Open Sans -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    
+    <!-- Nucleo Icons -->
+    <link href="~/lib/argon/css/nucleo-icons.css" rel="stylesheet" />
+    <link href="~/lib/argon/css/nucleo-svg.css" rel="stylesheet" />
+    
+    <!-- Font Awesome 5.15.4 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Argon Dashboard CSS -->
+    <link href="~/lib/argon/css/argon-dashboard.min.css" rel="stylesheet" />
+    
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
+    
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -22,137 +33,255 @@ Basado en: FRONT_Publicado/Empleador/comunity.Master *@
             font-family: "Gurajada";
             src: url(/fonts/Gurajada-Regular.ttf);
         }
-
         .headerText {
             font-family: "Gurajada", Gurajada;
         }
-
-        .navbar-brand {
-            padding: 0;
+        .checked {
+            color: orange;
         }
-
-        .navbar-brand img {
-            height: 50px;
-            margin-left: 10px;
+        .divCalificacionCard {
+            text-align: end;
+            margin-top: 15px;
         }
-
-        .buscadorEmpleador {
+        .pricing-content {
             position: relative;
-            height: 300px;
-            background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
-            background-size: cover;
-            background-position: center;
         }
-
-        .buscadorEmpleador-content {
+        .pricing_design {
+            position: relative;
+            margin: 0px 15px;
+        }
+        .pricing_design .single-pricing {
+            background: #00176B;
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px -10px rgba(0,64,128,.2);
+            position: relative;
+            z-index: 1;
+        }
+        .pricing_design .single-pricing:before {
+            content: "";
+            background-color: #fff;
+            width: 100%;
+            height: 100%;
+            border-radius: 18px 18px 190px 18px;
+            border: 1px solid #eee;
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 0;
+            right: 0;
+            z-index: -1;
+        }
+        .price-head h2 {
+            margin-bottom: 20px;
+            font-size: 26px;
+            font-weight: 600;
+        }
+        .price-head h1 {
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 5px;
+        }
+        .single-pricing ul {
+            list-style: none;
+            margin-top: 30px;
+        }
+        .single-pricing ul li {
+            line-height: 36px;
+        }
+        .single-pricing ul li i {
+            background: #554c86;
+            color: #fff;
+            width: 20px;
+            height: 20px;
+            border-radius: 30px;
+            font-size: 11px;
             text-align: center;
-            color: white;
-            width: 80%;
+            line-height: 20px;
+            margin-right: 6px;
         }
-
-        .buscadorEmpleador-content h1 {
-            font-size: 32px;
+        .price_btn {
+            background: #00176B;
+            padding: 10px 30px;
+            color: #fff;
+            display: inline-block;
+            margin-top: 20px;
+            border-radius: 2px;
+            -webkit-transition: 0.3s;
+            transition: 0.3s;
         }
-
-        .border-left-primary {
-            border-left: 0.25rem solid #4e73df !important;
+        .price_btn:hover {
+            background: #0aa1d6;
         }
-
-        .border-left-success {
-            border-left: 0.25rem solid #1cc88a !important;
-        }
-
-        .border-left-info {
-            border-left: 0.25rem solid #36b9cc !important;
-        }
-
-        .border-left-warning {
-            border-left: 0.25rem solid #f6c23e !important;
+        .banner {
+            position: relative;
+            height: 500px;
+            background: url("/images/bannerADM1.jpg");
+            background-size: cover;
+            background-position: unset;
         }
     </style>
-
+    
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <a class="navbar-brand" href="/">
-            <img src="~/images/logoMiGenteBlanco.png" alt="Logo" />
-        </a>
-
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
+<body class="g-sidenav-show bg-gray-100">
+    <!-- Banner superior con gradiente -->
+    <div class="min-height-300 banner position-absolute w-100"></div>
+    
+    <!-- Sidebar / Sidenav -->
+    <aside class="sidenav bg-white navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4" id="sidenav-main">
+        <div class="sidenav-header" style="text-align: center; margin-top: 10px;">
+            <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+            <a class="justify-content-center" asp-controller="Empleador" asp-action="Dashboard">
+                <img src="~/images/logoMiGene.png" width="120" alt="main_logo" />
+            </a>
+        </div>
+        <hr class="horizontal dark mt-0" />
+        <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+            <ul class="navbar-nav justify-content-end">
+                <!-- Menu Principal -->
                 <li class="nav-item">
-                    <a class="btn btn-transparent text-light" asp-controller="Empleador" asp-action="Index" style="border-radius: 10px; border-color: white">Mi Gente En Linea</a>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-light dropdown-toggle" style="border-radius: 10px; border-color: white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fa fa-user"></i> Perfil
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" asp-controller="Empleador" asp-action="Perfil">Mi Perfil</a>
-                            <a class="dropdown-item" asp-controller="Empleador" asp-action="MiSuscripcion">Mi Suscripción</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Cerrar Sesión</a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Empleador" asp-action="Dashboard">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-tv-2 text-primary text-sm opacity-10"></i>
                         </div>
-                    </div>
+                        <span class="nav-link-text ms-1">Menu Principal</span>
+                    </a>
+                </li>
+                <!-- Gestor de Colaboradores -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Empleados" ? "active" : "")" href="#" data-bs-toggle="modal" data-bs-target="#modalGestorColaboradores">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Gestor de Colaboradores</span>
+                    </a>
+                </li>
+                <!-- Calificacion de Perfiles -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Calificaciones" ? "active" : "")" asp-controller="Empleador" asp-action="Calificaciones">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-credit-card text-success text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Calificación de Perfiles</span>
+                    </a>
+                </li>
+                <!-- Directorio -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Empleador" asp-action="Index">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-like-2 text-success text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Directorio</span>
+                    </a>
+                </li>
+                
+                <!-- Separator: Gestion de Cuenta -->
+                <li class="nav-item mt-3">
+                    <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Gestion de Cuenta</h6>
+                </li>
+                <!-- Perfil -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Perfil" ? "active" : "")" asp-controller="Empleador" asp-action="Perfil">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-single-02 text-dark text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Perfil</span>
+                    </a>
+                </li>
+                <!-- Suscripcion -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MiSuscripcion" ? "active" : "")" asp-controller="Empleador" asp-action="MiSuscripcion">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-single-copy-04 text-warning text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Suscripcion</span>
+                    </a>
+                </li>
+                <!-- Cerrar Sesion -->
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-collection text-info text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Cerrar Sesión</span>
+                    </a>
                 </li>
             </ul>
         </div>
-    </nav>
-
-    <!-- Banner de búsqueda -->
-    <div class="buscadorEmpleador">
-        <div class="buscadorEmpleador-content">
-            <h1 class="headerText">¿Qué deseas gestionar hoy?</h1>
-            <div class="row mt-4">
-                <div class="col-md-3 col-6 mb-2">
-                    <a asp-controller="Empleador" asp-action="Empleados" class="btn btn-light btn-block">
-                        <i class="fa fa-users"></i> Empleados
-                    </a>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content position-relative border-radius-lg">
+        <!-- Navbar superior -->
+        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
+            <div class="container-fluid py-1 px-3">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Empleador</a></li>
+                        <li class="breadcrumb-item text-sm text-white active" aria-current="page">@ViewData["Title"]</li>
+                    </ol>
+                </nav>
+                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                    <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                    </div>
+                    <ul class="navbar-nav justify-content-end">
+                        <li class="nav-item d-flex align-items-center">
+                            <a href="javascript:;" class="nav-link text-white font-weight-bold px-0">
+                                <i class="fa fa-user me-sm-1"></i>
+                                <span class="d-sm-inline d-none">@User.Identity?.Name</span>
+                            </a>
+                        </li>
+                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+                            <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
+                                <div class="sidenav-toggler-inner">
+                                    <i class="sidenav-toggler-line bg-white"></i>
+                                    <i class="sidenav-toggler-line bg-white"></i>
+                                    <i class="sidenav-toggler-line bg-white"></i>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="col-md-3 col-6 mb-2">
-                    <a asp-controller="Empleador" asp-action="Nomina" class="btn btn-light btn-block">
-                        <i class="fa fa-calculator"></i> Nómina
-                    </a>
+            </div>
+        </nav>
+        <!-- End Navbar -->
+        
+        <!-- Page Content -->
+        <div class="container-fluid py-4">
+            @RenderBody()
+        </div>
+    </main>
+    
+    <!-- Modal: Tipo de Gestion -->
+    <div class="modal fade" id="modalGestorColaboradores" tabindex="-1" aria-labelledby="modalGestorColaboradoresLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h5 class="modal-title" id="modalGestorColaboradoresLabel">Tipo de Gestion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="col-md-3 col-6 mb-2">
-                    <a asp-controller="Empleador" asp-action="Contrataciones" class="btn btn-light btn-block">
-                        <i class="fa fa-briefcase"></i> Contrataciones
-                    </a>
-                </div>
-                <div class="col-md-3 col-6 mb-2">
-                    <a asp-controller="Empleador" asp-action="Calificaciones" class="btn btn-light btn-block">
-                        <i class="fa fa-star"></i> Calificaciones
-                    </a>
+                <div class="modal-body text-center">
+                    <a asp-controller="Empleador" asp-action="Empleados" class="btn btn-primary btn-lg mb-3">Colaboradores Fijos</a>
+                    <a asp-controller="Empleador" asp-action="Contrataciones" class="btn btn-secondary btn-lg">Contrataciones Temporales</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main>@RenderBody()</main>
-
-    <!-- Footer -->
-    <footer class="mt-5">
-        <div class="form-control" style="background-color: dimgray; color: white; text-align: center">
-            <a style="font-size: smaller">© Copyright Mi Gente en línea @DateTime.Now.Year</a>
-            <br />
-            <a style="font-size: smaller">Diseño y Desarrollo @@IntDoSystem, SRL</a>
-        </div>
-    </footer>
-
-    <!-- Scripts de Bootstrap -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <!-- Scripts de Argon Dashboard -->
+    <script src="~/lib/argon/js/core/popper.min.js"></script>
+    <script src="~/lib/argon/js/core/bootstrap.min.js"></script>
+    <script src="~/lib/argon/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="~/lib/argon/js/plugins/smooth-scrollbar.min.js"></script>
+    <script src="~/lib/argon/js/argon-dashboard.min.js"></script>
+    
+    <!-- Initialize scrollbar for sidenav -->
+    <script>
+        var win = navigator.platform.indexOf('Win') > -1;
+        if (win && document.querySelector('#sidenav-scrollbar')) {
+            var options = { damping: '0.5' }
+            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+        }
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

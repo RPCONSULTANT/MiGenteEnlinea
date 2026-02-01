@@ -1,0 +1,253 @@
+@{
+    ViewData["Title"] = "Adquirir Plan";
+    Layout = "_LayoutContratista";
+}
+
+<style>
+    .pricing-card {
+        border: none;
+        border-radius: 10px;
+        background-color: #ffffff;
+        color: #212529;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+
+    .pricing-card:hover {
+        transform: scale(1.05);
+    }
+
+    .price-btn {
+        background-color: #0d6efd;
+        border: none;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    .price-btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="pagetitle">
+                <h1>Gestión de Planes</h1>
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Contratista</a></li>
+                        <li class="breadcrumb-item active">Adquirir un Plan</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-12 text-center mb-4">
+            <h2>Plan de Exposición Profesional</h2>
+            <p class="text-muted">Accede a los beneficios que Mi Gente en Línea ofrece adquiriendo el plan que tenemos para ti.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card pricing-card text-center p-4">
+                <div class="card-body">
+                    <h4 class="text-primary">Mi Gente, Soy yo</h4>
+                    <hr>
+                    <h1 class="display-4 text-dark">RD$495.00</h1>
+                    <span class="text-muted">/Anual</span>
+                    <hr>
+                    <ul class="list-unstyled mt-4 mb-4 text-start">
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            <strong>1</strong> Administrador
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            <strong>1</strong> Registro de Perfil Profesional
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            Consultas Ilimitadas
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            Registro de Portafolio
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            Adquisición de Reputación por Rating
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-check-circle text-success me-2"></i>
+                            <strong>12</strong> Meses de Data Histórica
+                        </li>
+                    </ul>
+                    <button type="button" class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+                        <i class="fa fa-shopping-cart"></i> Adquirir Ahora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Beneficios Adicionales -->
+    <div class="row mt-5">
+        <div class="col-12 text-center mb-4">
+            <h3>¿Por qué elegir Mi Gente en Línea?</h3>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fa fa-users fa-3x text-primary mb-3"></i>
+                    <h5>Visibilidad</h5>
+                    <p class="text-muted">Tu perfil será visible para miles de empleadores que buscan profesionales como tú.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fa fa-star fa-3x text-warning mb-3"></i>
+                    <h5>Reputación</h5>
+                    <p class="text-muted">Construye tu reputación a través de calificaciones de clientes satisfechos.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fa fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h5>Confianza</h5>
+                    <p class="text-muted">Forma parte de una comunidad verificada de profesionales.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Checkout -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title">Pago con Tarjeta de Crédito</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img src="https://gcs-international.com/wp-content/uploads/2017/06/Cardnet-Web.png" alt="Cardnet" style="width: 150px;">
+                </div>
+                <form id="formCheckout">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Titular</label>
+                        <input type="text" class="form-control" id="txtNombreTitular" placeholder="Nombre como aparece en la tarjeta" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Número de Tarjeta</label>
+                        <input type="text" class="form-control" id="txtNumeroTarjeta" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Vencimiento</label>
+                            <input type="text" class="form-control" id="txtVencimiento" placeholder="MM/AA" maxlength="5" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="txtCVV" placeholder="123" maxlength="4" required>
+                        </div>
+                    </div>
+                    <small class="text-danger">NOTA: Los datos suministrados no serán almacenados en Mi Gente en Línea...</small>
+                    <hr>
+                    <div class="card bg-light">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Plan:</span>
+                                <strong>Mi Gente, Soy yo</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>TOTAL A PAGAR:</span>
+                                <strong class="text-primary fs-5">RD$495.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="chkTerminos" required>
+                        <label class="form-check-label" for="chkTerminos">
+                            Acepto los <a href="#" target="_blank">Términos y Condiciones</a>
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnProcesarPago">
+                    <i class="fa fa-lock"></i> Completar Suscripción
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:white;">
+        <div class="spinner-border text-light" role="status" style="width:3rem; height:3rem;"></div>
+        <p class="mt-3">Procesando pago...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Formatear número de tarjeta
+            $('#txtNumeroTarjeta').on('input', function() {
+                var value = $(this).val().replace(/\s/g, '').replace(/\D/g, '');
+                var formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+                $(this).val(formatted);
+            });
+
+            // Formatear vencimiento
+            $('#txtVencimiento').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                }
+                $(this).val(value);
+            });
+
+            // Procesar pago
+            $('#btnProcesarPago').on('click', function() {
+                if (!$('#formCheckout')[0].checkValidity()) {
+                    $('#formCheckout')[0].reportValidity();
+                    return;
+                }
+
+                if (!$('#chkTerminos').is(':checked')) {
+                    Swal.fire('Error', 'Debe aceptar los términos y condiciones', 'warning');
+                    return;
+                }
+
+                $('#loadingOverlay').show();
+                $('#checkoutModal').modal('hide');
+
+                // TODO: Llamar API de Cardnet
+                setTimeout(function() {
+                    $('#loadingOverlay').hide();
+                    Swal.fire({
+                        title: '¡Pago Exitoso!',
+                        text: 'Tu suscripción ha sido activada. Ya puedes publicar tu perfil profesional.',
+                        icon: 'success',
+                        confirmButtonText: 'Ir a Mi Perfil'
+                    }).then((result) => {
+                        window.location.href = '/Contratista/Perfil';
+                    });
+                }, 3000);
+            });
+        });
+    </script>
+}

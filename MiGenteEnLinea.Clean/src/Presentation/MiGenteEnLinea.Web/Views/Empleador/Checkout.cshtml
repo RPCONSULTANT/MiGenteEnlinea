@@ -1,0 +1,318 @@
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "_LayoutEmpleador";
+    var planId = ViewData["PlanId"];
+}
+
+<div class="container-fluid mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="AdquirirPlan">Planes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <div class="row">
+        <div class="col-md-7">
+            <h3><i class="fa fa-credit-card"></i> Información de Pago</h3>
+            <p class="text-muted">Ingrese los datos de su tarjeta de crédito o débito.</p>
+
+            <form id="formPago">
+                <!-- Datos del titular -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Datos del Titular</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="apellido" class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="apellido" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="telefono" class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefono" required placeholder="(000) 000-0000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos de la tarjeta -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fa fa-lock"></i> Datos de la Tarjeta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="nombreTarjeta" class="form-label">Nombre en la Tarjeta</label>
+                            <input type="text" class="form-control" id="nombreTarjeta" required placeholder="Tal como aparece en la tarjeta">
+                        </div>
+                        <div class="mb-3">
+                            <label for="numeroTarjeta" class="form-label">Número de Tarjeta</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="numeroTarjeta" required maxlength="19" placeholder="0000 0000 0000 0000">
+                                <span class="input-group-text" id="tipoTarjeta">
+                                    <i class="fa fa-credit-card"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="mesVencimiento" class="form-label">Mes</label>
+                                    <select class="form-select" id="mesVencimiento" required>
+                                        <option value="">MM</option>
+                                        @for (int i = 1; i <= 12; i++)
+                                        {
+                                            <option value="@i.ToString("D2")">@i.ToString("D2")</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="anoVencimiento" class="form-label">Año</label>
+                                    <select class="form-select" id="anoVencimiento" required>
+                                        <option value="">AAAA</option>
+                                        @for (int i = DateTime.Now.Year; i <= DateTime.Now.Year + 15; i++)
+                                        {
+                                            <option value="@i">@i</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="password" class="form-control" id="cvv" required maxlength="4" placeholder="***">
+                                    <small class="text-muted">3 o 4 dígitos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Términos -->
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="chkTerminos" required>
+                            <label class="form-check-label" for="chkTerminos">
+                                He leído y acepto los <a href="/terminos" target="_blank">términos y condiciones</a> del servicio.
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="chkAutorizacion" required>
+                            <label class="form-check-label" for="chkAutorizacion">
+                                Autorizo a MiGente En Línea a realizar el cargo a mi tarjeta de crédito/débito por el monto indicado.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkPrivacidad" required>
+                            <label class="form-check-label" for="chkPrivacidad">
+                                Acepto la <a href="/privacidad" target="_blank">política de privacidad</a>.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resumen del pedido -->
+        <div class="col-md-5">
+            <div class="card shadow sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fa fa-shopping-cart"></i> Resumen del Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Plan:</span>
+                        <strong id="nombrePlan">Cargando...</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Período:</span>
+                        <span>1 Año</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">RD$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>ITBIS (18%):</span>
+                        <span>Incluido</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total a Pagar:</strong>
+                        <strong class="text-success fs-4" id="total">RD$0.00</strong>
+                    </div>
+                    
+                    <button type="button" class="btn btn-success btn-lg w-100" id="btnPagar">
+                        <i class="fa fa-lock"></i> Pagar Ahora
+                    </button>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fa fa-shield-alt"></i> Pago seguro con encriptación SSL
+                        </small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="height: 40px;" class="me-2">
+                        <img src="~/images/visa-mastercard.png" alt="Visa/Mastercard" style="height: 30px;" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="card p-4">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h4>Procesando su pago...</h4>
+                <p class="text-muted">Por favor no cierre esta ventana</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var planId = '@planId';
+        
+        $(document).ready(function() {
+            // Cargar información del plan
+            cargarInfoPlan();
+            
+            // Formatear número de tarjeta
+            $('#numeroTarjeta').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                var formatted = '';
+                for (var i = 0; i < value.length && i < 16; i++) {
+                    if (i > 0 && i % 4 === 0) formatted += ' ';
+                    formatted += value[i];
+                }
+                $(this).val(formatted);
+                
+                // Detectar tipo de tarjeta
+                if (value.startsWith('4')) {
+                    $('#tipoTarjeta').html('<i class="fab fa-cc-visa text-primary"></i>');
+                } else if (value.startsWith('5')) {
+                    $('#tipoTarjeta').html('<i class="fab fa-cc-mastercard text-warning"></i>');
+                } else {
+                    $('#tipoTarjeta').html('<i class="fa fa-credit-card"></i>');
+                }
+            });
+            
+            // Procesar pago
+            $('#btnPagar').on('click', function() {
+                // Validar formulario
+                if (!validarFormulario()) return;
+                
+                // Mostrar loading
+                $('#loadingOverlay').show();
+                
+                // TODO: Llamar API de Cardnet para procesar el pago
+                var datosTransaccion = {
+                    planId: planId,
+                    nombreTarjeta: $('#nombreTarjeta').val(),
+                    numeroTarjeta: $('#numeroTarjeta').val().replace(/\s/g, ''),
+                    mesVencimiento: $('#mesVencimiento').val(),
+                    anoVencimiento: $('#anoVencimiento').val(),
+                    cvv: $('#cvv').val(),
+                    email: $('#email').val(),
+                    telefono: $('#telefono').val()
+                };
+                
+                // Simular procesamiento
+                setTimeout(function() {
+                    $('#loadingOverlay').hide();
+                    
+                    Swal.fire({
+                        title: '¡Pago Exitoso!',
+                        html: '<i class="fa fa-check-circle fa-5x text-success mb-3"></i><br>Tu suscripción ha sido activada correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Ir al Dashboard',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        window.location.href = '/Empleador/Index';
+                    });
+                }, 3000);
+            });
+        });
+        
+        function cargarInfoPlan() {
+            // Información de planes
+            var planes = {
+                '1': { nombre: 'Eres Mi Gente', precio: 495 },
+                '2': { nombre: 'Somos Mi Gente', precio: 1695 },
+                '3': { nombre: 'Mi Gente Somos Todos', precio: 3750 }
+            };
+            
+            var plan = planes[planId] || planes['1'];
+            $('#nombrePlan').text(plan.nombre);
+            $('#subtotal').text('RD$' + plan.precio.toLocaleString());
+            $('#total').text('RD$' + plan.precio.toLocaleString());
+        }
+        
+        function validarFormulario() {
+            var campos = ['nombre', 'apellido', 'email', 'telefono', 'nombreTarjeta', 'numeroTarjeta', 'mesVencimiento', 'anoVencimiento', 'cvv'];
+            var valido = true;
+            
+            campos.forEach(function(campo) {
+                var valor = $('#' + campo).val();
+                if (!valor || valor.trim() === '') {
+                    $('#' + campo).addClass('is-invalid');
+                    valido = false;
+                } else {
+                    $('#' + campo).removeClass('is-invalid');
+                }
+            });
+            
+            if (!$('#chkTerminos').is(':checked') || !$('#chkAutorizacion').is(':checked') || !$('#chkPrivacidad').is(':checked')) {
+                Swal.fire('Error', 'Debe aceptar todos los términos y condiciones.', 'error');
+                return false;
+            }
+            
+            var numeroTarjeta = $('#numeroTarjeta').val().replace(/\s/g, '');
+            if (numeroTarjeta.length < 15) {
+                Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
+                return false;
+            }
+            
+            if (!valido) {
+                Swal.fire('Error', 'Por favor complete todos los campos requeridos.', 'error');
+            }
+            
+            return valido;
+        }
+    </script>
+}

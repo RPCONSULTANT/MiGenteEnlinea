@@ -1,0 +1,413 @@
+@{
+    ViewData["Title"] = "Buscador de Profesionales";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <h2 style="color:white"><i class="fa fa-search"></i> Encuentra el Profesional Ideal</h2>
+    <p style="color:lightgray">Busca entre nuestra red de contratistas verificados para tus necesidades de servicio.</p>
+    <hr />
+</div>
+
+<div class="container-fluid bg-white p-4" style="border-radius: 5px;">
+    <!-- Filtros de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Servicio</label>
+            <select class="form-select" id="ddlServicio">
+                <option value="">-- Todos los servicios --</option>
+                <option value="1">Electricidad</option>
+                <option value="2">Plomería</option>
+                <option value="3">Carpintería</option>
+                <option value="4">Pintura</option>
+                <option value="5">Jardinería</option>
+                <option value="6">Limpieza</option>
+                <option value="7">Albañilería</option>
+                <option value="8">Mecánica</option>
+                <option value="9">Cocina</option>
+                <option value="10">Cuidado de Niños</option>
+                <option value="11">Cuidado de Adultos Mayores</option>
+                <option value="12">Otro</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Zona</label>
+            <select class="form-select" id="ddlZona">
+                <option value="">-- Todas las zonas --</option>
+                <option value="DN">Distrito Nacional</option>
+                <option value="SD">Santo Domingo</option>
+                <option value="SN">Santiago</option>
+                <option value="LP">La Vega</option>
+                <option value="PP">Puerto Plata</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Calificación Mínima</label>
+            <select class="form-select" id="ddlCalificacion">
+                <option value="">-- Cualquiera --</option>
+                <option value="4">4+ estrellas</option>
+                <option value="3">3+ estrellas</option>
+                <option value="2">2+ estrellas</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" id="btnBuscar">
+                <i class="fa fa-search"></i> Buscar
+            </button>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row" id="resultadosContainer">
+        <!-- Placeholder mientras no hay búsqueda -->
+        <div class="col-12 text-center py-5" id="placeholderBusqueda">
+            <i class="fa fa-users fa-5x text-muted mb-3"></i>
+            <h4 class="text-muted">Selecciona los filtros y haz clic en Buscar</h4>
+            <p class="text-muted">Encontrarás profesionales verificados en tu zona.</p>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingContainer" style="display:none;" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">Buscando profesionales...</p>
+    </div>
+
+    <!-- Template de perfil (se clona con JavaScript) -->
+    <template id="templatePerfil">
+        <div class="col-md-4 mb-4 perfil-card">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <img src="~/images/default-avatar.png" class="rounded-circle mb-3 foto-perfil" style="width: 100px; height: 100px; object-fit: cover;">
+                    <h5 class="nombre-perfil">Nombre del Profesional</h5>
+                    <p class="text-muted servicio-perfil mb-2">Servicio</p>
+                    <div class="estrellas-perfil text-warning mb-2">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-half-alt"></i>
+                        <span class="text-dark ms-2 calificacion-numero">4.5</span>
+                    </div>
+                    <p class="zona-perfil text-muted mb-3"><i class="fa fa-map-marker-alt"></i> <span>Zona</span></p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-ver-perfil">
+                            <i class="fa fa-eye"></i> Ver Perfil
+                        </button>
+                        <a href="#" class="btn btn-success btn-whatsapp">
+                            <i class="fab fa-whatsapp"></i> Contactar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<!-- Modal Ver Perfil -->
+<div class="modal fade" id="modalVerPerfil" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa fa-user"></i> Perfil Profesional</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" id="perfilTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button">
+                            <i class="fa fa-user"></i> Datos Generales
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="servicios-tab" data-bs-toggle="tab" data-bs-target="#servicios" type="button">
+                            <i class="fa fa-tools"></i> Catálogo de Servicios
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="calificaciones-tab" data-bs-toggle="tab" data-bs-target="#calificaciones" type="button">
+                            <i class="fa fa-star"></i> Calificaciones
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="perfilTabsContent">
+                    <!-- Tab Datos Generales -->
+                    <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <img id="modalFoto" src="~/images/default-avatar.png" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                <h4 id="modalNombre">Nombre del Profesional</h4>
+                                <p class="text-muted" id="modalServicioPrincipal">Servicio Principal</p>
+                            </div>
+                            <div class="col-md-8">
+                                <table class="table">
+                                    <tr>
+                                        <th>Identificación:</th>
+                                        <td id="modalCedula">000-0000000-0</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Zona de Trabajo:</th>
+                                        <td id="modalZona">Distrito Nacional</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Experiencia:</th>
+                                        <td id="modalExperiencia">5 años</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Miembro desde:</th>
+                                        <td id="modalMiembroDesde">Enero 2022</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Trabajos realizados:</th>
+                                        <td id="modalTrabajos">25</td>
+                                    </tr>
+                                </table>
+                                <div class="mt-3">
+                                    <h6>Calificación Promedio</h6>
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-warning fs-4" id="modalEstrellas">
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star-half-alt"></i>
+                                        </span>
+                                        <span class="ms-2 fs-5" id="modalPromedio">4.5</span>
+                                        <span class="text-muted ms-2">(<span id="modalTotalCalificaciones">15</span> calificaciones)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Servicios -->
+                    <div class="tab-pane fade" id="servicios" role="tabpanel">
+                        <h5>Servicios que Ofrece</h5>
+                        <div class="row" id="listaServicios">
+                            <div class="col-md-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body py-2">
+                                        <i class="fa fa-bolt text-warning me-2"></i> Electricidad Residencial
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body py-2">
+                                        <i class="fa fa-bolt text-warning me-2"></i> Instalaciones Eléctricas
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body py-2">
+                                        <i class="fa fa-lightbulb text-warning me-2"></i> Reparación de Luminarias
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5>Descripción</h5>
+                        <p id="modalDescripcion">
+                            Profesional con amplia experiencia en trabajos de electricidad residencial y comercial. 
+                            Ofrezco servicios de calidad con garantía.
+                        </p>
+                    </div>
+
+                    <!-- Tab Calificaciones -->
+                    <div class="tab-pane fade" id="calificaciones" role="tabpanel">
+                        <h5>Resumen de Calificaciones</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <span class="me-3" style="width: 100px; display: inline-block;">Puntualidad:</span>
+                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 90%;">4.5</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="me-3" style="width: 100px; display: inline-block;">Conocimientos:</span>
+                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 95%;">4.8</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <span class="me-3" style="width: 100px; display: inline-block;">Cumplimiento:</span>
+                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 85%;">4.3</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="me-3" style="width: 100px; display: inline-block;">Recomendación:</span>
+                                    <div class="progress d-inline-flex" style="width: 150px; height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 92%;">4.6</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <h5>Últimas Opiniones</h5>
+                        <div class="list-group" id="listaOpiniones">
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Cliente Anónimo</strong>
+                                    <span class="text-warning">
+                                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Hace 2 semanas</small>
+                                <p class="mb-0">Excelente trabajo, muy puntual y profesional. Lo recomiendo totalmente.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Cliente Anónimo</strong>
+                                    <span class="text-warning">
+                                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="far fa-star"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Hace 1 mes</small>
+                                <p class="mb-0">Buen servicio, llegó a tiempo y resolvió el problema rápidamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" class="btn btn-success" id="btnContactarWhatsApp">
+                    <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                </a>
+                <button type="button" class="btn btn-primary" id="btnContratar">
+                    <i class="fa fa-handshake"></i> Contratar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Buscar profesionales
+            $('#btnBuscar').on('click', function() {
+                buscarProfesionales();
+            });
+            
+            // Ver perfil
+            $(document).on('click', '.btn-ver-perfil', function() {
+                var card = $(this).closest('.perfil-card');
+                var perfilId = card.data('id');
+                abrirPerfil(perfilId);
+            });
+            
+            // Contratar
+            $('#btnContratar').on('click', function() {
+                $('#modalVerPerfil').modal('hide');
+                Swal.fire({
+                    title: '¿Deseas contratar este profesional?',
+                    text: 'Se creará una contratación temporal.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, contratar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/Empleador/Contrataciones';
+                    }
+                });
+            });
+        });
+        
+        function buscarProfesionales() {
+            var servicio = $('#ddlServicio').val();
+            var zona = $('#ddlZona').val();
+            var calificacion = $('#ddlCalificacion').val();
+            
+            // Mostrar loading
+            $('#placeholderBusqueda').hide();
+            $('#loadingContainer').show();
+            
+            // TODO: Llamar API para buscar profesionales
+            // Simulación de resultados
+            setTimeout(function() {
+                $('#loadingContainer').hide();
+                mostrarResultados([
+                    { id: 1, nombre: 'Juan Pérez', servicio: 'Electricista', zona: 'Distrito Nacional', calificacion: 4.5, foto: '/images/default-avatar.png' },
+                    { id: 2, nombre: 'María García', servicio: 'Plomería', zona: 'Santo Domingo Este', calificacion: 4.8, foto: '/images/default-avatar.png' },
+                    { id: 3, nombre: 'Carlos Rodríguez', servicio: 'Pintura', zona: 'Distrito Nacional', calificacion: 4.2, foto: '/images/default-avatar.png' },
+                    { id: 4, nombre: 'Ana Martínez', servicio: 'Limpieza', zona: 'Santiago', calificacion: 5.0, foto: '/images/default-avatar.png' },
+                    { id: 5, nombre: 'Pedro Sánchez', servicio: 'Carpintería', zona: 'Distrito Nacional', calificacion: 4.7, foto: '/images/default-avatar.png' },
+                    { id: 6, nombre: 'Laura Díaz', servicio: 'Jardinería', zona: 'Santo Domingo Norte', calificacion: 4.3, foto: '/images/default-avatar.png' }
+                ]);
+            }, 1500);
+        }
+        
+        function mostrarResultados(resultados) {
+            var container = $('#resultadosContainer');
+            container.html('');
+            
+            if (resultados.length === 0) {
+                container.html(`
+                    <div class="col-12 text-center py-5">
+                        <i class="fa fa-search fa-5x text-muted mb-3"></i>
+                        <h4 class="text-muted">No se encontraron resultados</h4>
+                        <p class="text-muted">Intenta con otros filtros de búsqueda.</p>
+                    </div>
+                `);
+                return;
+            }
+            
+            var template = document.getElementById('templatePerfil');
+            
+            resultados.forEach(function(perfil) {
+                var clone = template.content.cloneNode(true);
+                var card = clone.querySelector('.perfil-card');
+                
+                card.dataset.id = perfil.id;
+                card.querySelector('.nombre-perfil').textContent = perfil.nombre;
+                card.querySelector('.servicio-perfil').textContent = perfil.servicio;
+                card.querySelector('.zona-perfil span').textContent = perfil.zona;
+                card.querySelector('.calificacion-numero').textContent = perfil.calificacion;
+                
+                // Generar estrellas
+                var estrellasHtml = generarEstrellas(perfil.calificacion);
+                card.querySelector('.estrellas-perfil').innerHTML = estrellasHtml + 
+                    '<span class="text-dark ms-2">' + perfil.calificacion + '</span>';
+                
+                // Link de WhatsApp
+                card.querySelector('.btn-whatsapp').href = 'https://wa.me/18090000000?text=Hola, te encontré en MiGente En Línea';
+                
+                container.append(card);
+            });
+        }
+        
+        function generarEstrellas(calificacion) {
+            var html = '';
+            var fullStars = Math.floor(calificacion);
+            var hasHalfStar = (calificacion - fullStars) >= 0.5;
+            var emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            
+            for (var i = 0; i < fullStars; i++) {
+                html += '<i class="fa fa-star"></i>';
+            }
+            if (hasHalfStar) {
+                html += '<i class="fa fa-star-half-alt"></i>';
+            }
+            for (var i = 0; i < emptyStars; i++) {
+                html += '<i class="far fa-star"></i>';
+            }
+            return html;
+        }
+        
+        function abrirPerfil(perfilId) {
+            // TODO: Cargar datos del perfil desde API
+            // Por ahora mostrar modal con datos de ejemplo
+            $('#modalVerPerfil').modal('show');
+        }
+    </script>
+}
