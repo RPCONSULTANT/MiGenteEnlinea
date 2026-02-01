@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_LayoutEmpleador";
+}
+
+<!-- Dashboard Header -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="headerText">Bienvenido a tu Panel de Control</h2>
+            <hr />
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards Row -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Card: Total Empleados -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Empleados</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Nóminas del Mes -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Nóminas del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">$0.00</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa fa-money fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Contrataciones Activas -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Contrataciones Activas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Suscripción -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Estado Suscripción</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Activa</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fa fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="headerText">Acciones Rápidas</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="@Url.Action("Empleados", "Empleador")" class="card text-center shadow h-100" style="text-decoration: none;">
+                <div class="card-body">
+                    <i class="fa fa-user-plus fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Agregar Empleado</h5>
+                    <p class="card-text text-muted">Registra un nuevo empleado en tu nómina.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="@Url.Action("Nomina", "Empleador")" class="card text-center shadow h-100" style="text-decoration: none;">
+                <div class="card-body">
+                    <i class="fa fa-calculator fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Procesar Nómina</h5>
+                    <p class="card-text text-muted">Genera recibos de pago para tus empleados.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="@Url.Action("Contrataciones", "Empleador")" class="card text-center shadow h-100" style="text-decoration: none;">
+                <div class="card-body">
+                    <i class="fa fa-handshake-o fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Contrataciones</h5>
+                    <p class="card-text text-muted">Gestiona contratos temporales.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="@Url.Action("AbogadoVirtual", "Empleador")" class="card text-center shadow h-100" style="text-decoration: none;">
+                <div class="card-body">
+                    <i class="fa fa-gavel fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Abogado Virtual</h5>
+                    <p class="card-text text-muted">Consulta legal con inteligencia artificial.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actividad Reciente</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center">No hay actividad reciente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

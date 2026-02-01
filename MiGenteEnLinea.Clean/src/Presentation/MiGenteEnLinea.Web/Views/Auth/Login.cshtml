@@ -1,0 +1,107 @@
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_LayoutAuth";
+}
+
+<div class="login-container animate__animated animate__jello">
+    <div id="loginForm" class="login-form animate__animated animate__flipInY">
+        <h4 class="text-center">Bienvenido a</h4>
+        <a href="/" target="_parent">
+            <div style="text-align: center">
+                <img src="~/images/logoMiGene.png" alt="Mi Gente en Línea" />
+            </div>
+        </a>
+
+        <hr />
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Message"]
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Correo electrónico" required />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Contraseña" required />
+                    <div class="input-group-append">
+                        <button id="btnTogglePassword" class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
+                            <i id="eyeIcon" class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Iniciar sesión</button>
+            </div>
+            <div class="form-group">
+                <a href="@Url.Action("Registrar", "Auth")" class="btn btn-secondary btn-block">Crear Nueva Cuenta</a>
+            </div>
+            <div class="form-group text-center">
+                <a href="#" onclick="toggleDivs('loginForm','forgotPasswordForm')" class="text-primary">¿Olvidaste tu contraseña?</a>
+            </div>
+        </form>
+    </div>
+
+    <div id="forgotPasswordForm" class="login-form animated-form animate__animated animate__flipInX">
+        <h4 class="text-center">Recuperar contraseña</h4>
+        <hr />
+
+        <form asp-action="RecuperarPassword" method="post">
+            @Html.AntiForgeryToken()
+            
+            <div class="form-group">
+                <label for="forgotEmail">Correo electrónico</label>
+                <input type="email" id="forgotEmail" name="email" class="form-control" placeholder="Correo electrónico" required />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Enviar Solicitud</button>
+            </div>
+
+            <div class="form-group text-center">
+                <a href="#" onclick="toggleDivs('forgotPasswordForm','loginForm')" class="text-primary">Volver al inicio de sesión</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleDivs(hideDivId, showDivId) {
+            var hideDiv = document.getElementById(hideDivId);
+            var showDiv = document.getElementById(showDivId);
+
+            if (hideDiv && showDiv) {
+                hideDiv.style.display = 'none';
+                showDiv.style.display = 'block';
+            }
+        }
+
+        function togglePasswordVisibility() {
+            var passwordField = document.getElementById("password");
+            var eyeIcon = document.getElementById("eyeIcon");
+
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                eyeIcon.classList.remove("fa-eye");
+                eyeIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                eyeIcon.classList.remove("fa-eye-slash");
+                eyeIcon.classList.add("fa-eye");
+            }
+        }
+    </script>
+}

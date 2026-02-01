@@ -1,0 +1,191 @@
+@{
+    ViewData["Title"] = "Mi Perfil";
+    Layout = "_LayoutContratista";
+}
+
+<div class="container-fluid py-4">
+    <!-- Profile Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-body p-3">
+                    <div class="row gx-4">
+                        <div class="col-auto">
+                            <div class="avatar avatar-xl position-relative">
+                                <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="width: 80px; height: 80px; border-radius: 50%;">
+                            </div>
+                        </div>
+                        <div class="col-auto my-auto">
+                            <div class="h-100">
+                                <h5 class="mb-1">Nombre del Usuario</h5>
+                                <p class="mb-0 font-weight-bold text-sm">
+                                    Profesional / Ofertante
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3">
+                            <div class="nav-wrapper position-relative end-0">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fa fa-edit"></i> Editar Perfil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mt-4">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold">Calificación Promedio</p>
+                            <h5 class="font-weight-bolder mb-0">
+                                4.5 <span class="text-warning"><i class="fa fa-star"></i></span>
+                            </h5>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                <i class="fa fa-star text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold">Trabajos Completados</p>
+                            <h5 class="font-weight-bolder mb-0">0</h5>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                <i class="fa fa-check text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold">Vistas al Perfil</p>
+                            <h5 class="font-weight-bolder mb-0">0</h5>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                                <i class="fa fa-eye text-lg opacity-10" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information -->
+    <div class="row mt-4">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header pb-0">
+                    <h6>Información del Perfil</h6>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input type="text" class="form-control" placeholder="Tu nombre" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Apellido</label>
+                                    <input type="text" class="form-control" placeholder="Tu apellido" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Cédula</label>
+                                    <input type="text" class="form-control" placeholder="00000000000" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="text" class="form-control" placeholder="809-000-0000" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <input type="text" class="form-control" placeholder="Tu dirección" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Descripción / Sobre mí</label>
+                                    <textarea class="form-control" rows="4" placeholder="Cuéntanos sobre ti y tus habilidades..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header pb-0">
+                    <h6>Servicios Ofrecidos</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item text-center text-muted">
+                            No hay servicios registrados.
+                        </li>
+                    </ul>
+                    <button class="btn btn-outline-primary btn-sm btn-block mt-3">
+                        <i class="fa fa-plus"></i> Agregar Servicio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calificaciones Recientes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header pb-0">
+                    <h6>Calificaciones Recientes</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center">No hay calificaciones recientes.</p>
+                    <div class="text-center">
+                        <a href="@Url.Action("MisCalificaciones", "Contratista")" class="btn btn-outline-primary btn-sm">
+                            Ver todas las calificaciones
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

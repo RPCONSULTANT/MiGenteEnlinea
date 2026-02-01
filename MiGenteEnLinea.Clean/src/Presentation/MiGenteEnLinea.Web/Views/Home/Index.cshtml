@@ -1,20 +1,198 @@
 @{
     ViewData["Title"] = "Inicio";
+    Layout = "_LayoutLanding";
 }
 
-<div class="container text-center" style="margin-top: 100px;">
-    <img src="~/images/logoMiGene.png" alt="Mi Gente en Línea" style="max-width: 300px;" />
-    <h1 class="mt-4">MiGenteEnLinea - Frontend en Construcción</h1>
-    <p class="lead">Fase 0 completada. Proyecto reseteado y listo para migración.</p>
-    <hr />
-    <div class="alert alert-info">
-        <strong>Próximos pasos:</strong>
-        <ul class="text-left">
-            <li>Fase 1: Copiar assets (CSS, JS, fonts, images)</li>
-            <li>Fase 2: Copiar templates (email, print, legal)</li>
-            <li>Fase 3: Crear layouts (Master Pages → Razor)</li>
-            <li>Fase 4-8: Migrar páginas por módulo</li>
-            <li>Fase 9: Conectar con API Backend</li>
-        </ul>
+<style>
+    .bannerSoyTuGente {
+        background-color: #00176B;
+        color: white;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .bannerSoyTuGente-description {
+        flex: 1;
+        margin-right: 20px;
+    }
+
+    .bannerSoyTuGente-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .bannerSoyTuGente-button {
+        background-color: #ffffff;
+        color: #00176B;
+        border: none;
+        padding: 10px 20px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Banner Principal -->
+<div class="banner">
+    <div class="banner-content">
+        <h1 class="headerText animate__animated animate__slideInLeft">Soluciones integrales de auto gestion y construccion de referencias</h1>
+        <button class="btn btn-primary btn-lg" style="padding: 15px;">Conoce mas sobre Mi Gente</button>
     </div>
 </div>
+
+<!-- Sub Banner -->
+<div class="container col col-lg-12 form-control" style="background-color: #00176B; width: auto; color: white; text-align: center;">
+    <h6 class="animate__animated animate__heartBeat animate__infinite animate__slower" style="margin: 10px">La solucion para el manejo de tus procesos laborales</h6>
+</div>
+
+<!-- Sección Por qué usar Mi Gente -->
+<div class="container">
+    <div class="form-inline">
+        <h1 class="headerText">Por que usar </h1>
+        <h1 class="headerText" style="margin-left: 8px; font-weight: bold; color: #2460FC">Mi Gente?</h1>
+    </div>
+    <div class="form-inline align-content-center">
+        <!-- Card: Gestión de Trabajadores -->
+        <a class="link" href="#">
+            <div class="card text-center" style="width: 15rem; text-align: center; margin: 15px; transition: background-color 2s ease-out 100ms">
+                <div class="inline ">
+                    <img class="center-block" src="~/images/workers.png" style="max-width: 70px;" alt="Gestión de Trabajadores" />
+                </div>
+                <div class="card-body">
+                    <p class="font-weight-bold" style="color: black; font-size: medium">Gestión de Trabajadores</p>
+                    <p class="card-text">Lleva un control de tus colaboradores en todo momento.</p>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Card: Pago de Nómina -->
+        <a class="link" href="#">
+            <div class="card text-center" style="width: 15rem; text-align: center; margin: 15px;">
+                <div class="inline">
+                    <img class="center-block" src="~/images/moneyIcon.png" style="max-width: 70px;" alt="Pago de Nómina" />
+                </div>
+                <div class="card-body">
+                    <p class="font-weight-bold" style="color: black; font-size: medium">Pago de Nomina</p>
+                    <p class="card-text">Gestiona tu nomina de una manera eficiente y rapida en la palma de tu mano</p>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Card: Cálculo de Prestaciones -->
+        <a class="link" target="_blank" href="https://calculo.mt.gob.do/">
+            <div class="card text-center" style="width: 15rem; text-align: center; margin: 15px;">
+                <div class="inline">
+                    <img class="center-block" src="~/images/calculatorIcon.png" style="max-width: 70px;" alt="Cálculo de Prestaciones" />
+                </div>
+                <div class="card-body">
+                    <p class="font-weight-bold" style="color: black; font-size: medium">Calculo de Prestaciones</p>
+                    <p class="card-text">Realiza el calculo de las prestaciones de tu colaborador para generar recibo de descargo</p>
+                </div>
+            </div>
+        </a>
+        
+        <!-- Card: Documentación Legal -->
+        <a class="link" href="#">
+            <div class="card text-center" style="width: 15rem; text-align: center; margin: 15px;">
+                <div class="inline">
+                    <img class="center-block" src="~/images/legalDocIcon.png" style="max-width: 70px;" alt="Documentación Legal" />
+                </div>
+                <div class="card-body">
+                    <p class="font-weight-bold" style="color: black; font-size: medium">Documentacion Legal</p>
+                    <p class="card-text">Genera facilmente los documentos legales que necesitas en tu proceso de contratacion</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Sección Calificación de Perfiles -->
+<div class="container">
+    <h1 class="headerText">Cuentas con un directorio de profesionales con su historial de comportamiento</h1>
+    <hr />
+    <h1 class="headerText" style="color: #2460FC; margin-top: -15px;">Calificacion de Perfiles</h1>
+</div>
+
+<div class="container profile-page">
+    <div class="row">
+        <!-- Perfil 1 -->
+        <div class="col-xl-6 col-lg-7 col-md-12">
+            <div class="card profile-header">
+                <div class="body">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4 col-12">
+                            <div class="profile-image float-md-right">
+                                <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="Profile">
+                            </div>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-12">
+                            <h4 class="m-t-0 m-b-0"><strong>Michael</strong> Deo</h4>
+                            <span class="job_post">Ui UX Designer</span>
+                            <p>795 Folsom Ave, Suite 600 San Francisco, CADGE 94107</p>
+                            <div>
+                                <button class="btn btn-primary btn-round">Ver Perfil</button>
+                                <button class="btn btn-primary btn-round btn-simple">Enviar Mensaje</button>
+                            </div>
+                            <div class="divCalificacionCard">
+                                <a>Calificación</a>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star"></span>
+                                <span class="fa fa-star"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perfil 2 -->
+        <div class="col-xl-6 col-lg-7 col-md-12">
+            <div class="card profile-header">
+                <div class="body">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4 col-12">
+                            <div class="profile-image float-md-right">
+                                <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="Profile">
+                            </div>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-12">
+                            <h4 class="m-t-0 m-b-0"><strong>Sarah</strong> Smith</h4>
+                            <span class="job_post">Desarrollador Web</span>
+                            <p>123 Main Street, Santo Domingo, RD</p>
+                            <div>
+                                <button class="btn btn-primary btn-round">Ver Perfil</button>
+                                <button class="btn btn-primary btn-round btn-simple">Enviar Mensaje</button>
+                            </div>
+                            <div class="divCalificacionCard">
+                                <a>Calificación</a>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star checked"></span>
+                                <span class="fa fa-star"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Banner Soy Tu Gente -->
+<div class="bannerSoyTuGente mt-4">
+    <div class="bannerSoyTuGente-description">
+        <div class="bannerSoyTuGente-title">¿Eres un profesional?</div>
+        <p>Únete a nuestra comunidad de profesionales y comienza a recibir ofertas de trabajo.</p>
+    </div>
+    <button class="bannerSoyTuGente-button" onclick="window.location.href='@Url.Action("Registrar", "Auth")'">
+        ¡Regístrate Ahora!
+    </button>
+</div>
+
+<!-- Footer Space -->
+<div style="height: 50px;"></div>

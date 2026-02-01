@@ -1,0 +1,138 @@
+@{
+    ViewData["Title"] = "Registrar";
+    Layout = "_LayoutLanding";
+}
+
+<style>
+    @@media (max-width: 2600px) {
+        .divRegistro {
+            width: 60%;
+            background-color: white;
+            height: 600px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+            right: 10%;
+            top: 250px;
+            background-color: white;
+            width: 80%;
+            position: absolute;
+            border-color: black
+        }
+    }
+    
+    @@media (max-width: 480px) {
+        .divRegistro {
+            width: 60%;
+            background-color: white;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+            right: 2%;
+            top: 250px;
+            background-color: white;
+            width: 95%;
+            position: absolute;
+            border-color: black;
+            margin-bottom: 30px;
+        }
+    }
+</style>
+
+<div class="banner2" style="z-index: 1000">
+    <div class="banner-content">
+    </div>
+    <div class="animate__animated animate__backInDown divRegistro">
+        <div class="container" style="margin: 20px,20px,20px,20px;">
+            <h4 style="margin-top:10px; font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif" class="headertext">Bienvenido a</h4>
+            <h4 style="color: #2C64F8; margin-top: -5px; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif" class="headertext">Mi Gente en Linea</h4>
+            <hr />
+
+            <div class="row">
+                <div class="form-row col col-lg-4">
+                    <div class="col col-12" style="margin-top: 20px;">
+                        <h2 class="col col-lg-6 col-xs-12" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif">Regístrate</h2>
+                    </div>
+                    <p></p>
+
+                    <div id="perfilForm" class="container">
+                        <form asp-action="Registrar" method="post">
+                            @Html.AntiForgeryToken()
+                            
+                            <div class="form-row align-items-center col col-lg-12 col-xs-12">
+                                <div class="col-sm-12 my-1">
+                                    <select name="tipo" class="form-control" required>
+                                        <option value="">Seleccione el Tipo de Perfil</option>
+                                        <option value="1">Empleador</option>
+                                        <option value="2">Ofertante</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 my-1">
+                                    <div class="input-group">
+                                        <input type="text" name="nombre" required class="form-control" placeholder="Nombre">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 my-1">
+                                    <div class="input-group">
+                                        <input type="text" name="apellido" required class="form-control" placeholder="Apellido">
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 my-1">
+                                    <div class="input-group">
+                                        <input type="email" name="email" required class="form-control" placeholder="example@email.com">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 my-1">
+                                    <div class="input-group">
+                                        <input type="text" name="telefono1" required class="form-control" placeholder="Teléfono 1">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 my-1">
+                                    <div class="input-group">
+                                        <input type="text" name="telefono2" class="form-control" placeholder="Teléfono 2">
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-lg-12 my-2">
+                                    <hr />
+                                    <a>Credenciales de Acceso</a>
+                                </div>
+
+                                <div class="col-sm-12 my-1">
+                                    <label class="sr-only" for="usuario">Username</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">@@</div>
+                                        </div>
+                                        <input type="text" name="usuario" required class="form-control" placeholder="Nombre de Usuario">
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-lg-12 my-2">
+                                    <button type="submit" class="form-control btn btn-primary">Registrar Cuenta</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="form-row col col-lg-8 bg-primary d-none d-md-block" style="background-image: url(/images/angryimg.png); background-size: cover; border-radius: 20px;">
+                    <div class="col col-12" style="margin-top: 31px;">
+                        <h2 class="animate__animated animate__slow" style="text-align: center; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; color: white">Aquí comienzas a formar parte de nuestra comunidad</h2>
+                        <hr />
+                        <div class="row">
+                            <div class="col col-lg6">
+                                <img style="border-radius: 100px; max-width: 100%" class="animate__animated animate__wobble animate__slow" src="/images/x2q8uahp.bmp" />
+                            </div>
+                            <div class="col col-lg6">
+                                <p style="color: white; text-align: center">La comunidad mas completa de profesionales, donde podras gestionar tus empleados y encontrar personal calificado para cubrir tus necesidades.</p>
+                                <button class="btn btn-success form-control">Conocer más...</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-control" style="background-image: url(/images/back1.jpg); height: 700px;"></div>

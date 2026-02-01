@@ -1,14 +1,12 @@
-@*
-    Layout para páginas de Empleador (dashboard con barra de búsqueda)
-    Basado en: FRONT_Publicado/Empleador/comunity.Master
-*@
+@* Layout para dashboard de Empleadores
+Basado en: FRONT_Publicado/Empleador/comunity.Master *@
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Mi Gente en línea</title>
-    
+
     <!-- Bootstrap 4 -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
     <!-- Font Awesome -->
@@ -16,24 +14,13 @@
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
-    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         @@font-face {
             font-family: "Gurajada";
             src: url(/fonts/Gurajada-Regular.ttf);
-        }
-
-        html, body {
-            height: 100%;
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .footer {
-            margin-top: auto;
         }
 
         .headerText {
@@ -44,133 +31,121 @@
             padding: 0;
         }
 
-        .navbar {
-            background-size: cover;
-            background-position: unset;
-        }
-
         .navbar-brand img {
             height: 50px;
             margin-left: 10px;
         }
 
-        .navbar-nav ml-auto {
-            margin-right: 10px;
-        }
-
-        .banner {
+        .buscadorEmpleador {
             position: relative;
-            height: 500px;
-            background: url("/images/banner_Foto1.jpg");
-            background-size: cover;
-            background-position: left;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .banner2 {
-            position: center;
             height: 300px;
             background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
             background-size: cover;
-            background-position: unset;
+            background-position: center;
         }
 
-        .banner-content h1 {
-            font-size: 40px;
+        .buscadorEmpleador-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
         }
 
-        .link {
-            color: darkgrey;
+        .buscadorEmpleador-content h1 {
+            font-size: 32px;
         }
 
-        .link:hover {
-            box-shadow: inset 30px 30px 30px 30px #007BFF;
-            color: darkgrey;
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
         }
 
-        html {
-            scroll-behavior: smooth;
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
         }
 
-        .no-border {
-            border: none;
+        .border-left-info {
+            border-left: 0.25rem solid #36b9cc !important;
+        }
+
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
         }
     </style>
-    
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <!-- Banner with Navbar -->
-    <div class="banner" style="position: relative; z-index: 0;">
-        <nav class="navbar navbar-expand-lg" style="background-color: transparent; position: absolute; width: 100%; z-index: 1;">
-            <a class="navbar-brand" asp-controller="Empleador" asp-action="Index">
-                <img src="~/images/logoMiGenteBlanco.png" alt="Logo" />
-            </a>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/">
+            <img src="~/images/logoMiGenteBlanco.png" alt="Logo" />
+        </a>
 
-            <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarNav" aria-controls="navbarNav"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="fa fa-solid fa-bars" style="color: #ffffff;"></span>
-            </button>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="btn btn-transparent text-light" asp-controller="Empleador" asp-action="Dashboard"
-                           style="border-radius: 10px; border-color: white">Mi Gente En Linea</a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-light dropdown-toggle" 
-                                    style="border-radius: 10px; border-color: white" 
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa fa-user"></i> Perfil
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" asp-controller="Empleador" asp-action="Perfil">Mi Perfil</a>
-                                <a class="dropdown-item" asp-controller="Empleador" asp-action="MiSuscripcion">Mi Suscripción</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Cerrar Sesión</a>
-                            </div>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="btn btn-transparent text-light" asp-controller="Empleador" asp-action="Index" style="border-radius: 10px; border-color: white">Mi Gente En Linea</a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-light dropdown-toggle" style="border-radius: 10px; border-color: white" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-user"></i> Perfil
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" asp-controller="Empleador" asp-action="Perfil">Mi Perfil</a>
+                            <a class="dropdown-item" asp-controller="Empleador" asp-action="MiSuscripcion">Mi Suscripción</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Cerrar Sesión</a>
                         </div>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        
-        <div class="mask text-light" style="background-color: rgba(0, 0, 0, 0.7); height: 100%">
-            <div class="banner-content">
-                <div class="form-inline col col-12">
-                    <div class="row justify-content-left col col-lg-8" style="margin-top: 150px">
-                        <div class="form-group col col-lg-6">
-                            <h3 class="animate__animated animate__bounceInUp">Encuentra ese colaborador perfecto</h3>
-                            <a class="animate__animated animate__fadeIn animate__slower" style="color: white">
-                                Apoyate de una comunidad de profesionales calificados
-                            </a>
-                        </div>
-                        
-                        @await RenderSectionAsync("SearchBar", required: false)
                     </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Banner de búsqueda -->
+    <div class="buscadorEmpleador">
+        <div class="buscadorEmpleador-content">
+            <h1 class="headerText">¿Qué deseas gestionar hoy?</h1>
+            <div class="row mt-4">
+                <div class="col-md-3 col-6 mb-2">
+                    <a asp-controller="Empleador" asp-action="Empleados" class="btn btn-light btn-block">
+                        <i class="fa fa-users"></i> Empleados
+                    </a>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <a asp-controller="Empleador" asp-action="Nomina" class="btn btn-light btn-block">
+                        <i class="fa fa-calculator"></i> Nómina
+                    </a>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <a asp-controller="Empleador" asp-action="Contrataciones" class="btn btn-light btn-block">
+                        <i class="fa fa-briefcase"></i> Contrataciones
+                    </a>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <a asp-controller="Empleador" asp-action="Calificaciones" class="btn btn-light btn-block">
+                        <i class="fa fa-star"></i> Calificaciones
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container">
-        <main>
-            @RenderBody()
-        </main>
-    </div>
+    <main>@RenderBody()</main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="form-control" style="background-color: dimgray; color: white; text-align: center;">
-            <a asp-controller="Home" asp-action="FAQ" class="text-white" title="Sección de Preguntas y Respuestas">
-                <h3>Preguntas y Respuestas</h3>
-            </a>
-            <hr />
-            <a style="font-size: smaller">© Derechos reservados Mi Gente en línea @DateTime.Now.Year</a>
+    <footer class="mt-5">
+        <div class="form-control" style="background-color: dimgray; color: white; text-align: center">
+            <a style="font-size: smaller">© Copyright Mi Gente en línea @DateTime.Now.Year</a>
             <br />
-            <a style="font-size: smaller">Diseño y Desarrollo por IntDoSystem, SRL</a>
+            <a style="font-size: smaller">Diseño y Desarrollo @@IntDoSystem, SRL</a>
         </div>
     </footer>
 
@@ -178,7 +153,7 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,169 +1,190 @@
-@*
-    Layout para páginas de Autenticación (Login, Register, Activate, ForgotPassword)
-    Design simple y limpio basado en el estilo de la landing page
-*@
+@* Layout para páginas de Autenticación (Login, Register, Activate,
+ForgotPassword) Design simple y limpio basado en el estilo de la landing page *@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Mi Gente en línea</title>
-    
+
     <!-- Bootstrap 4 -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    />
     <!-- Font Awesome -->
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
     <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+      rel="stylesheet"
+    />
+
     <style>
-        @@font-face {
-            font-family: "Gurajada";
-            src: url(/fonts/Gurajada-Regular.ttf);
-        }
+      @@font-face {
+        font-family: "Gurajada";
+        src: url(/fonts/Gurajada-Regular.ttf);
+      }
 
-        .headerText {
-            font-family: "Gurajada", Gurajada;
-        }
+      .headerText {
+        font-family: "Gurajada", Gurajada;
+      }
 
-        html, body {
-            height: 100%;
-        }
+      html,
+      body {
+        height: 100%;
+      }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(to bottom right, rgba(128, 0, 128, 0.4), rgba(147, 112, 219, 0.4), rgba(0, 0, 139, 0.9));
-            min-height: 100vh;
-        }
+      body {
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(
+          to bottom right,
+          rgba(128, 0, 128, 0.4),
+          rgba(147, 112, 219, 0.4),
+          rgba(0, 0, 139, 0.9)
+        );
+        min-height: 100vh;
+      }
 
-        .auth-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-        }
+      .auth-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+      }
 
-        .auth-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
-            max-width: 450px;
-            width: 100%;
-        }
+      .auth-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 40px;
+        max-width: 450px;
+        width: 100%;
+      }
 
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+      .auth-logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
 
-        .auth-logo img {
-            height: 60px;
-        }
+      .auth-logo img {
+        height: 60px;
+      }
 
-        .auth-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-        }
+      .auth-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+      }
 
-        .form-group label {
-            font-weight: 500;
-            color: #555;
-        }
+      .form-group label {
+        font-weight: 500;
+        color: #555;
+      }
 
-        .form-control {
-            border-radius: 8px;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-        }
+      .form-control {
+        border-radius: 8px;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+      }
 
-        .form-control:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-        }
+      .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+      }
 
-        .btn-auth {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
+      .btn-auth {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-top: 10px;
+      }
 
-        .auth-links {
-            text-align: center;
-            margin-top: 20px;
-        }
+      .auth-links {
+        text-align: center;
+        margin-top: 20px;
+      }
 
-        .auth-links a {
-            color: #007bff;
-            text-decoration: none;
-        }
+      .auth-links a {
+        color: #007bff;
+        text-decoration: none;
+      }
 
-        .auth-links a:hover {
-            text-decoration: underline;
-        }
+      .auth-links a:hover {
+        text-decoration: underline;
+      }
 
-        .footer {
-            margin-top: auto;
-        }
+      .footer {
+        margin-top: auto;
+      }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 20px 0;
-        }
+      .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+      }
 
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #ddd;
-        }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #ddd;
+      }
 
-        .divider span {
-            padding: 0 10px;
-            color: #888;
-            font-size: 14px;
-        }
+      .divider span {
+        padding: 0 10px;
+        color: #888;
+        font-size: 14px;
+      }
     </style>
-    
+
     @await RenderSectionAsync("Styles", required: false)
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navbar minimal -->
-    <nav class="navbar navbar-expand-lg" style="background: transparent;">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <img src="~/images/logoMiGenteBlanco.png" alt="Logo" style="height: 50px;" />
-            </a>
-            <a class="btn btn-outline-light" asp-controller="Home" asp-action="Index">
-                <i class="fa fa-home"></i> Inicio
-            </a>
-        </div>
+    <nav class="navbar navbar-expand-lg" style="background: transparent">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <img
+            src="~/images/logoMiGenteBlanco.png"
+            alt="Logo"
+            style="height: 50px"
+          />
+        </a>
+        <a
+          class="btn btn-outline-light"
+          asp-controller="Home"
+          asp-action="Index"
+        >
+          <i class="fa fa-home"></i> Inicio
+        </a>
+      </div>
     </nav>
 
     <!-- Auth Container -->
     <div class="auth-container">
-        <div class="auth-card animate__animated animate__fadeIn">
-            @RenderBody()
-        </div>
+      <div class="auth-card animate__animated animate__fadeIn">
+        @RenderBody()
+      </div>
     </div>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="text-center py-3" style="color: rgba(255,255,255,0.7);">
-            <small>© @DateTime.Now.Year Mi Gente en línea - IntDoSystem, SRL</small>
-        </div>
+      <div class="text-center py-3" style="color: rgba(255, 255, 255, 0.7)">
+        <small>© @DateTime.Now.Year Mi Gente en línea - IntDoSystem, SRL</small>
+      </div>
     </footer>
 
     <!-- Scripts -->
@@ -171,7 +192,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     @await RenderSectionAsync("Scripts", required: false)
-</body>
+  </body>
 </html>

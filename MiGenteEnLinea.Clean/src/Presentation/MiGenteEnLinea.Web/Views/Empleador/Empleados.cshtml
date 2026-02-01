@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "Empleados";
+    Layout = "_LayoutEmpleador";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="headerText">Mis Empleados</h2>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarEmpleado">
+                    <i class="fa fa-plus"></i> Agregar Empleado
+                </button>
+            </div>
+            <hr />
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="container-fluid mb-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" placeholder="Buscar por nombre o cédula..." id="searchEmpleado" />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="filterEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activos</option>
+                        <option value="inactivo">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="filterDepartamento">
+                        <option value="">Todos los departamentos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary btn-block">
+                        <i class="fa fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empleados Table -->
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Cédula</th>
+                            <th>Cargo</th>
+                            <th>Salario</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaEmpleados">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fa fa-users fa-3x mb-3"></i>
+                                <p>No hay empleados registrados.</p>
+                                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarEmpleado">
+                                    <i class="fa fa-plus"></i> Agregar tu primer empleado
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Empleado -->
+<div class="modal fade" id="modalAgregarEmpleado" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nuevo Empleado</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formAgregarEmpleado">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Cédula</label>
+                                <input type="text" class="form-control" name="cedula" placeholder="00000000000" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nombre Completo</label>
+                                <input type="text" class="form-control" name="nombre" placeholder="Nombre y Apellido" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Cargo</label>
+                                <input type="text" class="form-control" name="cargo" placeholder="Cargo o Posición" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Salario Base</label>
+                                <input type="number" class="form-control" name="salario" placeholder="0.00" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Fecha de Ingreso</label>
+                                <input type="date" class="form-control" name="fechaIngreso" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tipo de Contrato</label>
+                                <select class="form-control" name="tipoContrato">
+                                    <option value="indefinido">Indefinido</option>
+                                    <option value="temporal">Temporal</option>
+                                    <option value="obra">Por Obra</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Guardar Empleado</button>
+            </div>
+        </div>
+    </div>
+</div>

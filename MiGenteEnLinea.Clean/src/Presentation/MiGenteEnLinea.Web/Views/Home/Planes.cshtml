@@ -1,0 +1,209 @@
+@{
+    ViewData["Title"] = "Planes";
+    Layout = "_LayoutLanding";
+}
+
+<!-- Banner -->
+<div class="banner">
+    <div class="banner-content">
+        <h1 class="headerText animate__animated animate__slideInLeft">Nuestros Planes</h1>
+        <p class="lead text-white">Elige el plan que mejor se adapte a tus necesidades</p>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="row text-center">
+        <div class="col-12">
+            <h2 class="headerText">Planes para Empleadores</h2>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Plan Básico -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-secondary text-white text-center">
+                    <h4 class="mb-0">Plan Básico</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title pricing-card-title">
+                        RD$ 500 <small class="text-muted">/ mes</small>
+                    </h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fa fa-check text-success"></i> Hasta 5 empleados</li>
+                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
+                        <li><i class="fa fa-check text-success"></i> Contratos básicos</li>
+                        <li><i class="fa fa-check text-success"></i> Soporte por email</li>
+                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Abogado Virtual</li>
+                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Reportes avanzados</li>
+                    </ul>
+                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 1 })" class="btn btn-lg btn-block btn-outline-secondary">
+                        Seleccionar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Profesional -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100 border-primary">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Plan Profesional</h4>
+                    <span class="badge badge-warning">Más Popular</span>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title pricing-card-title">
+                        RD$ 1,200 <small class="text-muted">/ mes</small>
+                    </h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fa fa-check text-success"></i> Hasta 20 empleados</li>
+                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
+                        <li><i class="fa fa-check text-success"></i> Contratos personalizados</li>
+                        <li><i class="fa fa-check text-success"></i> Soporte prioritario</li>
+                        <li><i class="fa fa-check text-success"></i> Abogado Virtual</li>
+                        <li class="text-muted"><i class="fa fa-times text-danger"></i> Reportes avanzados</li>
+                    </ul>
+                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 2 })" class="btn btn-lg btn-block btn-primary">
+                        Seleccionar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Empresarial -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">Plan Empresarial</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title pricing-card-title">
+                        RD$ 2,500 <small class="text-muted">/ mes</small>
+                    </h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fa fa-check text-success"></i> Empleados ilimitados</li>
+                        <li><i class="fa fa-check text-success"></i> Gestión de nómina</li>
+                        <li><i class="fa fa-check text-success"></i> Contratos personalizados</li>
+                        <li><i class="fa fa-check text-success"></i> Soporte 24/7</li>
+                        <li><i class="fa fa-check text-success"></i> Abogado Virtual</li>
+                        <li><i class="fa fa-check text-success"></i> Reportes avanzados</li>
+                    </ul>
+                    <a href="@Url.Action("AdquirirPlan", "Empleador", new { planId = 3 })" class="btn btn-lg btn-block btn-outline-success">
+                        Seleccionar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 mb-5">
+    <div class="row text-center">
+        <div class="col-12">
+            <h2 class="headerText">Planes para Contratistas</h2>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- Plan Contratista Básico -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white text-center">
+                    <h4 class="mb-0">Plan Contratista</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title pricing-card-title">
+                        RD$ 300 <small class="text-muted">/ mes</small>
+                    </h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fa fa-check text-success"></i> Perfil profesional</li>
+                        <li><i class="fa fa-check text-success"></i> Visibilidad en directorio</li>
+                        <li><i class="fa fa-check text-success"></i> Recibir calificaciones</li>
+                        <li><i class="fa fa-check text-success"></i> Gestión de servicios</li>
+                        <li><i class="fa fa-check text-success"></i> Soporte por email</li>
+                    </ul>
+                    <a href="@Url.Action("AdquirirPlan", "Contratista", new { planId = 10 })" class="btn btn-lg btn-block btn-info">
+                        Seleccionar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Contratista Premium -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100 border-warning">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h4 class="mb-0">Plan Premium</h4>
+                    <span class="badge badge-dark">Destacado</span>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-title pricing-card-title">
+                        RD$ 600 <small class="text-muted">/ mes</small>
+                    </h2>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><i class="fa fa-check text-success"></i> Todo del plan básico</li>
+                        <li><i class="fa fa-check text-success"></i> Perfil destacado</li>
+                        <li><i class="fa fa-check text-success"></i> Prioridad en búsquedas</li>
+                        <li><i class="fa fa-check text-success"></i> Badge verificado</li>
+                        <li><i class="fa fa-check text-success"></i> Soporte prioritario</li>
+                    </ul>
+                    <a href="@Url.Action("AdquirirPlan", "Contratista", new { planId = 11 })" class="btn btn-lg btn-block btn-warning">
+                        Seleccionar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Section -->
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h2 class="headerText">Preguntas Frecuentes</h2>
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>¿Puedo cambiar de plan?</h5>
+                    <p class="text-muted">Sí, puedes cambiar de plan en cualquier momento. El cambio se aplicará en tu próximo ciclo de facturación.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>¿Qué métodos de pago aceptan?</h5>
+                    <p class="text-muted">Aceptamos tarjetas de crédito y débito a través de Cardnet.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>¿Hay período de prueba?</h5>
+                    <p class="text-muted">Ofrecemos una prueba gratuita de 7 días para nuevos usuarios.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>¿Puedo cancelar en cualquier momento?</h5>
+                    <p class="text-muted">Sí, puedes cancelar tu suscripción en cualquier momento sin penalidades.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cardnet Badge -->
+<div class="container text-center mb-5">
+    <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="max-width: 200px;" />
+    <p class="text-muted mt-2">Pagos seguros con Cardnet</p>
+</div>
