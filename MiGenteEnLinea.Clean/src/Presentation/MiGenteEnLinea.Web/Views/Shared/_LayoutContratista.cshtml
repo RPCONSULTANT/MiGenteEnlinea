@@ -248,6 +248,58 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
     <script src="~/lib/argon/js/core/bootstrap.min.js"></script>
     <script src="~/lib/argon/js/argon-dashboard.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Validación de Plan Activo para Contratistas -->
+    <script>
+        (function() {
+            // Verificar si estamos en páginas permitidas sin plan
+            const currentPath = window.location.pathname.toLowerCase();
+            const isAdquirirPlan = currentPath.includes('adquirirplan');
+            const isMiSuscripcion = currentPath.includes('misuscripcion');
+            
+            // Páginas permitidas sin plan activo
+            if (isAdquirirPlan || isMiSuscripcion) {
+                return;
+            }
+            
+            // Verificar autenticación
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            // Verificar plan activo
+            const planId = localStorage.getItem('planId');
+            const vencimientoPlan = localStorage.getItem('vencimientoPlan');
+            let tienePlanActivo = false;
+            
+            if (planId && planId !== '0' && planId !== 'null' && planId !== '') {
+                if (vencimientoPlan && vencimientoPlan !== '' && vencimientoPlan !== 'null') {
+                    const fechaVencimiento = new Date(vencimientoPlan);
+                    const hoy = new Date();
+                    tienePlanActivo = fechaVencimiento > hoy;
+                } else {
+                    tienePlanActivo = true;
+                }
+            }
+            
+            if (!tienePlanActivo) {
+                console.log('Contratista sin plan activo. Redirigiendo...');
+                Swal.fire({
+                    title: 'Plan Requerido',
+                    text: 'Para acceder a las funciones de la plataforma, primero debe adquirir un plan.',
+                    icon: 'warning',
+                    confirmButtonText: 'Ver Planes',
+                    confirmButtonColor: '#00176B',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    window.location.href = '/Contratista/AdquirirPlan';
+                });
+            }
+        })();
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
   </body>

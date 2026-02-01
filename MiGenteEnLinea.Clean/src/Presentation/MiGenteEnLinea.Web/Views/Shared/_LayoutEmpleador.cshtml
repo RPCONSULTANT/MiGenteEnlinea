@@ -267,6 +267,9 @@ Tema: Argon Dashboard 2.0 *@
         </div>
     </div>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <!-- Scripts de Argon Dashboard -->
     <script src="~/lib/argon/js/core/popper.min.js"></script>
     <script src="~/lib/argon/js/core/bootstrap.min.js"></script>
@@ -281,6 +284,63 @@ Tema: Argon Dashboard 2.0 *@
             var options = { damping: '0.5' }
             Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
         }
+    </script>
+    
+    <!-- Validación de Plan Activo -->
+    <script>
+        (function() {
+            // Verificar si estamos en la página de AdquirirPlan (no bloquear esa página)
+            const currentPath = window.location.pathname.toLowerCase();
+            const isAdquirirPlan = currentPath.includes('adquirirplan');
+            const isMiSuscripcion = currentPath.includes('misuscripcion');
+            
+            // Páginas permitidas sin plan activo
+            if (isAdquirirPlan || isMiSuscripcion) {
+                return; // No bloquear estas páginas
+            }
+            
+            // Verificar si el usuario tiene un plan activo
+            const planId = localStorage.getItem('planId');
+            const vencimientoPlan = localStorage.getItem('vencimientoPlan');
+            const accessToken = localStorage.getItem('accessToken');
+            
+            // Si no hay token, redirigir a login
+            if (!accessToken) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            
+            // Verificar si tiene plan válido
+            let tienePlanActivo = false;
+            
+            if (planId && planId !== '0' && planId !== 'null' && planId !== '') {
+                // Verificar si no ha vencido
+                if (vencimientoPlan && vencimientoPlan !== '' && vencimientoPlan !== 'null') {
+                    const fechaVencimiento = new Date(vencimientoPlan);
+                    const hoy = new Date();
+                    tienePlanActivo = fechaVencimiento > hoy;
+                } else {
+                    // Tiene planId pero no fecha de vencimiento, asumir activo
+                    tienePlanActivo = true;
+                }
+            }
+            
+            // Si no tiene plan activo, redirigir a AdquirirPlan
+            if (!tienePlanActivo) {
+                console.log('Usuario sin plan activo. Redirigiendo a AdquirirPlan...');
+                Swal.fire({
+                    title: 'Plan Requerido',
+                    text: 'Para acceder a las funciones de la plataforma, primero debe adquirir un plan.',
+                    icon: 'warning',
+                    confirmButtonText: 'Ver Planes',
+                    confirmButtonColor: '#00176B',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    window.location.href = '/Empleador/AdquirirPlan';
+                });
+            }
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

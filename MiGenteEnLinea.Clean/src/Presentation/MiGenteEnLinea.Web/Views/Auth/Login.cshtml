@@ -137,8 +137,27 @@
                     // Debug: Log user data
                     console.log('Login response user:', data.user);
                     console.log('User tipo:', data.user.tipo, 'Type:', typeof data.user.tipo);
+                    console.log('PlanId:', data.user.planId, 'Vencimiento:', data.user.vencimientoPlan);
                     
-                    // Redirect based on user type 
+                    // Verificar si tiene plan activo
+                    const planId = data.user.planId;
+                    const vencimientoPlan = data.user.vencimientoPlan;
+                    let tienePlanActivo = false;
+                    
+                    if (planId && planId !== 0 && planId !== '0') {
+                        if (vencimientoPlan) {
+                            const fechaVencimiento = new Date(vencimientoPlan);
+                            const hoy = new Date();
+                            tienePlanActivo = fechaVencimiento > hoy;
+                        } else {
+                            // Tiene planId pero no vencimiento, asumir activo
+                            tienePlanActivo = true;
+                        }
+                    }
+                    
+                    console.log('Tiene plan activo:', tienePlanActivo);
+                    
+                    // Redirect based on user type and plan status
                     // Supports both formats: "1"/"2" (legacy) and "Empleador"/"Contratista" (text)
                     setTimeout(() => {
                         const tipo = String(data.user.tipo).toLowerCase();
@@ -147,9 +166,19 @@
                         if (returnUrl && returnUrl !== '') {
                             window.location.href = returnUrl;
                         } else if (tipo === '1' || tipo === 'empleador') {
-                            window.location.href = '/Empleador';
+                            // Si no tiene plan activo, ir a AdquirirPlan
+                            if (!tienePlanActivo) {
+                                window.location.href = '/Empleador/AdquirirPlan';
+                            } else {
+                                window.location.href = '/Empleador';
+                            }
                         } else if (tipo === '2' || tipo === 'contratista') {
-                            window.location.href = '/Contratista';
+                            // Si no tiene plan activo, ir a AdquirirPlan
+                            if (!tienePlanActivo) {
+                                window.location.href = '/Contratista/AdquirirPlan';
+                            } else {
+                                window.location.href = '/Contratista';
+                            }
                         } else {
                             console.warn('Unknown user tipo:', data.user.tipo);
                             window.location.href = '/';

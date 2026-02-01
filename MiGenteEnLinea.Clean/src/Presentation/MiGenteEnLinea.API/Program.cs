@@ -231,10 +231,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// HTTPS Redirection
-app.UseHttpsRedirection();
-
-// CORS
+// CORS - DEBE IR ANTES DE HttpsRedirection para permitir preflight requests
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevelopmentPolicy");
@@ -243,6 +240,9 @@ else
 {
     app.UseCors("ProductionPolicy");
 }
+
+// HTTPS Redirection (después de CORS para no bloquear preflight)
+app.UseHttpsRedirection();
 
 // Authentication & Authorization
 app.UseAuthentication();
