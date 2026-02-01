@@ -204,17 +204,14 @@ var app = builder.Build();
 // Serilog Request Logging
 app.UseSerilogRequestLogging();
 
-// Exception Handling
+// Exception Handling - Usar nuestro middleware global para todos los ambientes
+// Este convierte excepciones de dominio a respuestas HTTP apropiadas
+app.UseMiddleware<MiGenteEnLinea.API.Middleware.GlobalExceptionHandlerMiddleware>();
+
+// En desarrollo, también agregar detalles adicionales
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    // TODO: Implementar GlobalExceptionHandlerMiddleware para producción
-    // app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-    app.UseExceptionHandler("/error");
-    app.UseHsts();
+    // Swagger antes del error handler para que esté disponible
 }
 
 // Swagger (solo en desarrollo)

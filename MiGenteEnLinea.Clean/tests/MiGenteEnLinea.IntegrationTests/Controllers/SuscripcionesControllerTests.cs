@@ -40,9 +40,13 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         // Act
         var response = await Client.PostAsJsonAsync("/api/suscripciones", command);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var suscripcionId = await response.Content.ReadFromJsonAsync<int>();
+        // Assert - POST should return 201 Created for new resources
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        // API returns { suscripcionId: X }
+        var responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = System.Text.Json.JsonDocument.Parse(responseBody);
+        var suscripcionId = doc.RootElement.GetProperty("suscripcionId").GetInt32();
         suscripcionId.Should().BeGreaterThan(0);
     }
 
@@ -86,7 +90,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         await Client.PostAsJsonAsync("/api/suscripciones", createCommand);
 
         // Act
-        var response = await Client.GetAsync($"/api/suscripciones/by-user/{userId}");
+        var response = await Client.GetAsync($"/api/suscripciones/activa/{userId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -108,7 +112,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         var nonExistentUserId = 999999;
 
         // Act
-        var response = await Client.GetAsync($"/api/suscripciones/by-user/{nonExistentUserId}");
+        var response = await Client.GetAsync($"/api/suscripciones/activa/{nonExistentUserId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -127,7 +131,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         await LoginAsync(email, "Password123!");
 
         // Act
-        var response = await Client.GetAsync("/api/planes/empleadores");
+        var response = await Client.GetAsync("/api/suscripciones/planes/empleadores");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -146,7 +150,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         await LoginAsync(email, "Password123!");
 
         // Act
-        var response = await Client.GetAsync("/api/planes/contratistas");
+        var response = await Client.GetAsync("/api/suscripciones/planes/contratistas");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -161,7 +165,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
     #region SuscripcionValidation Tests (2 tests)
 
     [Fact]
-    public async Task CreateSuscripcion_WithInvalidPlanId_ReturnsBadRequest()
+    public async Task CreateSuscripcion_WithInvalidPlanId_ReturnsNotFound()
     {
         // Arrange
         var email = GenerateUniqueEmail("empleador");
@@ -179,7 +183,8 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         var response = await Client.PostAsJsonAsync("/api/suscripciones", command);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound, 
+            "plan inexistente debe retornar 404 Not Found");
     }
 
     [Fact]
@@ -199,7 +204,7 @@ public class SuscripcionesControllerTests : IntegrationTestBase
         await Client.PostAsJsonAsync("/api/suscripciones", createCommand);
 
         // Act
-        var response = await Client.GetAsync($"/api/suscripciones/by-user/{userId}");
+        var response = await Client.GetAsync($"/api/suscripciones/activa/{userId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

@@ -13,6 +13,8 @@ using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetCedulaByUserId
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetServiciosContratista;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.SearchContratistas;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace MiGenteEnLinea.API.Controllers;
 
 /// <summary>
@@ -24,6 +26,7 @@ namespace MiGenteEnLinea.API.Controllers;
 /// </remarks>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ContratistasController : ControllerBase
 {
     private readonly IMediator _mediator;

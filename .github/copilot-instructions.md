@@ -79,18 +79,21 @@ This workspace provides specialized prompts for different AI agents:
 └── ddd-migration-agent.md                  # DDD migration workflow (coming soon)
 ```
 
-**🚀 CURRENT FOCUS:** Integration Tests - Corrigiendo RegisterUserAsync type mismatch
+**🚀 CURRENT FOCUS:** Integration Tests - 30/85 pasando (35%), AuthFlow 7/7 ✅
 **📄 Estado Actual:** Backend 100% completo (123 endpoints), Tests de Integración EN DESARROLLO
-**📊 Progress:** Backend ✅ 100% | Tests 🔄 30/85 pasando (35%)
-**🎯 Testing Strategy:** Real database integration tests, fix RegisterUserAsync first
+**📊 Progress:** Backend ✅ 100% | Tests 🔄 30/85 pasando (35%) | AuthFlow ✅ 7/7
+**🎯 Testing Strategy:** Real database integration tests, AuthFlow complete
 **🔧 Branch Activo:** `main` (integration tests development)
-**📋 Integration Tests Status (Enero 31, 2026):**
+**📋 Integration Tests Status (Enero 31, 2026 - Updated):**
 
-- ✅ Compilación: EXITOSA (0 errores, 6 warnings)
-- 🔴 Tests: 85 totales, 30 pasando (35%), 54 fallando (64%)
-- 🔴 CRÍTICO: RegisterUserAsync espera userId como int, pero API devuelve string
-- 🔄 Próximo paso: Corregir IntegrationTestBase.cs línea 130
-- ⏳ Después: Corregir DeleteUser_SoftDelete test
+- ✅ Compilación: EXITOSA (0 errores, 4 warnings nullable)
+- ✅ AuthFlow Tests: 7/7 PASANDO (100%) - Auth completa funciona
+- 🔄 Tests Totales: 85 (30 pasando, 54 fallando, 1 omitido)
+- ✅ CORREGIDO: RegisterUserAsync ahora usa RegisterResult DTO (PascalCase)
+- ✅ CORREGIDO: LoginAsync ahora usa AuthenticationResultDto (PascalCase)
+- ✅ CORREGIDO: AuthController.Register usa Created() en vez de CreatedAtAction()
+- ✅ CORREGIDO: RegisterUserAsync auto-activa cuenta después de registro
+- ⏳ PENDIENTE: Corregir URLs de tests (ej: /api/planes → /api/suscripciones/planes)
   **📚 Documentación Completa:** `MiGenteEnLinea.Clean/INDICE_COMPLETO_DOCUMENTACION.md` (**121 archivos .md** organizados en 12 categorías)
 
 ---

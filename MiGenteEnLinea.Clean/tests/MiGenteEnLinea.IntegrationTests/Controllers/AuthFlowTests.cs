@@ -143,33 +143,51 @@ public class AuthFlowTests : IntegrationTestBase
     /// Flujo 2: Login con usuario Legacy (migracion automatica a Identity)
     /// Valida el patrón Legacy Fallback: usuario existe solo en Credenciales (Legacy),
     /// se migra automáticamente a Identity al hacer login.
+    /// 
+    /// NOTA: Este test crea su propio usuario Legacy para evitar contaminación 
+    /// de otros tests que podrían crear el usuario en Identity primero.
     /// </summary>
     [Fact]
     public async Task Flow_LoginLegacyUser_AutoMigratesToIdentity()
     {
         // ====================================================================
-        // SETUP: Usuario "juan.perez@test.com" existe SOLO en Legacy
-        // (creado por TestDataSeeder en Credenciales + Perfiles)
+        // SETUP: Crear usuario SOLO en Legacy (no en Identity)
+        // Usamos un email único para este test para evitar contaminación
         // ====================================================================
-        var email = "juan.perez@test.com";
+        var email = $"legacy-only-{Guid.NewGuid():N}@test.com";
         var password = TestDataSeeder.TestPasswordPlainText; // "Test@1234"
+        var passwordHash = TestDataSeeder.TestPasswordHash;
+        var userId = Guid.NewGuid().ToString();
 
-        _output.WriteLine($"[SETUP] Usuario legacy: {email}");
+        _output.WriteLine($"[SETUP] Creando usuario legacy: {email}");
+
+        // Crear perfil en Legacy
+        var perfil = MiGenteEnLinea.Domain.Entities.Seguridad.Perfile.CrearPerfilEmpleador(
+            userId: userId,
+            nombre: "Legacy",
+            apellido: "User",
+            email: email,
+            telefono1: "809-555-9999");
+        DbContext.Perfiles.Add(perfil);
+        await DbContext.SaveChangesAsync();
+
+        // Crear credencial en Legacy (solo en tabla Credenciales, NO en AspNetUsers)
+        var credencial = MiGenteEnLinea.Domain.Entities.Authentication.Credencial.Create(
+            userId: userId,
+            email: Email.CreateUnsafe(email),
+            passwordHash: passwordHash);
+        credencial.Activar(); // Activar la cuenta
+        DbContext.CredencialesRefactored.Add(credencial);
+        await DbContext.SaveChangesAsync();
+
+        _output.WriteLine($"[SETUP] ✅ Usuario creado en Legacy. UserId: {userId}");
 
         // Verificar que NO existe en Identity (antes de login)
         using var scopeBefore = Factory.Services.CreateScope();
         var userManagerBefore = scopeBefore.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<MiGenteEnLinea.Infrastructure.Identity.ApplicationUser>>();
         var userBeforeLogin = await userManagerBefore.FindByEmailAsync(email);
+        userBeforeLogin.Should().BeNull("El usuario NO debe existir en Identity antes del login");
         _output.WriteLine($"[SETUP] Usuario en Identity (antes de login): {userBeforeLogin?.Email ?? "NULL"}");
-
-        // Verificar que SÍ existe en Legacy
-        // ✅ OPTIMIZADO: Usar Value Object comparison (EF Core puede traducir esto)
-        // Patrón recomendado para producción: comparar Value Objects directamente
-        var emailVO = Email.CreateUnsafe(email);
-        var credencial = await AppDbContext.Credenciales
-            .FirstOrDefaultAsync(c => c.Email == emailVO);
-        credencial.Should().NotBeNull("El usuario debe existir en Credenciales (Legacy)");
-        _output.WriteLine($"[SETUP] ✅ Usuario encontrado en Credenciales (Legacy). UserId: {credencial!.UserId}");
 
         // ====================================================================
         // PASO 1: LOGIN (debería buscar en Legacy y migrar a Identity)
@@ -185,7 +203,14 @@ public class AuthFlowTests : IntegrationTestBase
 
         var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
 
-        loginResponse.IsSuccessStatusCode.Should().BeTrue();
+        // DEBUG: Show response content if not successful
+        if (!loginResponse.IsSuccessStatusCode)
+        {
+            var errorContent = await loginResponse.Content.ReadAsStringAsync();
+            _output.WriteLine($"[ERROR] Login failed with status {loginResponse.StatusCode}: {errorContent}");
+        }
+
+        loginResponse.IsSuccessStatusCode.Should().BeTrue($"Login should succeed. StatusCode: {loginResponse.StatusCode}");
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResultDto>();
 
         loginResult.Should().NotBeNull();
@@ -202,7 +227,7 @@ public class AuthFlowTests : IntegrationTestBase
         var userAfterLogin = await userManagerAfter.FindByEmailAsync(email);
         userAfterLogin.Should().NotBeNull("El usuario debería haberse migrado a AspNetUsers (Identity)");
         userAfterLogin!.Email.Should().Be(email);
-        userAfterLogin.Id.Should().Be(credencial.UserId, "El UserId debe ser el mismo que en Legacy");
+        userAfterLogin.Id.Should().Be(userId, "El UserId debe ser el mismo que en Legacy");
 
         _output.WriteLine($"[VERIFY] ✅ Usuario migrado a Identity. UserId: {userAfterLogin.Id}");
 

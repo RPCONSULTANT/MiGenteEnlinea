@@ -4,6 +4,7 @@ using MiGenteEnLinea.Domain.Entities.Empleadores;
 using MiGenteEnLinea.Domain.Entities.Contratistas;
 using MiGenteEnLinea.Domain.Entities.Seguridad;
 using MiGenteEnLinea.Domain.Entities.Authentication;
+using MiGenteEnLinea.Domain.Entities.Nominas;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using BCrypt.Net;
@@ -45,12 +46,96 @@ public static class TestDataSeeder
     }
 
     /// <summary>
-    /// Seed completo: Planes + Usuarios (Empleadores y Contratistas)
+    /// Seed completo: Planes + DeduccionesTss + Usuarios (Empleadores y Contratistas)
     /// </summary>
     public static async Task SeedAllAsync(IApplicationDbContext context)
     {
+        await SeedDeduccionesTssAsync(context);
         await SeedPlanesAsync(context);
+        await SeedPlanesContratistasAsync(context);
         await SeedUsuariosAsync(context);
+    }
+
+    /// <summary>
+    /// Crea las deducciones TSS estándar de República Dominicana
+    /// </summary>
+    public static async Task<List<DeduccionTss>> SeedDeduccionesTssAsync(IApplicationDbContext context)
+    {
+        if (await context.DeduccionesTss.AnyAsync())
+        {
+            return await context.DeduccionesTss.ToListAsync();
+        }
+
+        var deducciones = new List<DeduccionTss>
+        {
+            // AFP (Administradora de Fondos de Pensiones)
+            DeduccionTss.Create(
+                descripcion: "AFP - Aporte Empleado",
+                porcentaje: 2.87m,
+                topeSalarial: 235000.00m),
+            
+            DeduccionTss.Create(
+                descripcion: "AFP - Aporte Empleador",
+                porcentaje: 7.10m,
+                topeSalarial: 235000.00m),
+            
+            // ARS (Administradora de Riesgos de Salud)
+            DeduccionTss.Create(
+                descripcion: "SFS - Aporte Empleado",
+                porcentaje: 3.04m,
+                topeSalarial: 235000.00m),
+            
+            DeduccionTss.Create(
+                descripcion: "SFS - Aporte Empleador",
+                porcentaje: 7.09m,
+                topeSalarial: 235000.00m),
+            
+            // Riesgo Laboral
+            DeduccionTss.Create(
+                descripcion: "Riesgo Laboral - Empleador",
+                porcentaje: 1.20m,
+                topeSalarial: 235000.00m),
+            
+            // INFOTEP
+            DeduccionTss.Create(
+                descripcion: "INFOTEP - Empleador",
+                porcentaje: 1.00m,
+                topeSalarial: null)
+        };
+
+        context.DeduccionesTss.AddRange(deducciones);
+        await context.SaveChangesAsync();
+        return deducciones;
+    }
+
+    /// <summary>
+    /// Crea 3 planes de contratistas: Básico, Profesional, Premium
+    /// </summary>
+    public static async Task<List<PlanContratista>> SeedPlanesContratistasAsync(IApplicationDbContext context)
+    {
+        if (await context.PlanesContratistas.AnyAsync())
+        {
+            return await context.PlanesContratistas.ToListAsync();
+        }
+
+        var planes = new List<PlanContratista>
+        {
+            PlanContratista.Create(
+                nombrePlan: "Plan Básico Contratista",
+                precio: 300.00m),
+            
+            PlanContratista.Create(
+                nombrePlan: "Plan Profesional Contratista",
+                precio: 600.00m),
+            
+            PlanContratista.Create(
+                nombrePlan: "Plan Premium Contratista",
+                precio: 1200.00m)
+        };
+
+        context.PlanesContratistas.AddRange(planes);
+        await context.SaveChangesAsync();
+        return planes;
     }
 
     /// <summary>

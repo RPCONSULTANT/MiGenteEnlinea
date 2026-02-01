@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.ActivateAccount;
@@ -229,9 +230,11 @@ public class AuthController : ControllerBase
     ///     }
     /// 
     /// </remarks>
+    [Authorize]
     [HttpPost("change-password")]
     [ProducesResponseType(typeof(ChangePasswordResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] ChangePasswordCommand command)
     {
@@ -465,6 +468,13 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _mediator.Send(command);
+
+            // ✅ FIX: Verificar si el registro fue exitoso antes de retornar Created
+            if (!result.Success)
+            {
+                _logger.LogWarning("Registro fallido: {Message}", result.Message);
+                return BadRequest(new { message = result.Message, success = false });
+            }
 
             _logger.LogInformation("Usuario registrado exitosamente - UserId: {UserId}", result.UserId);
 

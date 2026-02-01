@@ -1,6 +1,13 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Application.Features.Authentication.DTOs;
+using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
+using Xunit;
 
 namespace MiGenteEnLinea.IntegrationTests.Infrastructure;
 
@@ -40,15 +47,51 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
     /// </summary>
     private async Task SeedTestData()
     {
-        // Verificar si ya hay datos (para evitar duplicados entre tests)
-        var hasData = await AppDbContext.Credenciales.AnyAsync();
-        if (hasData)
+        // Verificar si hay datos COMPLETOS (incluyendo DeduccionesTss y Planes)
+        var hasDeduccionesTss = await AppDbContext.DeduccionesTss.AnyAsync();
+        var hasPlanes = await AppDbContext.PlanesEmpleadores.AnyAsync();
+        var hasPlanesContratistas = await AppDbContext.PlanesContratistas.AnyAsync();
+        var hasCredenciales = await AppDbContext.Credenciales.AnyAsync();
+        
+        // Verificar que los PlanesContratistas tengan NombrePlan correctamente seteado
+        var planesContratistasConNombre = await AppDbContext.PlanesContratistas
+            .Where(p => p.NombrePlan != null && p.NombrePlan != "")
+            .AnyAsync();
+        
+        // Si faltan datos críticos o los datos son incorrectos, limpiar y recrear
+        if (!hasDeduccionesTss)
         {
-            return; // Ya hay datos seeded
+            await TestDataSeeder.SeedDeduccionesTssAsync(AppDbContext);
         }
         
-        // Ejecutar seeder
-        await TestDataSeeder.SeedAllAsync(AppDbContext);
+        if (!hasPlanes)
+        {
+            await TestDataSeeder.SeedPlanesAsync(AppDbContext);
+        }
+        
+        // Si hay planes pero sin nombre, eliminarlos y recrear
+        if (hasPlanesContratistas && !planesContratistasConNombre)
+        {
+            // Eliminar planes corruptos
+            var planesCorruptos = await AppDbContext.PlanesContratistas.ToListAsync();
+            foreach (var plan in planesCorruptos)
+            {
+                DbContext.PlanesContratistas.Remove(plan);
+            }
+            await DbContext.SaveChangesAsync();
+            
+            // Recrear planes
+            await TestDataSeeder.SeedPlanesContratistasAsync(AppDbContext);
+        }
+        else if (!hasPlanesContratistas)
+        {
+            await TestDataSeeder.SeedPlanesContratistasAsync(AppDbContext);
+        }
+        
+        if (!hasCredenciales)
+        {
+            await TestDataSeeder.SeedUsuariosAsync(AppDbContext);
+        }
     }
 
     /// <summary>
@@ -83,13 +126,14 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var response = await Client.PostAsJsonAsync("/api/auth/login", loginRequest);
         response.EnsureSuccessStatusCode();
 
-        var loginResponse = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var token = loginResponse.GetProperty("accessToken").GetString();
+        // ✅ FIX: Deserializar a AuthenticationResultDto directamente (PascalCase)
+        var loginResult = await response.Content.ReadFromJsonAsync<AuthenticationResultDto>();
         
-        token.Should().NotBeNullOrEmpty("El login debe devolver un access token");
+        loginResult.Should().NotBeNull("El login debe devolver un AuthenticationResultDto");
+        loginResult!.AccessToken.Should().NotBeNullOrEmpty("El login debe devolver un access token");
         
-        SetAuthToken(token!);
-        return token!;
+        SetAuthToken(loginResult.AccessToken);
+        return loginResult.AccessToken;
     }
 
     /// <summary>

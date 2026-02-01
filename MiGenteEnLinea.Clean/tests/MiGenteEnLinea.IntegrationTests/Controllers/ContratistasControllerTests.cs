@@ -4,6 +4,7 @@ using FluentAssertions;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.CreateContratista;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratista;
 using MiGenteEnLinea.Application.Features.Contratistas.Common;
+using MiGenteEnLinea.Application.Features.Contratistas.Queries.SearchContratistas;
 using MiGenteEnLinea.IntegrationTests.Infrastructure;
 using Xunit;
 
@@ -23,35 +24,27 @@ public class ContratistasControllerTests : IntegrationTestBase
     #region CreateContratista Tests (2 tests)
 
     [Fact]
-    public async Task CreateContratista_WithValidData_CreatesProfileAndReturnsContratistaId()
+    public async Task CreateContratista_ForRegisteredUser_ReturnsContratistaData()
     {
-        // Arrange - Register and login as contratista
+        // Note: Per GAP-010, ALL users get a Contratista auto-created on registration
+        // (Legacy behavior: everyone can offer services)
+        // This test verifies we can retrieve the auto-created contratista
+        
+        // Arrange - Register and login (contratista is auto-created)
         var email = GenerateUniqueEmail("contratista");
         var userId = await RegisterUserAsync(email, "Password123!", "Pedro", "García", "Contratista");
         await LoginAsync(email, "Password123!");
 
-        var command = new CreateContratistaCommand(
-            UserId: userId.ToString(),
-            Nombre: "Pedro",
-            Apellido: "García",
-            Tipo: 1, // Persona Física
-            Titulo: "Plomero profesional certificado",
-            Identificacion: GenerateRandomIdentification(),
-            Sector: "Reparaciones del hogar",
-            Experiencia: 10,
-            Presentacion: "Plomero con 10 años de experiencia en instalaciones residenciales",
-            Telefono1: "8091234567",
-            Whatsapp1: true,
-            Provincia: "Santo Domingo"
-        );
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/contratistas", command);
+        // Act - Get the auto-created contratista
+        var response = await Client.GetAsync($"/api/contratistas/by-user/{userId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var contratistaId = await response.Content.ReadFromJsonAsync<int>();
-        contratistaId.Should().BeGreaterThan(0);
+        var contratista = await response.Content.ReadFromJsonAsync<ContratistaDto>();
+        contratista.Should().NotBeNull();
+        contratista!.UserId.Should().Be(userId.ToString());
+        contratista.Nombre.Should().Be("Pedro");
+        contratista.Apellido.Should().Be("García");
     }
 
     [Fact]
@@ -80,26 +73,16 @@ public class ContratistasControllerTests : IntegrationTestBase
     [Fact]
     public async Task GetContratistaById_WithValidId_ReturnsContratistaDto()
     {
-        // Arrange - Register, login, and create contratista
+        // Arrange - Register as contratista (auto-creates Contratista per GAP-010)
         var email = GenerateUniqueEmail("contratista");
         var userId = await RegisterUserAsync(email, "Password123!", "María", "López", "Contratista");
         await LoginAsync(email, "Password123!");
 
-        var createCommand = new CreateContratistaCommand(
-            UserId: userId.ToString(),
-            Nombre: "María",
-            Apellido: "López",
-            Tipo: 1,
-            Titulo: "Electricista certificada",
-            Sector: "Electricidad",
-            Experiencia: 8,
-            Presentacion: "Electricista especializada en instalaciones comerciales",
-            Telefono1: "8099876543",
-            Whatsapp1: true,
-            Provincia: "Santiago"
-        );
-        var createResponse = await Client.PostAsJsonAsync("/api/contratistas", createCommand);
-        var contratistaId = await createResponse.Content.ReadFromJsonAsync<int>();
+        // Get the auto-created contratista by userId
+        var byUserResponse = await Client.GetAsync($"/api/contratistas/by-user/{userId}");
+        byUserResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var autoCreatedContratista = await byUserResponse.Content.ReadFromJsonAsync<ContratistaDto>();
+        var contratistaId = autoCreatedContratista!.ContratistaId;
 
         // Act
         var response = await Client.GetAsync($"/api/contratistas/{contratistaId}");
@@ -112,10 +95,6 @@ public class ContratistasControllerTests : IntegrationTestBase
         contratistaDto.UserId.Should().Be(userId.ToString());
         contratistaDto.Nombre.Should().Be("María");
         contratistaDto.Apellido.Should().Be("López");
-        contratistaDto.Titulo.Should().Be("Electricista certificada");
-        contratistaDto.Sector.Should().Be("Electricidad");
-        contratistaDto.Experiencia.Should().Be(8);
-        contratistaDto.Provincia.Should().Be("Santiago");
     }
 
     #endregion
@@ -135,9 +114,9 @@ public class ContratistasControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var contratistas = await response.Content.ReadFromJsonAsync<List<ContratistaDto>>();
-        contratistas.Should().NotBeNull();
-        contratistas.Should().BeOfType<List<ContratistaDto>>();
+        var result = await response.Content.ReadFromJsonAsync<SearchContratistasResult>();
+        result.Should().NotBeNull();
+        result!.Contratistas.Should().NotBeNull();
         // Note: List might be empty or contain test data
     }
 
@@ -148,27 +127,18 @@ public class ContratistasControllerTests : IntegrationTestBase
     [Fact]
     public async Task UpdateContratista_WithValidData_UpdatesSuccessfully()
     {
-        // Arrange - Register, login, and create contratista
+        // Arrange - Register as contratista (auto-creates Contratista per GAP-010)
         var email = GenerateUniqueEmail("contratista");
         var userId = await RegisterUserAsync(email, "Password123!", "Ana", "Rodríguez", "Contratista");
         await LoginAsync(email, "Password123!");
 
-        var createCommand = new CreateContratistaCommand(
-            UserId: userId.ToString(),
-            Nombre: "Ana",
-            Apellido: "Rodríguez",
-            Tipo: 1,
-            Titulo: "Carpintera",
-            Sector: "Carpintería",
-            Experiencia: 5,
-            Presentacion: "Original presentation",
-            Telefono1: "8091111111",
-            Provincia: "La Vega"
-        );
-        var createResponse = await Client.PostAsJsonAsync("/api/contratistas", createCommand);
-        var contratistaId = await createResponse.Content.ReadFromJsonAsync<int>();
+        // Get the auto-created contratista by userId
+        var byUserResponse = await Client.GetAsync($"/api/contratistas/by-user/{userId}");
+        byUserResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var autoCreatedContratista = await byUserResponse.Content.ReadFromJsonAsync<ContratistaDto>();
+        var contratistaId = autoCreatedContratista!.ContratistaId;
 
-        // Update contratista
+        // Update contratista - Note: API uses userId in the route, not contratistaId
         var updateCommand = new UpdateContratistaCommand(
             UserId: userId.ToString(),
             Titulo: "Carpintera profesional certificada",
@@ -182,13 +152,13 @@ public class ContratistasControllerTests : IntegrationTestBase
             Email: "ana.carpintera@test.com"
         );
 
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/contratistas/{contratistaId}", updateCommand);
+        // Act - Use userId in the route, not contratistaId
+        var response = await Client.PutAsJsonAsync($"/api/contratistas/{userId}", updateCommand);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Verify update
+        // Verify update - GET uses contratistaId
         var getResponse = await Client.GetAsync($"/api/contratistas/{contratistaId}");
         var updatedContratista = await getResponse.Content.ReadFromJsonAsync<ContratistaDto>();
         updatedContratista.Should().NotBeNull();

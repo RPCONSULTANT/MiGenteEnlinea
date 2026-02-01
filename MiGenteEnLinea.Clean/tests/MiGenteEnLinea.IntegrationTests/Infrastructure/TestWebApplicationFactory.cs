@@ -1,3 +1,14 @@
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
+using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
+using MiGenteEnLinea.Infrastructure.Persistence.Interceptors;
+
 namespace MiGenteEnLinea.IntegrationTests.Infrastructure;
 
 /// <summary>
@@ -159,33 +170,20 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             var scopedServices = scope.ServiceProvider;
             var db = scopedServices.GetRequiredService<MiGenteDbContext>();
             
-            try
+            // ✅ FIX: Crear base de datos solo si no existe (evita conflictos de concurrencia)
+            // No usar EnsureDeleted() aquí porque causa problemas con tests paralelos
+            if (!db.Database.CanConnect())
             {
-                // Verificar si la base de datos existe
-                if (db.Database.CanConnect())
-                {
-                    // La base de datos ya existe, limpiar datos pero mantener esquema
-                    // Esto es más rápido que recrear y evita conflictos de concurrencia
-                }
-                else
-                {
-                    // Base de datos no existe, crearla con migraciones
-                    db.Database.Migrate();
-                }
+                // Base de datos no existe, crearla con migraciones
+                db.Database.Migrate();
             }
-            catch (Exception ex)
+            else
             {
-                // Log pero continuar - la base de datos podría estar siendo creada por otro test
-                Console.WriteLine($"⚠️ Database setup warning: {ex.Message}");
-                
-                // Intentar aplicar migraciones de todos modos (por si faltan)
-                try
+                // Base de datos existe - verificar si tiene migraciones pendientes
+                var pendingMigrations = db.Database.GetPendingMigrations().ToList();
+                if (pendingMigrations.Any())
                 {
                     db.Database.Migrate();
-                }
-                catch
-                {
-                    // Ignorar si ya existe - otro test la está creando
                 }
             }
         });

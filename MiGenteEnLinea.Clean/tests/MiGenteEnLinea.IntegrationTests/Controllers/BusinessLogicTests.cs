@@ -25,8 +25,9 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task GetDeduccionesTss_WithAuthentication_ReturnsActiveTssDeductions()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.tss@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.tss@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("tss");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         // Act
         var response = await Client.GetAsync("/api/empleados/deducciones-tss");
@@ -42,8 +43,9 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task GetDeduccionesTss_ReturnsDeductionsWithValidPercentages()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.tss2@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.tss2@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("tss2");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         // Act
         var response = await Client.GetAsync("/api/empleados/deducciones-tss");
@@ -77,8 +79,9 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task CreateSuscripcion_WithPastStartDate_CalculatesExpirationCorrectly()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.expiry@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.expiry@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("expiry");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         // Create subscription starting 10 days ago (should expire in 20 days from now)
         var command = new CreateSuscripcionCommand
@@ -94,7 +97,11 @@ public class BusinessLogicTests : IntegrationTestBase
         // Assert
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created, 
             "suscripción con fecha pasada debe ser válida");
-        var suscripcionId = await createResponse.Content.ReadFromJsonAsync<int>();
+        
+        // API returns { suscripcionId: X }
+        var responseBody = await createResponse.Content.ReadAsStringAsync();
+        using var doc = System.Text.Json.JsonDocument.Parse(responseBody);
+        var suscripcionId = doc.RootElement.GetProperty("suscripcionId").GetInt32();
         suscripcionId.Should().BeGreaterThan(0);
     }
 
@@ -102,8 +109,9 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task GetSuscripcion_AfterCreation_ReturnsActiveStatus()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.active@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.active@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("active");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         var command = new CreateSuscripcionCommand
         {
@@ -115,7 +123,7 @@ public class BusinessLogicTests : IntegrationTestBase
         await Client.PostAsJsonAsync("/api/suscripciones", command);
 
         // Act
-        var getResponse = await Client.GetAsync($"/api/suscripciones/{userId}");
+        var getResponse = await Client.GetAsync($"/api/suscripciones/activa/{userId}");
 
         // Assert
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -126,11 +134,12 @@ public class BusinessLogicTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task CreateSuscripcion_WithInvalidPlanId_ReturnsBadRequest()
+    public async Task CreateSuscripcion_WithInvalidPlanId_ReturnsNotFound()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.invalid@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.invalid@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("invalid");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         var command = new CreateSuscripcionCommand
         {
@@ -143,8 +152,8 @@ public class BusinessLogicTests : IntegrationTestBase
         var response = await Client.PostAsJsonAsync("/api/suscripciones", command);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest, 
-            "plan inválido debe ser rechazado");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound, 
+            "plan inexistente debe retornar 404 Not Found");
     }
 
     #endregion
@@ -154,12 +163,8 @@ public class BusinessLogicTests : IntegrationTestBase
     [Fact]
     public async Task GetPlanesEmpleadores_ReturnsActivePlans()
     {
-        // Arrange
-        var userId = await RegisterUserAsync("test.planes1@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.planes1@example.com", "Test123!@#");
-
-        // Act
-        var response = await Client.GetAsync("/api/suscripciones/planes-empleadores");
+        // Act - Planes endpoint is [AllowAnonymous], no authentication needed
+        var response = await Client.GetAsync("/api/suscripciones/planes/empleadores");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -177,12 +182,8 @@ public class BusinessLogicTests : IntegrationTestBase
     [Fact]
     public async Task GetPlanesContratistas_ReturnsActivePlans()
     {
-        // Arrange
-        var userId = await RegisterUserAsync("test.planes2@example.com", "Test123!@#", "Contratista", "Test", "User");
-        await LoginAsync("test.planes2@example.com", "Test123!@#");
-
-        // Act
-        var response = await Client.GetAsync("/api/suscripciones/planes-contratistas");
+        // Act - Planes endpoint is [AllowAnonymous], no authentication needed
+        var response = await Client.GetAsync("/api/suscripciones/planes/contratistas");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -198,15 +199,15 @@ public class BusinessLogicTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetPlanes_WithoutAuthentication_ReturnsUnauthorized()
+    public async Task GetPlanes_WithoutAuthentication_ReturnsOk_BecausePlanesArePublic()
     {
-        // Act
-        var responseEmpleadores = await Client.GetAsync("/api/suscripciones/planes-empleadores");
-        var responseContratistas = await Client.GetAsync("/api/suscripciones/planes-contratistas");
+        // Act - Planes endpoints are [AllowAnonymous] to allow viewing before registration
+        var responseEmpleadores = await Client.GetAsync("/api/suscripciones/planes/empleadores");
+        var responseContratistas = await Client.GetAsync("/api/suscripciones/planes/contratistas");
 
-        // Assert
-        responseEmpleadores.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        responseContratistas.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // Assert - Should return OK because planes are public
+        responseEmpleadores.StatusCode.Should().Be(HttpStatusCode.OK);
+        responseContratistas.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     #endregion
@@ -217,8 +218,9 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task CreateSuscripcion_WithNullFechaInicio_UsesTodayAsDefault()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.default@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.default@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("default");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         var command = new CreateSuscripcionCommand
         {
@@ -232,7 +234,11 @@ public class BusinessLogicTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var suscripcionId = await response.Content.ReadFromJsonAsync<int>();
+        
+        // API returns { suscripcionId: X }
+        var responseBody = await response.Content.ReadAsStringAsync();
+        using var doc2 = System.Text.Json.JsonDocument.Parse(responseBody);
+        var suscripcionId = doc2.RootElement.GetProperty("suscripcionId").GetInt32();
         suscripcionId.Should().BeGreaterThan(0, 
             "suscripción sin fecha debe usar fecha actual por defecto");
     }
@@ -241,11 +247,12 @@ public class BusinessLogicTests : IntegrationTestBase
     public async Task GetSuscripcion_ForNonExistentUser_ReturnsNotFound()
     {
         // Arrange
-        var userId = await RegisterUserAsync("test.notfound@example.com", "Test123!@#", "Empleador", "Test", "User");
-        await LoginAsync("test.notfound@example.com", "Test123!@#");
+        var email = GenerateUniqueEmail("notfound");
+        var userId = await RegisterUserAsync(email, "Test123!@#", "Empleador", "Test", "User");
+        await LoginAsync(email, "Test123!@#");
 
         // Act - Try to get subscription for non-existent user
-        var response = await Client.GetAsync($"/api/suscripciones/{Guid.NewGuid()}");
+        var response = await Client.GetAsync($"/api/suscripciones/activa/{Guid.NewGuid()}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound,

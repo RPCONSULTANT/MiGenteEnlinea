@@ -4,6 +4,7 @@ using FluentAssertions;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.CreateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.UpdateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.DTOs;
+using MiGenteEnLinea.Application.Features.Empleadores.Queries.SearchEmpleadores;
 using MiGenteEnLinea.IntegrationTests.Infrastructure;
 using Xunit;
 
@@ -40,10 +41,21 @@ public class EmpleadoresControllerTests : IntegrationTestBase
         // Act
         var response = await Client.PostAsJsonAsync("/api/empleadores", command);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var empleadorId = await response.Content.ReadFromJsonAsync<int>();
-        empleadorId.Should().BeGreaterThan(0);
+        // Assert - POST returns 201 Created for new resources
+        response.StatusCode.Should().Be(HttpStatusCode.Created, 
+            $"Expected 201 Created but got {response.StatusCode}. Body: {await response.Content.ReadAsStringAsync()}");
+        
+        // Read response using the actual type returned by API
+        var result = await response.Content.ReadFromJsonAsync<CreateEmpleadorTestResponse>();
+        result.Should().NotBeNull();
+        result!.EmpleadorId.Should().BeGreaterThan(0);
+    }
+
+    // Response type matching API's CreateEmpleadorResponse
+    private class CreateEmpleadorTestResponse
+    {
+        public int EmpleadorId { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 
     [Fact]
@@ -85,7 +97,9 @@ public class EmpleadoresControllerTests : IntegrationTestBase
             Descripcion: "Empresa de servicios profesionales"
         );
         var createResponse = await Client.PostAsJsonAsync("/api/empleadores", createCommand);
-        var empleadorId = await createResponse.Content.ReadFromJsonAsync<int>();
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<CreateEmpleadorTestResponse>();
+        var empleadorId = createResult!.EmpleadorId;
 
         // Act
         var response = await Client.GetAsync($"/api/empleadores/{empleadorId}");
@@ -135,9 +149,9 @@ public class EmpleadoresControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var empleadores = await response.Content.ReadFromJsonAsync<List<EmpleadorDto>>();
-        empleadores.Should().NotBeNull();
-        empleadores.Should().BeOfType<List<EmpleadorDto>>();
+        var result = await response.Content.ReadFromJsonAsync<SearchEmpleadoresResult>();
+        result.Should().NotBeNull();
+        result!.Empleadores.Should().NotBeNull();
         // Note: List might be empty or contain test data
     }
 
@@ -160,9 +174,11 @@ public class EmpleadoresControllerTests : IntegrationTestBase
             Descripcion: "Original description"
         );
         var createResponse = await Client.PostAsJsonAsync("/api/empleadores", createCommand);
-        var empleadorId = await createResponse.Content.ReadFromJsonAsync<int>();
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<CreateEmpleadorTestResponse>();
+        var empleadorId = createResult!.EmpleadorId;
 
-        // Update empleador
+        // Update empleador - Note: API uses userId, not empleadorId in the route
         var updateCommand = new UpdateEmpleadorCommand(
             UserId: userId.ToString(),
             Habilidades: "Updated skills: Gestión de proyectos",
@@ -170,15 +186,13 @@ public class EmpleadoresControllerTests : IntegrationTestBase
             Descripcion: "Updated description: Empresa líder en innovación"
         );
 
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/empleadores/{empleadorId}", updateCommand);
+        // Act - Use userId in the route, not empleadorId
+        var response = await Client.PutAsJsonAsync($"/api/empleadores/{userId}", updateCommand);
 
-        // Assert
+        // Assert - API returns { message: "..." }
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var success = await response.Content.ReadFromJsonAsync<bool>();
-        success.Should().BeTrue();
 
-        // Verify update
+        // Verify update - GET uses empleadorId
         var getResponse = await Client.GetAsync($"/api/empleadores/{empleadorId}");
         var updatedEmpleador = await getResponse.Content.ReadFromJsonAsync<EmpleadorDto>();
         updatedEmpleador.Should().NotBeNull();

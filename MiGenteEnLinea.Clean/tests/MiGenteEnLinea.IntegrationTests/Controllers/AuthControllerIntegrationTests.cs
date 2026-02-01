@@ -109,17 +109,32 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Register_WithDuplicateEmail_ReturnsBadRequest()
     {
-        var registerCommand = new RegisterCommand
+        // Primero registrar un usuario
+        var email = GenerateUniqueEmail("duplicate");
+        var registerCommand1 = new RegisterCommand
         {
-            Email = "juan.perez@test.com",
-            Password = "NewUser@123",
+            Email = email,
+            Password = "First@123",
+            Nombre = "First",
+            Apellido = "User",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        var firstResponse = await Client.PostAsJsonAsync("/api/auth/register", registerCommand1);
+        firstResponse.IsSuccessStatusCode.Should().BeTrue($"First registration should succeed: {await firstResponse.Content.ReadAsStringAsync()}");
+
+        // Intentar registrar con el mismo email
+        var registerCommand2 = new RegisterCommand
+        {
+            Email = email,
+            Password = "Second@123",
             Nombre = "Duplicado",
             Apellido = "Usuario",
             Tipo = 1,
             Host = "http://localhost:5015"
         };
 
-        var response = await Client.PostAsJsonAsync("/api/auth/register", registerCommand);
+        var response = await Client.PostAsJsonAsync("/api/auth/register", registerCommand2);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -150,16 +165,41 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsTokens()
     {
+        // Crear usuario propio para este test (evita contaminación entre tests paralelos)
+        var email = GenerateUniqueEmail("login-valid");
+        var password = "LoginTest@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = password,
+            Nombre = "Login",
+            Apellido = "TestUser",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        var registerResponse = await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+        registerResponse.IsSuccessStatusCode.Should().BeTrue($"Register failed: {await registerResponse.Content.ReadAsStringAsync()}");
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateResponse = await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+        activateResponse.IsSuccessStatusCode.Should().BeTrue($"Activate failed: {await activateResponse.Content.ReadAsStringAsync()}");
+
+        // Login con el usuario recién creado
         var loginCommand = new LoginCommand
         {
-            Email = "juan.perez@test.com",
-            Password = TestDataSeeder.TestPasswordPlainText,
+            Email = email,
+            Password = password,
             IpAddress = "127.0.0.1"
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+        response.IsSuccessStatusCode.Should().BeTrue($"Login failed: {await response.Content.ReadAsStringAsync()}");
         var result = await response.Content.ReadFromJsonAsync<AuthenticationResultDto>();
         result.Should().NotBeNull();
         result!.AccessToken.Should().NotBeNullOrEmpty();
@@ -169,9 +209,32 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Login_WithInvalidPassword_ReturnsUnauthorized()
     {
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("login-invalid-pwd");
+        var password = "CorrectPass@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = password,
+            Nombre = "Login",
+            Apellido = "WrongPwd",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+
+        // Login con password incorrecto
         var loginCommand = new LoginCommand
         {
-            Email = "juan.perez@test.com",
+            Email = email,
             Password = "WrongPassword123!",
             IpAddress = "127.0.0.1"
         };
@@ -186,7 +249,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     {
         var loginCommand = new LoginCommand
         {
-            Email = "nonexistent@test.com",
+            Email = $"nonexistent-{Guid.NewGuid():N}@test.com",
             Password = TestDataSeeder.TestPasswordPlainText,
             IpAddress = "127.0.0.1"
         };
@@ -199,10 +262,24 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Login_WithInactiveAccount_ReturnsUnauthorized()
     {
+        // Crear usuario sin activar
+        var email = GenerateUniqueEmail("inactive-login");
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = "Inactive@123",
+            Nombre = "Inactive",
+            Apellido = "User",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+        // NO activamos la cuenta
+
         var loginCommand = new LoginCommand
         {
-            Email = "ana.martinez@test.com",
-            Password = TestDataSeeder.TestPasswordPlainText,
+            Email = email,
+            Password = "Inactive@123",
             IpAddress = "127.0.0.1"
         };
 
@@ -275,45 +352,65 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task ChangePassword_WithValidCredentials_ChangesPassword()
     {
-        var token = await LoginAsync("juan.perez@test.com", TestDataSeeder.TestPasswordPlainText);
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("chgpwd-valid");
+        var originalPassword = "Original@123";
+        var newPassword = "NewPassword@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = originalPassword,
+            Nombre = "ChangePassword",
+            Apellido = "User",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
 
-        // ✅ Use fresh DbContext to avoid caching issues
+        // Activar cuenta
         using var scope = Factory.Services.CreateScope();
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
-        
-        var emailVO = Email.CreateUnsafe("juan.perez@test.com");
-        var credencial = await freshContext.CredencialesRefactored
-            .AsNoTracking()
-            .FirstAsync(c => c.Email == emailVO);
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
 
+        // Login para obtener token
+        var token = await LoginAsync(email, originalPassword);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Cambiar password
         var changePasswordCommand = new ChangePasswordCommand(
-            Email: "juan.perez@test.com",
+            Email: email,
             UserId: credencial.UserId,
-            CurrentPassword: TestDataSeeder.TestPasswordPlainText,
-            NewPassword: "NewPassword@123"
+            CurrentPassword: originalPassword,
+            NewPassword: newPassword
         );
 
         var response = await Client.PostAsJsonAsync("/api/auth/change-password", changePasswordCommand);
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+        response.IsSuccessStatusCode.Should().BeTrue($"ChangePassword failed: {await response.Content.ReadAsStringAsync()}");
 
+        // Verificar que el nuevo password funciona
         Client.DefaultRequestHeaders.Authorization = null;
         var loginWithNewPassword = new LoginCommand
         {
-            Email = "juan.perez@test.com",
-            Password = "NewPassword@123",
+            Email = email,
+            Password = newPassword,
             IpAddress = "127.0.0.1"
         };
         var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginWithNewPassword);
-        loginResponse.IsSuccessStatusCode.Should().BeTrue();
+        loginResponse.IsSuccessStatusCode.Should().BeTrue($"Login with new password failed: {await loginResponse.Content.ReadAsStringAsync()}");
     }
 
     [Fact]
     public async Task ChangePassword_WithoutAuthentication_ReturnsUnauthorized()
     {
+        // Asegurar que no hay header de autorización
+        Client.DefaultRequestHeaders.Authorization = null;
+        
         var changePasswordCommand = new ChangePasswordCommand(
-            Email: "juan.perez@test.com",
+            Email: "anyuser@test.com",
             UserId: "some-user-id",
             CurrentPassword: "OldPassword@123",
             NewPassword: "NewPassword@123"
@@ -331,15 +428,40 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task RefreshToken_WithValidToken_ReturnsNewTokens()
     {
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("refresh-valid");
+        var password = "Refresh@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = password,
+            Nombre = "Refresh",
+            Apellido = "User",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+
+        // Login
         var loginCommand = new LoginCommand
         {
-            Email = "juan.perez@test.com",
-            Password = TestDataSeeder.TestPasswordPlainText,
+            Email = email,
+            Password = password,
             IpAddress = "127.0.0.1"
         };
         var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
+        loginResponse.IsSuccessStatusCode.Should().BeTrue($"Login failed: {await loginResponse.Content.ReadAsStringAsync()}");
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResultDto>();
 
+        // Refresh
         var refreshCommand = new RefreshTokenCommand(
             RefreshToken: loginResult!.RefreshToken,
             IpAddress: "127.0.0.1"
@@ -347,7 +469,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
 
         var response = await Client.PostAsJsonAsync("/api/auth/refresh", refreshCommand);
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+        response.IsSuccessStatusCode.Should().BeTrue($"Refresh failed: {await response.Content.ReadAsStringAsync()}");
         var result = await response.Content.ReadFromJsonAsync<AuthenticationResultDto>();
         result.Should().NotBeNull();
         result!.AccessToken.Should().NotBeNullOrEmpty();
@@ -374,15 +496,40 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task RevokeToken_WithValidToken_RevokesSuccessfully()
     {
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("revoke-valid");
+        var password = "Revoke@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = password,
+            Nombre = "Revoke",
+            Apellido = "User",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+
+        // Login
         var loginCommand = new LoginCommand
         {
-            Email = "juan.perez@test.com",
-            Password = TestDataSeeder.TestPasswordPlainText,
+            Email = email,
+            Password = password,
             IpAddress = "127.0.0.1"
         };
         var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
+        loginResponse.IsSuccessStatusCode.Should().BeTrue($"Login failed: {await loginResponse.Content.ReadAsStringAsync()}");
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResultDto>();
 
+        // Revoke
         var revokeCommand = new RevokeTokenCommand(
             RefreshToken: loginResult!.RefreshToken,
             IpAddress: "127.0.0.1"
@@ -390,8 +537,9 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
 
         var response = await Client.PostAsJsonAsync("/api/auth/revoke", revokeCommand);
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+        response.IsSuccessStatusCode.Should().BeTrue($"Revoke failed: {await response.Content.ReadAsStringAsync()}");
 
+        // Verificar que el refresh token ya no funciona
         var refreshCommand = new RefreshTokenCommand(
             RefreshToken: loginResult.RefreshToken,
             IpAddress: "127.0.0.1"
