@@ -3,136 +3,385 @@
     Layout = "_LayoutEmpleador";
 }
 
-<h2 style="color:white">Administra la Nomina de tu Gente</h2>
-<hr />
-<div style="background-color:white; padding-block:5px; padding-left:10px;">
-    <div class="container mt-5">
-        <h2>Gestión de Nómina</h2>
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Empleador")" class="text-primary">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Nómina</li>
+    </ol>
+</nav>
 
-        <!-- Tabs -->
-        <ul class="nav nav-tabs mt-3" id="myTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="novedad-tab" data-bs-toggle="tab" href="#novedad" role="tab" aria-controls="novedad" aria-selected="true">Novedad</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="historico-tab" data-bs-toggle="tab" href="#historico" role="tab" aria-controls="historico" aria-selected="false">Histórico</a>
-            </li>
-        </ul>
+<div class="container-fluid bg-white pt-3 pb-4" style="border-radius: 10px; box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);">
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1" style="font-family: 'Open Sans', sans-serif; font-weight: 600;">
+                <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+                Gestión de Nómina
+            </h2>
+            <p class="text-muted mb-0">Administra los pagos de tus colaboradores</p>
+        </div>
+    </div>
 
-        <!-- Contenido de los tabs -->
-        <div class="tab-content mt-3" id="myTabContent">
-            <!-- Tab Novedad -->
-            <div class="tab-pane fade show active" id="novedad" role="tabpanel" aria-labelledby="novedad-tab">
-                <div class="row">
-                    <div class="container">
-                        <div class="row mt-3">
-                            <div class="col-md-2">
-                                <label for="fechaPago" class="form-label">Fecha del Pago:</label>
-                                <input type="date" class="form-control" id="fechaPago" />
-                            </div>
-                            <div class="col-md-3">
-                                <label for="ddlEmpleado" class="form-label">Seleccionar Empleado:</label>
-                                <select class="form-select" id="ddlEmpleado">
-                                    <option value="">-- Seleccione --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label for="txtSalario" class="form-label">Salario:</label>
-                                <input type="text" class="form-control" id="txtSalario" value="0.00" onkeypress="return soloNumeros(event)" />
-                            </div>
-                            <div class="col-md-2">
-                                <label for="txtDescuento" class="form-label">Descuento</label>
-                                <input type="text" class="form-control" id="txtDescuento" />
-                            </div>
+    <!-- Summary Cards -->
+    <div class="row mb-4" id="summaryCards">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Empleados Activos</h6>
+                            <h3 id="statEmpleados">0</h3>
                         </div>
-
-                        <div class="row mt-3">
-                            <div class="col-md-4">
-                                <label for="txtDescripcion" class="form-label">Descripcion del Descuento:</label>
-                                <input type="text" class="form-control" id="txtDescripcion" />
-                            </div>
-                            <div class="col-md-4">
-                                <a style="color:white">.</a>
-                                <br />
-                                <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
-                            </div>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <table class="table table-bordered table-sm" id="gridNomina">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Empleado</th>
-                                                <th scope="col">Fecha del Pago</th>
-                                                <th scope="col">Monto</th>
-                                                <th scope="col">#</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="4">
-                                                    <div>No data to display</div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Tab Histórico -->
-            <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
-                <div class="row">
-                    <div class="container mt-3">
-                        <div class="row mb-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Desde:</label>
-                                <input type="date" class="form-control" id="fechaDesde" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Hasta:</label>
-                                <input type="date" class="form-control" id="fechaHasta" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Empleado:</label>
-                                <select class="form-select" id="filtroEmpleado">
-                                    <option value="">-- Todos --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button class="btn btn-secondary w-100" id="btnFiltrar">
-                                    <i class="fa fa-search"></i> Filtrar
-                                </button>
-                            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Nómina Pendiente</h6>
+                            <h3 id="statPendiente">RD$ 0.00</h3>
                         </div>
-
-                        <div class="card">
-                            <table class="table table-bordered table-sm" id="gridHistorico">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Fecha</th>
-                                        <th scope="col">Empleado</th>
-                                        <th scope="col">Concepto</th>
-                                        <th scope="col">Monto</th>
-                                        <th scope="col">Estado</th>
-                                        <th scope="col">#</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="6">
-                                            <div>No data to display</div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Pagado Este Mes</h6>
+                            <h3 id="statPagadoMes">RD$ 0.00</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Total Bruto Nómina</h6>
+                            <h3 id="statTotalBruto">RD$ 0.00</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill-wave fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-4 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2 text-muted">Cargando información...</p>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-3" id="nominaTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="novedad-tab" data-bs-toggle="pill" data-bs-target="#novedad" type="button" role="tab">
+                <i class="fas fa-plus-circle me-1"></i>Procesar Pagos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="lote-tab" data-bs-toggle="pill" data-bs-target="#lote" type="button" role="tab">
+                <i class="fas fa-layer-group me-1"></i>Pago en Lote
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historico-tab" data-bs-toggle="pill" data-bs-target="#historico" type="button" role="tab">
+                <i class="fas fa-history me-1"></i>Histórico
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="nominaTabContent">
+        
+        <!-- Tab: Procesar Pagos Individuales -->
+        <div class="tab-pane fade show active" id="novedad" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-user-plus me-2"></i>Procesar Pago Individual
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Seleccionar Empleado <span class="text-danger">*</span></label>
+                            <select class="form-select" id="ddlEmpleado">
+                                <option value="">-- Seleccione un empleado --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Fecha de Pago <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="fechaPago">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Concepto</label>
+                            <select class="form-select" id="ddlConcepto">
+                                <option value="1">Pago de Salario</option>
+                                <option value="2">Regalía Pascual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Salario</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input type="text" class="form-control" id="txtSalario" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-success w-100" id="btnAgregarPago" disabled>
+                                <i class="fas fa-plus me-1"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Info del empleado seleccionado -->
+                    <div id="empleadoInfo" class="alert alert-info d-none">
+                        <div class="row">
+                            <div class="col-md-3"><strong>Nombre:</strong> <span id="infoNombre">-</span></div>
+                            <div class="col-md-3"><strong>Posición:</strong> <span id="infoPosicion">-</span></div>
+                            <div class="col-md-3"><strong>Período:</strong> <span id="infoPeriodo">-</span></div>
+                            <div class="col-md-3"><strong>Aplica TSS:</strong> <span id="infoTss">-</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Descuento opcional -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Descuento Adicional (Opcional)</label>
+                            <input type="text" class="form-control" id="txtDescripcionDescuento" placeholder="Descripción del descuento">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Monto Descuento</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input type="number" class="form-control" id="txtMontoDescuento" step="0.01" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    
+                    <!-- Lista de pagos a procesar -->
+                    <h6><i class="fas fa-list me-2"></i>Pagos a Procesar</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="gridNomina">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Fecha Pago</th>
+                                    <th>Concepto</th>
+                                    <th class="text-end">Salario</th>
+                                    <th class="text-end">Descuento</th>
+                                    <th class="text-end">Neto</th>
+                                    <th class="text-center" style="width: 80px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyNomina">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                        Agregue empleados para procesar la nómina
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-success d-none" id="tfootNomina">
+                                <tr>
+                                    <th colspan="3">TOTAL A PAGAR</th>
+                                    <th class="text-end" id="totalBruto">RD$ 0.00</th>
+                                    <th class="text-end text-danger" id="totalDescuento">RD$ 0.00</th>
+                                    <th class="text-end" id="totalNeto">RD$ 0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-secondary" id="btnLimpiarLista" disabled>
+                            <i class="fas fa-trash me-1"></i>Limpiar Lista
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnProcesarNomina" disabled>
+                            <i class="fas fa-check-circle me-1"></i>Procesar Todos los Pagos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Pago en Lote -->
+        <div class="tab-pane fade" id="lote" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-layer-group me-2"></i>Procesar Nómina en Lote
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Esta opción procesa el pago de todos los empleados activos de una vez.
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Período de Nómina</label>
+                            <select class="form-select" id="ddlPeriodoLote">
+                                <option value="1">Semanal</option>
+                                <option value="2" selected>Quincenal</option>
+                                <option value="3">Mensual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha de Pago</label>
+                            <input type="date" class="form-control" id="fechaPagoLote">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Concepto</label>
+                            <select class="form-select" id="ddlConceptoLote">
+                                <option value="1">Pago de Salario</option>
+                                <option value="2">Regalía Pascual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-100" id="btnPreviewLote">
+                                <i class="fas fa-eye me-1"></i>Ver Vista Previa
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview del lote -->
+                    <div id="lotePreview" class="d-none">
+                        <h6><i class="fas fa-list-check me-2"></i>Empleados a procesar (<span id="conteoLote">0</span>)</h6>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th><input type="checkbox" id="checkAll" checked></th>
+                                        <th>Empleado</th>
+                                        <th>Posición</th>
+                                        <th class="text-end">Salario</th>
+                                        <th class="text-end">TSS</th>
+                                        <th class="text-end">Neto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyLote"></tbody>
+                                <tfoot class="table-success">
+                                    <tr>
+                                        <th colspan="3">TOTAL</th>
+                                        <th class="text-end" id="loteTotal">RD$ 0.00</th>
+                                        <th class="text-end" id="loteTss">RD$ 0.00</th>
+                                        <th class="text-end" id="loteNeto">RD$ 0.00</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-success" id="btnProcesarLote">
+                                <i class="fas fa-play me-1"></i>Procesar Nómina en Lote
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Histórico -->
+        <div class="tab-pane fade" id="historico" role="tabpanel">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-history me-2"></i>Histórico de Pagos
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            <label class="form-label">Desde</label>
+                            <input type="date" class="form-control" id="fechaDesde">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Hasta</label>
+                            <input type="date" class="form-control" id="fechaHasta">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Empleado</label>
+                            <select class="form-select" id="filtroEmpleado">
+                                <option value="">-- Todos --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="btnFiltrar">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button class="btn btn-outline-success flex-fill" id="btnExportarExcel">
+                                <i class="fas fa-file-excel me-1"></i>Excel
+                            </button>
+                            <button class="btn btn-outline-danger flex-fill" id="btnExportarPdf">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla histórico -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="gridHistorico">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha Pago</th>
+                                    <th>Empleado</th>
+                                    <th>Concepto</th>
+                                    <th class="text-end">Bruto</th>
+                                    <th class="text-end">Deducciones</th>
+                                    <th class="text-end">Neto</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyHistorico">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                                        Use los filtros para buscar pagos
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginación -->
+                    <nav id="paginacionHistorico" class="d-none">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" id="prevPage"><a class="page-link" href="#">Anterior</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item" id="nextPage"><a class="page-link" href="#">Siguiente</a></li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -142,63 +391,568 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function() {
-            // Cargar lista de empleados
-            // TODO: Llamar API para obtener empleados
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const API_BASE_URL = 'http://localhost:5015/api';
+        let empleadosList = [];
+        let pagosAProcesar = [];
+        let currentPage = 1;
+        const pageSize = 20;
+        
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
             
-            // Agregar a nómina
-            $('#btnAgregar').on('click', function() {
-                var empleado = $('#ddlEmpleado').val();
-                var fecha = $('#fechaPago').val();
-                var salario = $('#txtSalario').val();
-                var descuento = $('#txtDescuento').val();
-                
-                if (!empleado || !fecha || !salario) {
-                    Swal.fire('Error', 'Por favor complete todos los campos requeridos.', 'error');
-                    return;
-                }
-                
-                // TODO: Agregar a la tabla de nómina
-                Swal.fire('Agregado', 'El registro ha sido agregado a la nómina.', 'success');
-            });
+            document.getElementById('fechaPago').value = today;
+            document.getElementById('fechaPagoLote').value = today;
+            document.getElementById('fechaDesde').value = firstOfMonth;
+            document.getElementById('fechaHasta').value = today;
             
-            // Procesar nómina
-            $('#btnProcesarNomina').on('click', function() {
-                Swal.fire({
-                    title: 'Procesar Nómina',
-                    text: '¿Estás seguro que deseas procesar la nómina?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, procesar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // TODO: Llamar API para procesar nómina
-                        Swal.fire('Éxito', 'La nómina ha sido procesada correctamente.', 'success');
-                    }
-                });
-            });
+            // Load data
+            loadEmpleados();
+            loadResumen();
             
-            // Filtrar histórico
-            $('#btnFiltrar').on('click', function() {
-                // TODO: Llamar API con filtros
-            });
-            
-            // Exportar
-            $('#btnExportar').on('click', function() {
-                // TODO: Exportar a Excel
-                Swal.fire('Exportando', 'El archivo se está descargando...', 'info');
-            });
+            // Event listeners
+            document.getElementById('ddlEmpleado').addEventListener('change', onEmpleadoSelected);
+            document.getElementById('btnAgregarPago').addEventListener('click', agregarPago);
+            document.getElementById('btnLimpiarLista').addEventListener('click', limpiarLista);
+            document.getElementById('btnProcesarNomina').addEventListener('click', procesarNomina);
+            document.getElementById('btnPreviewLote').addEventListener('click', loadPreviewLote);
+            document.getElementById('btnProcesarLote').addEventListener('click', procesarLote);
+            document.getElementById('btnFiltrar').addEventListener('click', () => loadHistorico(1));
+            document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
+            document.getElementById('btnExportarPdf').addEventListener('click', exportarPdf);
+            document.getElementById('checkAll').addEventListener('change', toggleAllEmpleados);
         });
         
-        function soloNumeros(event) {
-            var charCode = (event.which) ? event.which : event.keyCode;
-            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-                return false;
+        // ============================================
+        // LOAD EMPLEADOS
+        // ============================================
+        async function loadEmpleados() {
+            const token = getAuthToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados?pageSize=500&activos=true`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    empleadosList = data.empleados || data.items || data || [];
+                    
+                    // Populate dropdowns
+                    populateEmpleadosDropdown('ddlEmpleado', empleadosList);
+                    populateEmpleadosDropdown('filtroEmpleado', empleadosList, true);
+                    
+                    // Update stats
+                    document.getElementById('statEmpleados').textContent = empleadosList.length;
+                }
+            } catch (error) {
+                console.error('Error loading empleados:', error);
             }
-            return true;
+        }
+        
+        function populateEmpleadosDropdown(elementId, empleados, includeAll = false) {
+            const dropdown = document.getElementById(elementId);
+            dropdown.innerHTML = includeAll 
+                ? '<option value="">-- Todos --</option>' 
+                : '<option value="">-- Seleccione un empleado --</option>';
+            
+            empleados.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.empleadoId;
+                option.textContent = `${emp.nombre} ${emp.apellido} - ${emp.posicion || 'Sin posición'}`;
+                option.dataset.salario = emp.salario || 0;
+                option.dataset.periodo = emp.periodoPago || 2;
+                option.dataset.tss = emp.inscritoTss || false;
+                option.dataset.posicion = emp.posicion || '';
+                dropdown.appendChild(option);
+            });
+        }
+        
+        // ============================================
+        // LOAD RESUMEN
+        // ============================================
+        async function loadResumen() {
+            const token = getAuthToken();
+            
+            try {
+                const periodo = new Date().toISOString().slice(0, 7); // YYYY-MM
+                const response = await fetch(`${API_BASE_URL}/nominas/resumen?periodo=${periodo}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const resumen = await response.json();
+                    document.getElementById('statPagadoMes').textContent = `RD$ ${(resumen.totalPagadoMes || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    document.getElementById('statTotalBruto').textContent = `RD$ ${(resumen.totalBrutoNomina || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    document.getElementById('statPendiente').textContent = `RD$ ${(resumen.totalPendiente || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                }
+            } catch (error) {
+                console.error('Error loading resumen:', error);
+            }
+        }
+        
+        // ============================================
+        // PROCESAR PAGO INDIVIDUAL
+        // ============================================
+        function onEmpleadoSelected() {
+            const select = document.getElementById('ddlEmpleado');
+            const selectedOption = select.options[select.selectedIndex];
+            const empleadoInfo = document.getElementById('empleadoInfo');
+            const btnAgregar = document.getElementById('btnAgregarPago');
+            
+            if (!select.value) {
+                empleadoInfo.classList.add('d-none');
+                document.getElementById('txtSalario').value = '';
+                btnAgregar.disabled = true;
+                return;
+            }
+            
+            const salario = parseFloat(selectedOption.dataset.salario) || 0;
+            const periodo = parseInt(selectedOption.dataset.periodo);
+            const tss = selectedOption.dataset.tss === 'true';
+            const posicion = selectedOption.dataset.posicion;
+            
+            document.getElementById('txtSalario').value = salario.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('infoNombre').textContent = selectedOption.textContent.split(' - ')[0];
+            document.getElementById('infoPosicion').textContent = posicion || '-';
+            document.getElementById('infoPeriodo').textContent = getPeriodoText(periodo);
+            document.getElementById('infoTss').textContent = tss ? 'Sí' : 'No';
+            
+            empleadoInfo.classList.remove('d-none');
+            btnAgregar.disabled = false;
+        }
+        
+        function agregarPago() {
+            const select = document.getElementById('ddlEmpleado');
+            const selectedOption = select.options[select.selectedIndex];
+            const fechaPago = document.getElementById('fechaPago').value;
+            const concepto = document.getElementById('ddlConcepto').value;
+            const descuentoDesc = document.getElementById('txtDescripcionDescuento').value.trim();
+            const descuentoMonto = parseFloat(document.getElementById('txtMontoDescuento').value) || 0;
+            
+            if (!select.value || !fechaPago) {
+                Swal.fire('Error', 'Seleccione un empleado y fecha de pago', 'error');
+                return;
+            }
+            
+            // Check if already added
+            if (pagosAProcesar.some(p => p.empleadoId === parseInt(select.value))) {
+                Swal.fire('Error', 'Este empleado ya está en la lista', 'warning');
+                return;
+            }
+            
+            const salario = parseFloat(selectedOption.dataset.salario) || 0;
+            const tss = selectedOption.dataset.tss === 'true';
+            let deducciones = 0;
+            
+            if (tss) {
+                deducciones = salario * 0.0591; // AFP 2.87% + SFS 3.04%
+            }
+            deducciones += descuentoMonto;
+            
+            const pago = {
+                empleadoId: parseInt(select.value),
+                nombre: selectedOption.textContent.split(' - ')[0],
+                fechaPago: fechaPago,
+                concepto: concepto,
+                conceptoTexto: document.getElementById('ddlConcepto').options[document.getElementById('ddlConcepto').selectedIndex].text,
+                salario: salario,
+                descuento: deducciones,
+                descuentoDesc: descuentoDesc,
+                neto: salario - deducciones
+            };
+            
+            pagosAProcesar.push(pago);
+            renderPagosTable();
+            
+            // Reset form
+            select.value = '';
+            document.getElementById('empleadoInfo').classList.add('d-none');
+            document.getElementById('txtSalario').value = '';
+            document.getElementById('txtDescripcionDescuento').value = '';
+            document.getElementById('txtMontoDescuento').value = '0';
+            document.getElementById('btnAgregarPago').disabled = true;
+        }
+        
+        function renderPagosTable() {
+            const tbody = document.getElementById('tbodyNomina');
+            const tfoot = document.getElementById('tfootNomina');
+            
+            if (pagosAProcesar.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            Agregue empleados para procesar la nómina
+                        </td>
+                    </tr>
+                `;
+                tfoot.classList.add('d-none');
+                document.getElementById('btnProcesarNomina').disabled = true;
+                document.getElementById('btnLimpiarLista').disabled = true;
+                return;
+            }
+            
+            let totalBruto = 0, totalDescuento = 0, totalNeto = 0;
+            
+            tbody.innerHTML = pagosAProcesar.map((p, index) => {
+                totalBruto += p.salario;
+                totalDescuento += p.descuento;
+                totalNeto += p.neto;
+                return `
+                    <tr>
+                        <td>${p.nombre}</td>
+                        <td>${formatDate(p.fechaPago)}</td>
+                        <td><span class="badge bg-info">${p.conceptoTexto}</span></td>
+                        <td class="text-end">RD$ ${p.salario.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-end text-danger">RD$ ${p.descuento.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-end text-success fw-bold">RD$ ${p.neto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-danger" onclick="removePago(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('totalBruto').textContent = `RD$ ${totalBruto.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalDescuento').textContent = `RD$ ${totalDescuento.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalNeto').textContent = `RD$ ${totalNeto.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            tfoot.classList.remove('d-none');
+            document.getElementById('btnProcesarNomina').disabled = false;
+            document.getElementById('btnLimpiarLista').disabled = false;
+        }
+        
+        function removePago(index) {
+            pagosAProcesar.splice(index, 1);
+            renderPagosTable();
+        }
+        
+        function limpiarLista() {
+            Swal.fire({
+                title: '¿Limpiar lista?',
+                text: 'Se eliminarán todos los pagos pendientes',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Sí, limpiar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    pagosAProcesar = [];
+                    renderPagosTable();
+                }
+            });
+        }
+        
+        async function procesarNomina() {
+            if (pagosAProcesar.length === 0) {
+                Swal.fire('Error', 'No hay pagos para procesar', 'error');
+                return;
+            }
+            
+            const result = await Swal.fire({
+                title: '¿Procesar todos los pagos?',
+                text: `Se procesarán ${pagosAProcesar.length} pagos`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Sí, procesar'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            const token = getAuthToken();
+            let exitosos = 0, fallidos = 0;
+            
+            Swal.fire({
+                title: 'Procesando...',
+                html: `<div class="progress"><div class="progress-bar" style="width: 0%">0%</div></div>`,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: async () => {
+                    for (let i = 0; i < pagosAProcesar.length; i++) {
+                        const pago = pagosAProcesar[i];
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/empleados/${pago.empleadoId}/nomina`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    empleadoId: pago.empleadoId,
+                                    tipoConcepto: parseInt(pago.concepto),
+                                    fechaPago: pago.fechaPago,
+                                    esFraccion: false
+                                })
+                            });
+                            
+                            if (response.ok || response.status === 201) {
+                                exitosos++;
+                            } else {
+                                fallidos++;
+                            }
+                        } catch (error) {
+                            fallidos++;
+                        }
+                        
+                        const percent = Math.round(((i + 1) / pagosAProcesar.length) * 100);
+                        document.querySelector('.progress-bar').style.width = percent + '%';
+                        document.querySelector('.progress-bar').textContent = percent + '%';
+                    }
+                    
+                    Swal.fire({
+                        title: '¡Completado!',
+                        html: `<p>Exitosos: <strong class="text-success">${exitosos}</strong></p>
+                               <p>Fallidos: <strong class="text-danger">${fallidos}</strong></p>`,
+                        icon: fallidos === 0 ? 'success' : 'warning'
+                    }).then(() => {
+                        pagosAProcesar = [];
+                        renderPagosTable();
+                        loadResumen();
+                    });
+                }
+            });
+        }
+        
+        // ============================================
+        // PAGO EN LOTE
+        // ============================================
+        function loadPreviewLote() {
+            const periodo = parseInt(document.getElementById('ddlPeriodoLote').value);
+            const empleadosFiltrados = empleadosList.filter(e => e.periodoPago === periodo || !periodo);
+            
+            const tbody = document.getElementById('tbodyLote');
+            let totalSalario = 0, totalTss = 0, totalNeto = 0;
+            
+            tbody.innerHTML = empleadosFiltrados.map(emp => {
+                const salario = emp.salario || 0;
+                const tss = emp.inscritoTss ? salario * 0.0591 : 0;
+                const neto = salario - tss;
+                
+                totalSalario += salario;
+                totalTss += tss;
+                totalNeto += neto;
+                
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="empleado-check" value="${emp.empleadoId}" checked></td>
+                        <td>${emp.nombre} ${emp.apellido}</td>
+                        <td>${emp.posicion || '-'}</td>
+                        <td class="text-end">RD$ ${salario.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-end text-danger">RD$ ${tss.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-end text-success">RD$ ${neto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('loteTotal').textContent = `RD$ ${totalSalario.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('loteTss').textContent = `RD$ ${totalTss.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('loteNeto').textContent = `RD$ ${totalNeto.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('conteoLote').textContent = empleadosFiltrados.length;
+            
+            document.getElementById('lotePreview').classList.remove('d-none');
+        }
+        
+        function toggleAllEmpleados() {
+            const checkAll = document.getElementById('checkAll').checked;
+            document.querySelectorAll('.empleado-check').forEach(cb => cb.checked = checkAll);
+        }
+        
+        async function procesarLote() {
+            const fechaPago = document.getElementById('fechaPagoLote').value;
+            const concepto = parseInt(document.getElementById('ddlConceptoLote').value);
+            const selectedIds = Array.from(document.querySelectorAll('.empleado-check:checked')).map(cb => parseInt(cb.value));
+            
+            if (!fechaPago) {
+                Swal.fire('Error', 'Seleccione la fecha de pago', 'error');
+                return;
+            }
+            
+            if (selectedIds.length === 0) {
+                Swal.fire('Error', 'Seleccione al menos un empleado', 'error');
+                return;
+            }
+            
+            const result = await Swal.fire({
+                title: '¿Procesar nómina en lote?',
+                text: `Se procesarán ${selectedIds.length} pagos`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Sí, procesar'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            const token = getAuthToken();
+            
+            try {
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Por favor espere',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                
+                const response = await fetch(`${API_BASE_URL}/nominas/procesar-lote`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        empleadoIds: selectedIds,
+                        fechaPago: fechaPago,
+                        tipoConcepto: concepto,
+                        esFraccion: false
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    Swal.fire({
+                        title: '¡Nómina Procesada!',
+                        html: `<p>Se procesaron <strong>${result.procesados || selectedIds.length}</strong> pagos exitosamente</p>`,
+                        icon: 'success'
+                    }).then(() => {
+                        document.getElementById('lotePreview').classList.add('d-none');
+                        loadResumen();
+                    });
+                } else {
+                    const error = await response.json();
+                    Swal.fire('Error', error.message || 'Error al procesar la nómina', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error de conexión', 'error');
+            }
+        }
+        
+        // ============================================
+        // HISTÓRICO
+        // ============================================
+        async function loadHistorico(page = 1) {
+            currentPage = page;
+            const token = getAuthToken();
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+            const empleadoId = document.getElementById('filtroEmpleado').value;
+            
+            let url = `${API_BASE_URL}/nominas/historial?page=${page}&pageSize=${pageSize}`;
+            if (fechaDesde) url += `&fechaDesde=${fechaDesde}`;
+            if (fechaHasta) url += `&fechaHasta=${fechaHasta}`;
+            if (empleadoId) url += `&empleadoId=${empleadoId}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayHistorico(data.items || data.recibos || data || []);
+                }
+            } catch (error) {
+                console.error('Error loading historico:', error);
+            }
+        }
+        
+        function displayHistorico(recibos) {
+            const tbody = document.getElementById('tbodyHistorico');
+            
+            if (!recibos || recibos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            No se encontraron registros
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = recibos.map(r => `
+                <tr>
+                    <td>${formatDate(r.fechaPago)}</td>
+                    <td>${r.empleadoNombre || r.nombre || '-'}</td>
+                    <td><span class="badge bg-info">${r.tipoConceptoNombre || 'Salario'}</span></td>
+                    <td class="text-end">RD$ ${(r.totalBruto || r.salario || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-end text-danger">RD$ ${(r.totalDeducciones || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-end text-success fw-bold">RD$ ${(r.totalNeto || r.monto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="verRecibo(${r.pagoId || r.id})" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="descargarPdf(${r.pagoId || r.id})" title="PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function verRecibo(pagoId) {
+            window.open(`/Empleador/ImprimirRecibo?id=${pagoId}`, 'ReciboWindow', 'width=800,height=600');
+        }
+        
+        function descargarPdf(pagoId) {
+            window.open(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, '_blank');
+        }
+        
+        function exportarExcel() {
+            Swal.fire('Info', 'Funcionalidad de exportación a Excel en desarrollo', 'info');
+        }
+        
+        function exportarPdf() {
+            Swal.fire('Info', 'Funcionalidad de exportación a PDF en desarrollo', 'info');
+        }
+        
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-DO');
+        }
+        
+        function getPeriodoText(periodo) {
+            switch(parseInt(periodo)) {
+                case 1: return 'Semanal';
+                case 2: return 'Quincenal';
+                case 3: return 'Mensual';
+                default: return '-';
+            }
         }
     </script>
 }

@@ -3,148 +3,177 @@
     Layout = "_LayoutEmpleador";
 }
 
-<div class="container-fluid mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="Index">Dashboard</a></li>
-            <li class="breadcrumb-item"><a asp-controller="Empleador" asp-action="Empleados">Empleados</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Ficha de Empleado</li>
-        </ol>
-    </nav>
-</div>
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Empleador")" class="text-primary">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Empleados", "Empleador")" class="text-primary">Colaboradores</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Ficha de Empleado</li>
+    </ol>
+</nav>
 
-<div class="container-fluid">
-    <h2 id="NombreEmpleado" class="text-dark">Empleado</h2>
-
-    <div class="bg-white pt-5 pb-5">
-        <div class="container">
-            <!-- Mensaje de empleado inactivo -->
-            <div id="divMensajeInactivo" class="alert alert-warning" style="display:none">
-                <h4 class="alert-heading">Este empleado se encuentra desactivado</h4>
-                <p>El empleado está desactivado y no puede realizar tareas en este momento. ¿Deseas imprimir el descargo?</p>
-                <button id="btnImprimirDescargo" class="btn btn-primary">Imprimir Descargo</button>
+<div class="container-fluid bg-white pt-3 pb-4" style="border-radius: 10px; box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);">
+    
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando información del colaborador...</p>
+    </div>
+    
+    <!-- Error State -->
+    <div id="errorState" class="alert alert-danger d-none">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span id="errorMessage">Error al cargar la información</span>
+        <button class="btn btn-link" onclick="loadEmpleado()">Reintentar</button>
+    </div>
+    
+    <!-- Content (hidden until loaded) -->
+    <div id="mainContent" class="d-none">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1" style="font-family: 'Open Sans', sans-serif; font-weight: 600;" id="pageTitle">
+                    <i class="fas fa-user-circle text-primary me-2"></i>
+                    <span id="nombreCompletoHeader">Colaborador</span>
+                </h2>
+                <p class="text-muted mb-0" id="posicionHeader">Posición</p>
             </div>
-
-            <div class="row">
-                <!-- Información del Empleado -->
-                <div class="col-md-12 mt-1">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <h4 class="card-title">Información del Empleado</h4>
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <p><strong>Fecha de Registro:</strong> <span id="fechaRegistro">01/01/2024</span></p>
-                                    <p><strong>Fecha de Inicio:</strong> <span id="fechaInicio">15/01/2024</span></p>
-                                    <p><strong>Identificación:</strong> <span id="identificacion">000-0000000-0</span></p>
-                                    <p><strong>Nombre:</strong> <span id="nombreCompleto">Nombre Apellido</span></p>
-                                    <p><strong>Salario:</strong> <span id="salario">RD$0.00</span></p>
-                                </div>
-                                <div class="col-md-3">
-                                    <p><strong>Dirección:</strong> <span id="htmlDireccion">Dirección</span></p>
-                                    <p><strong>Provincia:</strong> <span id="htmlProvincia">Provincia</span></p>
-                                    <p><strong>Municipio:</strong> <span id="htmlMunicipio">Municipio</span></p>
-                                    <p><strong>Contacto Emergencia:</strong> <span id="htmlEmergencia">N/A</span></p>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chkTss" disabled>
-                                        <label class="form-check-label" for="chkTss">Aplica para deducciones TSS</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <p><strong>Teléfono 1:</strong> <span id="telefono1">(000)-000-0000</span></p>
-                                    <p><strong>Teléfono 2:</strong> <span id="telefono2">(000)-000-0000</span></p>
-                                    <p><strong>Período de Pago:</strong> <span id="periodoPago">Quincenal</span></p>
-                                    <p><strong style="color:red">Contrato:</strong> <a class="btn btn-primary" style="color:white;font-weight:bold" href="#" id="btnContrato">Ver Contrato</a></p>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="chkActivo" disabled checked>
-                                        <label class="form-check-label" for="chkActivo">Activo</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <img id="fotoEmpleado" src="~/images/default-avatar.png" alt="Foto" class="img-thumbnail" style="max-width: 150px;">
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-md-12">
-                                    <button class="btn btn-primary me-2" id="btnEditarPerfil" type="button" data-bs-toggle="modal" data-bs-target="#registroEmpleadoModal">Editar</button>
-                                    <button type="button" class="btn btn-danger me-2" id="btnBaja">Dar de Baja</button>
-                                    <button id="btnPago" class="btn btn-success me-2" type="button" data-bs-toggle="modal" data-bs-target="#modalPago">Realizar Pago</button>
-                                    <button class="btn btn-info" type="button" data-bs-toggle="modal" id="btnNota" data-bs-target="#agregarNotaModal">Agregar Nota</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Historial de Pagos -->
-                <div class="col-md-12 mt-3">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <h4 class="card-title">Historial de Pagos</h4>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-bordered" id="gridPagos">
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha Registro</th>
-                                            <th>Fecha Pago</th>
-                                            <th>Tipo</th>
-                                            <th>Monto</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">No hay pagos registrados</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Historial de Notas -->
-                <div class="col-md-12 mt-3">
-                    <div class="card shadow" style="max-height: 300px; overflow-y: auto;">
-                        <div class="card-body">
-                            <h4 class="card-title">Historial de Notas</h4>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-bordered" id="gridNotas">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:20%">Fecha</th>
-                                            <th>Nota</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td colspan="2" class="text-center text-muted">No hay notas registradas</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex gap-2">
+                <a href="@Url.Action("Empleados", "Empleador")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
             </div>
         </div>
-    </div>
-</div>
+        
+        <!-- Mensaje de empleado inactivo -->
+        <div id="divMensajeInactivo" class="alert alert-warning d-none">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-user-slash fa-2x me-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Este colaborador se encuentra dado de baja</h5>
+                    <p class="mb-0">Fecha de salida: <strong id="fechaSalidaMsg">-</strong></p>
+                </div>
+                <button id="btnImprimirDescargo" class="btn btn-warning ms-auto" onclick="imprimirDescargo()">
+                    <i class="fas fa-file-pdf me-1"></i>Imprimir Descargo
+                </button>
+            </div>
+        </div>
 
-<!-- Modal Agregar Nota -->
-<div class="modal fade" id="agregarNotaModal" tabindex="-1" aria-labelledby="agregarNotaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="agregarNotaModalLabel">Agregar Nota</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="row">
+            <!-- Información del Empleado -->
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-id-card text-primary me-2"></i>Información del Colaborador</h5>
+                            <span class="badge bg-success d-none" id="badgeActivo"><i class="fas fa-check-circle me-1"></i>Activo</span>
+                            <span class="badge bg-secondary d-none" id="badgeInactivo"><i class="fas fa-times-circle me-1"></i>Inactivo</span>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p><strong>Fecha de Registro:</strong> <span id="fechaRegistro" class="text-primary">-</span></p>
+                                <p><strong>Fecha de Inicio:</strong> <span id="fechaInicio" class="text-primary">-</span></p>
+                                <p><strong>Identificación:</strong> <span id="identificacion" class="fw-bold">-</span></p>
+                                <p><strong>Nombre:</strong> <span id="nombreCompleto">-</span></p>
+                                <p><strong>Alias:</strong> <span id="alias">-</span></p>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Salario:</strong> <span id="salario" class="text-success fw-bold">RD$ 0.00</span></p>
+                                <p><strong>Período de Pago:</strong> <span id="periodoPago">-</span></p>
+                                <p><strong>Posición:</strong> <span id="posicion">-</span></p>
+                                <p><strong>Antigüedad:</strong> <span id="antiguedad">-</span></p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkTss" disabled>
+                                    <label class="form-check-label" for="chkTss">Aplica para deducciones TSS</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <p><strong>Dirección:</strong> <span id="htmlDireccion">-</span></p>
+                                <p><strong>Provincia:</strong> <span id="htmlProvincia">-</span></p>
+                                <p><strong>Municipio:</strong> <span id="htmlMunicipio">-</span></p>
+                                <p><strong>Teléfono 1:</strong> <span id="telefono1">-</span></p>
+                                <p><strong>Teléfono 2:</strong> <span id="telefono2">-</span></p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="mb-3">
+                                    <div id="avatarContainer" class="avatar-lg bg-gradient-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                        <span class="text-white fs-1" id="avatarInitials">XX</span>
+                                    </div>
+                                    <img id="fotoEmpleado" src="" alt="Foto" class="img-thumbnail d-none" style="max-width: 120px; max-height: 120px; object-fit: cover;">
+                                </div>
+                                <p class="mb-1"><strong>Contacto Emergencia:</strong></p>
+                                <p class="mb-0" id="htmlEmergencia">-</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Remuneraciones Extras -->
+                        <div id="remuneracionesSection" class="mt-3 d-none">
+                            <hr>
+                            <h6><i class="fas fa-plus-circle text-success me-1"></i>Remuneraciones Adicionales</h6>
+                            <div class="row" id="remuneracionesList"></div>
+                        </div>
+                        
+                        <hr>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-primary" id="btnEditarPerfil" type="button">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                            <button type="button" class="btn btn-success" id="btnPago">
+                                <i class="fas fa-dollar-sign me-1"></i>Realizar Pago
+                            </button>
+                            <button type="button" class="btn btn-info text-white" id="btnContrato">
+                                <i class="fas fa-file-contract me-1"></i>Ver Contrato
+                            </button>
+                            <button type="button" class="btn btn-danger" id="btnBaja">
+                                <i class="fas fa-user-minus me-1"></i>Dar de Baja
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <textarea id="txtNota" class="form-control" maxlength="200" placeholder="Ingrese la nota" rows="4"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnGuardarNota" class="btn btn-primary">Guardar Nota</button>
+
+            <!-- Historial de Pagos -->
+            <div class="col-md-12 mt-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0"><i class="fas fa-file-invoice-dollar text-success me-2"></i>Historial de Pagos</h5>
+                            <span class="badge bg-primary" id="badgePagos">0 pagos</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="gridPagos">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha Registro</th>
+                                        <th>Fecha Pago</th>
+                                        <th>Concepto</th>
+                                        <th class="text-end">Monto Bruto</th>
+                                        <th class="text-end">Deducciones</th>
+                                        <th class="text-end">Neto</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyPagos">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                            No hay pagos registrados
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -152,135 +181,172 @@
 
 <!-- Modal Editar Empleado -->
 <div class="modal fade" id="registroEmpleadoModal" tabindex="-1" aria-labelledby="registroEmpleadoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="registroEmpleadoModalLabel">Editar Empleado</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="registroEmpleadoModalLabel">
+                    <i class="fas fa-edit me-2"></i>Editar Colaborador
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-info alert-dismissible fade show d-none" id="editAlert" role="alert">
+                    <span id="editAlertMessage"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
                 <form id="formEditarEmpleado">
                     <div class="row">
+                        <!-- Columna Izquierda -->
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="fechaDeIngreso" class="form-label">Fecha de Inicio</label>
-                                <input type="date" class="form-control" id="fechaDeIngreso" disabled>
+                            <h6 class="text-primary mb-3"><i class="fas fa-user me-1"></i>Datos Personales</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalIdentificacion" class="form-label">Identificación (Cédula)</label>
+                                    <input type="text" class="form-control" id="modalIdentificacion" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalNacimiento" class="form-label">Fecha de Nacimiento</label>
+                                    <input type="date" class="form-control" id="modalNacimiento">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="txtIdentificacion" class="form-label"># Identificación</label>
-                                <input type="text" class="form-control" id="txtIdentificacion" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="modalNombre" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalApellido" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="modalApellido" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="modalNombre" class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="modalNombre" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalAlias" class="form-label">Alias/Apodo</label>
+                                    <input type="text" class="form-control" id="modalAlias">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalEstadoCivil" class="form-label">Estado Civil</label>
+                                    <select class="form-select" id="modalEstadoCivil">
+                                        <option value="1">Soltero(a)</option>
+                                        <option value="2">Casado(a)</option>
+                                        <option value="3">Divorciado(a)</option>
+                                        <option value="4">Viudo(a)</option>
+                                        <option value="5">Unión Libre</option>
+                                    </select>
+                                </div>
                             </div>
+                            
+                            <h6 class="text-primary mb-3 mt-3"><i class="fas fa-map-marker-alt me-1"></i>Ubicación y Contacto</h6>
                             <div class="mb-3">
-                                <label for="apellido" class="form-label">Apellido</label>
-                                <input type="text" class="form-control" id="apellido" required>
+                                <label for="modalDireccion" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="modalDireccion" maxlength="250">
                             </div>
-                            <div class="mb-3">
-                                <label for="alias" class="form-label">Alias/Apodo</label>
-                                <input type="text" class="form-control" id="alias">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalProvincia" class="form-label">Provincia</label>
+                                    <input type="text" class="form-control" id="modalProvincia">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalMunicipio" class="form-label">Municipio</label>
+                                    <input type="text" class="form-control" id="modalMunicipio">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="ddlEstadoCivil" class="form-label">Estado Civil</label>
-                                <select class="form-select" id="ddlEstadoCivil">
-                                    <option value="1">Soltero(a)</option>
-                                    <option value="2">Casado(a)</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalTelefono1" class="form-label">Teléfono 1</label>
+                                    <input type="text" class="form-control" id="modalTelefono1" placeholder="809-000-0000">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalTelefono2" class="form-label">Teléfono 2</label>
+                                    <input type="text" class="form-control" id="modalTelefono2" placeholder="809-000-0000">
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Columna Derecha -->
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nacimiento" class="form-label">Fecha de Nacimiento</label>
-                                <input type="date" class="form-control" id="nacimiento" required>
+                            <h6 class="text-primary mb-3"><i class="fas fa-briefcase me-1"></i>Datos Laborales</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalFechaInicio" class="form-label">Fecha de Inicio</label>
+                                    <input type="date" class="form-control" id="modalFechaInicio" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalPosicion" class="form-label">Posición <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="modalPosicion" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="direccion" class="form-label">Dirección</label>
-                                <input type="text" class="form-control" id="direccion" maxlength="250" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalSalario" class="form-label">Salario <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">RD$</span>
+                                        <input type="number" class="form-control" id="modalSalario" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalPeriodoPago" class="form-label">Período de Pago</label>
+                                    <select class="form-select" id="modalPeriodoPago">
+                                        <option value="1">Semanal</option>
+                                        <option value="2">Quincenal</option>
+                                        <option value="3">Mensual</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="provincia" class="form-label">Provincia</label>
-                                <input type="text" class="form-control" id="provincia" required>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="modalTss">
+                                <label class="form-check-label" for="modalTss">Aplica para Deducciones TSS</label>
                             </div>
-                            <div class="mb-3">
-                                <label for="municipio" class="form-label">Municipio</label>
-                                <input type="text" class="form-control" id="municipio" required>
+                            
+                            <h6 class="text-primary mb-3 mt-3"><i class="fas fa-ambulance me-1"></i>Contacto de Emergencia</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalContactoEmergencia" class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="modalContactoEmergencia">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modalTelefonoEmergencia" class="form-label">Teléfono</label>
+                                    <input type="text" class="form-control" id="modalTelefonoEmergencia" placeholder="809-000-0000">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="modalTelefono1" class="form-label">Teléfono 1</label>
-                                <input type="text" class="form-control" id="modalTelefono1" required>
+                            
+                            <h6 class="text-primary mb-3 mt-3"><i class="fas fa-plus-circle me-1"></i>Remuneraciones Adicionales</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="modalDescExtra1" placeholder="Descripción 1">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input type="number" class="form-control form-control-sm" id="modalMontoExtra1" step="0.01" placeholder="Monto 1">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="modalTelefono2" class="form-label">Teléfono 2</label>
-                                <input type="text" class="form-control" id="modalTelefono2">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="modalDescExtra2" placeholder="Descripción 2">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input type="number" class="form-control form-control-sm" id="modalMontoExtra2" step="0.01" placeholder="Monto 2">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="modalDescExtra3" placeholder="Descripción 3">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input type="number" class="form-control form-control-sm" id="modalMontoExtra3" step="0.01" placeholder="Monto 3">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="posicion" class="form-label">Posición que Ocupa</label>
-                                <input type="text" class="form-control" id="posicion" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="modalSalario" class="form-label">Salario Bruto</label>
-                                <input type="number" class="form-control" id="modalSalario" step="0.01" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="periodos" class="form-label">Período de Pago</label>
-                        <select class="form-select" id="periodos">
-                            <option value="1">Semanal</option>
-                            <option value="2" selected>Quincenal</option>
-                            <option value="3">Mensual</option>
-                        </select>
-                    </div>
-                    <hr>
-                    <h6>Contacto de Emergencia</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nombreContacto" class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="nombreContacto">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="telefonoContacto" class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" id="telefonoContacto">
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <h6>Otras Remuneraciones</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Descripción</label>
-                                <input type="text" class="form-control" id="nombreRemuneracion1">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Monto</label>
-                                <input type="number" class="form-control" id="montoRemuneracion1" step="0.01">
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="chkDeducciones">
-                        <label class="form-check-label" for="chkDeducciones">Aplica para Deducciones TSS</label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" id="btnCrear" class="btn btn-success">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" id="btnGuardarEdicion" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i>Guardar Cambios
+                </button>
             </div>
         </div>
     </div>
@@ -290,77 +356,78 @@
 <div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Realizar Pago a Empleado</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-dollar-sign me-2"></i>Realizar Pago</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-lg-12 mb-3">
-                        <label>Concepto de Pago</label>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Concepto de Pago</label>
                         <select class="form-select" id="ddlConceptoPago">
-                            <option selected>Pago de Salario</option>
-                            <option>Regalía Pascual</option>
+                            <option value="1" selected>Pago de Salario</option>
+                            <option value="2">Regalía Pascual</option>
                         </select>
                     </div>
-                    <div class="col-lg-4 col-sm-12 mb-3">
-                        <label>Fecha de Pago</label>
-                        <input type="date" class="form-control" id="fechaPago" required>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Pago</label>
+                        <input type="date" class="form-control" id="fechaPago">
                     </div>
-                    <div class="col-lg-5 col-sm-12 mb-3">
-                        <label>Tipo de Pago</label>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo de Pago</label>
                         <select class="form-select" id="ddlTipoPago">
-                            <option value="1" selected>Periodo Completo</option>
-                            <option value="2">Fracción de Periodo</option>
+                            <option value="false" selected>Período Completo</option>
+                            <option value="true">Fracción de Período</option>
                         </select>
                     </div>
-                    <div class="col-lg-3 col-sm-12 mb-3">
-                        <label>&nbsp;</label>
-                        <button type="button" class="btn btn-primary w-100" id="btnContinuar">Continuar</button>
-                    </div>
                 </div>
-                <hr>
-                <div class="row">
-                    <div class="col-lg-7 col-sm-12 mb-3">
-                        <label>Descuento (Descripción)</label>
-                        <input type="text" class="form-control" id="descripcionDescuento">
+                
+                <div id="pagoDetalle" class="d-none">
+                    <hr>
+                    <h6>Agregar Descuento Adicional</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="descripcionDescuento" placeholder="Descripción del descuento">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="montoDescuento" step="0.01" placeholder="Monto">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger w-100" id="btnAgregarDescuento">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-lg-3 col-sm-12 mb-3">
-                        <label>Monto</label>
-                        <input type="number" class="form-control" id="montoDescuento" step="0.01" placeholder="0.00">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="gridDetallePago">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Concepto</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-center" style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyDetallePago"></tbody>
+                            <tfoot class="table-success">
+                                <tr>
+                                    <th>Total a Pagar</th>
+                                    <th class="text-end" id="totalPagar">RD$ 0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
-                    <div class="col-lg-2 col-sm-12 mb-3">
-                        <label>&nbsp;</label>
-                        <button type="button" class="btn btn-danger w-100" id="btnNuevoDescuento"><i class="fa fa-plus"></i></button>
-                    </div>
-                </div>
-                <label>Detalle</label>
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="gridDetallePago">
-                        <thead>
-                            <tr>
-                                <th style="width:70%">Concepto</th>
-                                <th>Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Salario Base</td>
-                                <td>RD$0.00</td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-primary">
-                                <th>Total a Pagar</th>
-                                <th id="totalPagar">RD$0.00</th>
-                            </tr>
-                        </tfoot>
-                    </table>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success" id="btnGenerar">Procesar Pago</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnCalcularPago">
+                    <i class="fas fa-calculator me-1"></i>Calcular
+                </button>
+                <button type="button" class="btn btn-success d-none" id="btnProcesarPago">
+                    <i class="fas fa-check me-1"></i>Procesar Pago
+                </button>
             </div>
         </div>
     </div>
@@ -369,69 +436,655 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function() {
-            // Cargar datos del empleado desde API
-            var empleadoId = '@ViewData["EmpleadoId"]';
-            if (empleadoId && empleadoId !== '') {
-                // TODO: Cargar datos del empleado via API
-                // fetch(`/api/empleados/${empleadoId}`)...
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const API_BASE_URL = 'http://localhost:5015/api';
+        let currentEmpleado = null;
+        let descuentosAdicionales = [];
+        
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        }
+        
+        function getEmpleadoIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+        
+        function shouldAutoEdit() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('edit') === 'true';
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            if (!empleadoId) {
+                document.getElementById('loadingState').classList.add('d-none');
+                document.getElementById('errorState').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = 'No se especificó el ID del colaborador';
+                return;
             }
             
-            // Dar de baja
-            $('#btnBaja').on('click', function() {
-                Swal.fire({
-                    title: 'Dar de Baja',
-                    text: '¿Estás seguro que deseas dar de baja a este empleado?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Sí, dar de baja',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // TODO: Llamar API para dar de baja
-                        Swal.fire('Completado', 'El empleado ha sido dado de baja.', 'success');
-                    }
-                });
-            });
+            loadEmpleado();
             
-            // Guardar nota
-            $('#btnGuardarNota').on('click', function() {
-                var nota = $('#txtNota').val();
-                if (nota.trim() === '') {
-                    Swal.fire('Error', 'Por favor ingrese una nota.', 'error');
-                    return;
-                }
-                // TODO: Llamar API para guardar nota
-                $('#agregarNotaModal').modal('hide');
-                Swal.fire('Guardado', 'La nota ha sido guardada exitosamente.', 'success');
-            });
+            // Set default date to today
+            document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
             
-            // Procesar pago
-            $('#btnGenerar').on('click', function() {
-                Swal.fire({
-                    title: 'Confirmar Pago',
-                    text: '¿Estás seguro que deseas procesar este pago?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, procesar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // TODO: Llamar API para procesar pago
-                        $('#modalPago').modal('hide');
-                        Swal.fire('Éxito', 'El pago ha sido procesado correctamente.', 'success');
-                    }
-                });
+            // Event listeners
+            document.getElementById('btnEditarPerfil').addEventListener('click', openEditModal);
+            document.getElementById('btnGuardarEdicion').addEventListener('click', saveEmpleado);
+            document.getElementById('btnBaja').addEventListener('click', darDeBaja);
+            document.getElementById('btnPago').addEventListener('click', () => {
+                const modal = new bootstrap.Modal(document.getElementById('modalPago'));
+                modal.show();
             });
+            document.getElementById('btnCalcularPago').addEventListener('click', calcularPago);
+            document.getElementById('btnProcesarPago').addEventListener('click', procesarPago);
+            document.getElementById('btnAgregarDescuento').addEventListener('click', agregarDescuento);
+            document.getElementById('btnContrato').addEventListener('click', verContrato);
         });
         
-        function AbrirPopupImprimirRecibo(pagoID, userID, documento) {
-            var url = '/Empleador/ImprimirRecibo?documento=' + encodeURIComponent(documento) + '&id=' + encodeURIComponent(pagoID) + '&userID=' + encodeURIComponent(userID);
-            var ventanaPopup = window.open(url, 'PopupWindow', 'width=800,height=600,location=no');
+        // ============================================
+        // LOAD EMPLEADO DATA
+        // ============================================
+        async function loadEmpleado() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                const empleado = await response.json();
+                currentEmpleado = empleado;
+                
+                displayEmpleado(empleado);
+                loadRecibos(empleadoId);
+                
+                // Show content
+                document.getElementById('loadingState').classList.add('d-none');
+                document.getElementById('mainContent').classList.remove('d-none');
+                
+                // Auto-open edit modal if requested via URL parameter
+                if (shouldAutoEdit()) {
+                    setTimeout(() => openEditModal(), 300);
+                }
+                
+            } catch (error) {
+                console.error('Error loading empleado:', error);
+                document.getElementById('loadingState').classList.add('d-none');
+                document.getElementById('errorState').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+        
+        function displayEmpleado(emp) {
+            // Header
+            document.getElementById('nombreCompletoHeader').textContent = `${emp.nombre} ${emp.apellido}`;
+            document.getElementById('posicionHeader').textContent = emp.posicion || 'Sin posición asignada';
+            
+            // Status
+            if (emp.activo) {
+                document.getElementById('badgeActivo').classList.remove('d-none');
+                document.getElementById('badgeInactivo').classList.add('d-none');
+                document.getElementById('divMensajeInactivo').classList.add('d-none');
+            } else {
+                document.getElementById('badgeActivo').classList.add('d-none');
+                document.getElementById('badgeInactivo').classList.remove('d-none');
+                document.getElementById('divMensajeInactivo').classList.remove('d-none');
+                if (emp.fechaSalida) {
+                    document.getElementById('fechaSalidaMsg').textContent = formatDate(emp.fechaSalida);
+                }
+                // Hide buttons for inactive employees
+                document.getElementById('btnPago').classList.add('d-none');
+                document.getElementById('btnBaja').classList.add('d-none');
+            }
+            
+            // Personal Info
+            document.getElementById('fechaRegistro').textContent = formatDate(emp.createdAt);
+            document.getElementById('fechaInicio').textContent = formatDate(emp.fechaInicio);
+            document.getElementById('identificacion').textContent = formatCedula(emp.identificacion);
+            document.getElementById('nombreCompleto').textContent = `${emp.nombre} ${emp.apellido}`;
+            document.getElementById('alias').textContent = emp.alias || '-';
+            
+            // Work Info
+            document.getElementById('salario').textContent = `RD$ ${(emp.salario || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('periodoPago').textContent = emp.periodoPagoDescripcion || getPeriodoPagoText(emp.periodoPago);
+            document.getElementById('posicion').textContent = emp.posicion || '-';
+            document.getElementById('antiguedad').textContent = emp.antiguedad ? `${emp.antiguedad} días` : '-';
+            document.getElementById('chkTss').checked = emp.inscritoTss;
+            
+            // Location
+            document.getElementById('htmlDireccion').textContent = emp.direccion || '-';
+            document.getElementById('htmlProvincia').textContent = emp.provincia || '-';
+            document.getElementById('htmlMunicipio').textContent = emp.municipio || '-';
+            document.getElementById('telefono1').textContent = formatPhone(emp.telefono1) || '-';
+            document.getElementById('telefono2').textContent = formatPhone(emp.telefono2) || '-';
+            
+            // Emergency contact
+            if (emp.contactoEmergencia) {
+                document.getElementById('htmlEmergencia').textContent = 
+                    `${emp.contactoEmergencia} - ${formatPhone(emp.telefonoEmergencia) || 'Sin teléfono'}`;
+            } else {
+                document.getElementById('htmlEmergencia').textContent = 'No especificado';
+            }
+            
+            // Avatar
+            const initials = `${(emp.nombre || 'X')[0]}${(emp.apellido || 'X')[0]}`;
+            document.getElementById('avatarInitials').textContent = initials.toUpperCase();
+            
+            // Photo (if available)
+            if (emp.foto) {
+                document.getElementById('fotoEmpleado').src = emp.foto;
+                document.getElementById('fotoEmpleado').classList.remove('d-none');
+                document.getElementById('avatarContainer').classList.add('d-none');
+            }
+            
+            // Remuneraciones extras
+            const remuneraciones = [];
+            if (emp.descripcionExtra1 && emp.montoExtra1) {
+                remuneraciones.push({ descripcion: emp.descripcionExtra1, monto: emp.montoExtra1 });
+            }
+            if (emp.descripcionExtra2 && emp.montoExtra2) {
+                remuneraciones.push({ descripcion: emp.descripcionExtra2, monto: emp.montoExtra2 });
+            }
+            if (emp.descripcionExtra3 && emp.montoExtra3) {
+                remuneraciones.push({ descripcion: emp.descripcionExtra3, monto: emp.montoExtra3 });
+            }
+            
+            if (remuneraciones.length > 0) {
+                document.getElementById('remuneracionesSection').classList.remove('d-none');
+                const container = document.getElementById('remuneracionesList');
+                container.innerHTML = remuneraciones.map(r => `
+                    <div class="col-md-4">
+                        <div class="alert alert-success py-2 mb-2">
+                            <strong>${r.descripcion}:</strong> RD$ ${r.monto.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // ============================================
+        // LOAD RECIBOS (PAYMENT HISTORY)
+        // ============================================
+        async function loadRecibos(empleadoId) {
+            const token = getAuthToken();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/recibos?pageSize=50`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const recibos = data.recibos || data.items || data || [];
+                    displayRecibos(recibos);
+                }
+            } catch (error) {
+                console.error('Error loading recibos:', error);
+            }
+        }
+        
+        function displayRecibos(recibos) {
+            const tbody = document.getElementById('tbodyPagos');
+            document.getElementById('badgePagos').textContent = `${recibos.length} pagos`;
+            
+            if (!recibos || recibos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            No hay pagos registrados
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = recibos.map(r => `
+                <tr>
+                    <td>${formatDate(r.fechaRegistro || r.createdAt)}</td>
+                    <td>${formatDate(r.fechaPago)}</td>
+                    <td><span class="badge bg-info">${r.tipoConceptoNombre || r.concepto || 'Salario'}</span></td>
+                    <td class="text-end">RD$ ${(r.totalBruto || r.montoBruto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-end text-danger">RD$ ${(r.totalDeducciones || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-end text-success fw-bold">RD$ ${(r.totalNeto || r.monto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="verRecibo(${r.pagoId || r.id})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="imprimirRecibo(${r.pagoId || r.id})" title="Imprimir PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // ============================================
+        // EDIT EMPLEADO
+        // ============================================
+        function openEditModal() {
+            if (!currentEmpleado) return;
+            
+            const emp = currentEmpleado;
+            
+            // Fill modal fields
+            document.getElementById('modalIdentificacion').value = emp.identificacion || '';
+            document.getElementById('modalNombre').value = emp.nombre || '';
+            document.getElementById('modalApellido').value = emp.apellido || '';
+            document.getElementById('modalAlias').value = emp.alias || '';
+            document.getElementById('modalNacimiento').value = emp.nacimiento || '';
+            document.getElementById('modalEstadoCivil').value = emp.estadoCivil || 1;
+            document.getElementById('modalDireccion').value = emp.direccion || '';
+            document.getElementById('modalProvincia').value = emp.provincia || '';
+            document.getElementById('modalMunicipio').value = emp.municipio || '';
+            document.getElementById('modalTelefono1').value = emp.telefono1 || '';
+            document.getElementById('modalTelefono2').value = emp.telefono2 || '';
+            document.getElementById('modalFechaInicio').value = emp.fechaInicio || '';
+            document.getElementById('modalPosicion').value = emp.posicion || '';
+            document.getElementById('modalSalario').value = emp.salario || 0;
+            document.getElementById('modalPeriodoPago').value = emp.periodoPago || 2;
+            document.getElementById('modalTss').checked = emp.inscritoTss || false;
+            document.getElementById('modalContactoEmergencia').value = emp.contactoEmergencia || '';
+            document.getElementById('modalTelefonoEmergencia').value = emp.telefonoEmergencia || '';
+            
+            // Remuneraciones extras
+            document.getElementById('modalDescExtra1').value = emp.descripcionExtra1 || '';
+            document.getElementById('modalMontoExtra1').value = emp.montoExtra1 || '';
+            document.getElementById('modalDescExtra2').value = emp.descripcionExtra2 || '';
+            document.getElementById('modalMontoExtra2').value = emp.montoExtra2 || '';
+            document.getElementById('modalDescExtra3').value = emp.descripcionExtra3 || '';
+            document.getElementById('modalMontoExtra3').value = emp.montoExtra3 || '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('registroEmpleadoModal'));
+            modal.show();
+        }
+        
+        async function saveEmpleado() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            const updateData = {
+                empleadoId: parseInt(empleadoId),
+                identificacion: document.getElementById('modalIdentificacion').value,
+                nombre: document.getElementById('modalNombre').value.trim(),
+                apellido: document.getElementById('modalApellido').value.trim(),
+                alias: document.getElementById('modalAlias').value.trim() || null,
+                estadoCivil: parseInt(document.getElementById('modalEstadoCivil').value),
+                nacimiento: document.getElementById('modalNacimiento').value || null,
+                direccion: document.getElementById('modalDireccion').value.trim() || null,
+                provincia: document.getElementById('modalProvincia').value.trim() || null,
+                municipio: document.getElementById('modalMunicipio').value.trim() || null,
+                telefono1: document.getElementById('modalTelefono1').value.replace(/\D/g, '') || null,
+                telefono2: document.getElementById('modalTelefono2').value.replace(/\D/g, '') || null,
+                posicion: document.getElementById('modalPosicion').value.trim(),
+                salario: parseFloat(document.getElementById('modalSalario').value) || 0,
+                periodoPago: parseInt(document.getElementById('modalPeriodoPago').value),
+                tss: document.getElementById('modalTss').checked,
+                contactoEmergencia: document.getElementById('modalContactoEmergencia').value.trim() || null,
+                telefonoEmergencia: document.getElementById('modalTelefonoEmergencia').value.replace(/\D/g, '') || null,
+                descripcionExtra1: document.getElementById('modalDescExtra1').value.trim() || null,
+                montoExtra1: parseFloat(document.getElementById('modalMontoExtra1').value) || null,
+                descripcionExtra2: document.getElementById('modalDescExtra2').value.trim() || null,
+                montoExtra2: parseFloat(document.getElementById('modalMontoExtra2').value) || null,
+                descripcionExtra3: document.getElementById('modalDescExtra3').value.trim() || null,
+                montoExtra3: parseFloat(document.getElementById('modalMontoExtra3').value) || null
+            };
+            
+            // Validate required fields
+            if (!updateData.nombre || !updateData.apellido || !updateData.posicion || updateData.salario <= 0) {
+                Swal.fire('Error', 'Por favor complete los campos requeridos (Nombre, Apellido, Posición, Salario)', 'error');
+                return;
+            }
+            
+            try {
+                const btn = document.getElementById('btnGuardarEdicion');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+                
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok || response.status === 204) {
+                    Swal.fire({
+                        title: '¡Guardado!',
+                        text: 'Los cambios se guardaron correctamente',
+                        icon: 'success'
+                    }).then(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('registroEmpleadoModal')).hide();
+                        loadEmpleado();
+                    });
+                } else {
+                    const error = await response.json();
+                    Swal.fire('Error', error.message || error.title || 'Error al guardar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error de conexión al guardar', 'error');
+            } finally {
+                const btn = document.getElementById('btnGuardarEdicion');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar Cambios';
+            }
+        }
+        
+        // ============================================
+        // DAR DE BAJA
+        // ============================================
+        async function darDeBaja() {
+            const { value: formValues } = await Swal.fire({
+                title: '¿Dar de baja a este colaborador?',
+                html: `
+                    <p>Esta acción marcará al colaborador como inactivo.</p>
+                    <div class="mb-3 text-start">
+                        <label class="form-label">Fecha de salida:</label>
+                        <input type="date" id="swal-fecha-salida" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="form-label">Motivo:</label>
+                        <select id="swal-motivo" class="form-select">
+                            <option value="Renuncia voluntaria">Renuncia voluntaria</option>
+                            <option value="Despido justificado">Despido justificado</option>
+                            <option value="Despido injustificado">Despido injustificado</option>
+                            <option value="Fin de contrato">Fin de contrato</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="form-label">Prestaciones laborales (RD$):</label>
+                        <input type="number" id="swal-prestaciones" class="form-control" value="0" step="0.01">
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-user-minus me-1"></i>Dar de baja',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    return {
+                        fechaBaja: document.getElementById('swal-fecha-salida').value,
+                        motivo: document.getElementById('swal-motivo').value,
+                        prestaciones: parseFloat(document.getElementById('swal-prestaciones').value) || 0
+                    };
+                }
+            });
+            
+            if (formValues) {
+                const empleadoId = getEmpleadoIdFromUrl();
+                const token = getAuthToken();
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/dar-de-baja`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fechaBaja: formValues.fechaBaja,
+                            motivo: formValues.motivo,
+                            prestaciones: formValues.prestaciones
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        Swal.fire({
+                            title: '¡Completado!',
+                            text: 'El colaborador ha sido dado de baja correctamente.',
+                            icon: 'success'
+                        }).then(() => loadEmpleado());
+                    } else {
+                        const error = await response.json();
+                        Swal.fire('Error', error.message || 'Error al dar de baja', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Error de conexión', 'error');
+                }
+            }
+        }
+        
+        // ============================================
+        // PROCESAR PAGO
+        // ============================================
+        async function calcularPago() {
+            if (!currentEmpleado) return;
+            
+            document.getElementById('pagoDetalle').classList.remove('d-none');
+            document.getElementById('btnCalcularPago').classList.add('d-none');
+            document.getElementById('btnProcesarPago').classList.remove('d-none');
+            
+            // Calculate payment details
+            const salario = currentEmpleado.salario || 0;
+            const extras = [
+                { desc: currentEmpleado.descripcionExtra1, monto: currentEmpleado.montoExtra1 },
+                { desc: currentEmpleado.descripcionExtra2, monto: currentEmpleado.montoExtra2 },
+                { desc: currentEmpleado.descripcionExtra3, monto: currentEmpleado.montoExtra3 }
+            ].filter(e => e.desc && e.monto);
+            
+            // Build detail table
+            let html = `<tr><td>Salario Base</td><td class="text-end text-success">RD$ ${salario.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td></td></tr>`;
+            let total = salario;
+            
+            extras.forEach(e => {
+                html += `<tr><td>${e.desc}</td><td class="text-end text-success">RD$ ${e.monto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td></td></tr>`;
+                total += e.monto;
+            });
+            
+            // Add TSS deductions if applicable
+            if (currentEmpleado.inscritoTss) {
+                const afp = total * 0.0287;
+                const sfs = total * 0.0304;
+                html += `<tr><td class="text-danger">Deducción AFP (2.87%)</td><td class="text-end text-danger">-RD$ ${afp.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td></td></tr>`;
+                html += `<tr><td class="text-danger">Deducción SFS (3.04%)</td><td class="text-end text-danger">-RD$ ${sfs.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td></td></tr>`;
+                total -= (afp + sfs);
+            }
+            
+            document.getElementById('tbodyDetallePago').innerHTML = html;
+            document.getElementById('totalPagar').textContent = `RD$ ${total.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            descuentosAdicionales = [];
+        }
+        
+        function agregarDescuento() {
+            const desc = document.getElementById('descripcionDescuento').value.trim();
+            const monto = parseFloat(document.getElementById('montoDescuento').value) || 0;
+            
+            if (!desc || monto <= 0) {
+                Swal.fire('Error', 'Ingrese descripción y monto del descuento', 'error');
+                return;
+            }
+            
+            descuentosAdicionales.push({ descripcion: desc, monto: monto });
+            
+            // Add row to table
+            const tbody = document.getElementById('tbodyDetallePago');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td class="text-danger">${desc}</td>
+                <td class="text-end text-danger">-RD$ ${monto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); updateTotal();">×</button></td>
+            `;
+            tbody.appendChild(newRow);
+            
+            // Clear inputs
+            document.getElementById('descripcionDescuento').value = '';
+            document.getElementById('montoDescuento').value = '';
+            
+            updateTotal();
+        }
+        
+        function updateTotal() {
+            // Recalculate total (simplified)
+            calcularPago();
+        }
+        
+        async function procesarPago() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            
+            const pagoData = {
+                empleadoId: parseInt(empleadoId),
+                tipoConcepto: parseInt(document.getElementById('ddlConceptoPago').value),
+                fechaPago: document.getElementById('fechaPago').value,
+                esFraccion: document.getElementById('ddlTipoPago').value === 'true',
+                descuentosAdicionales: descuentosAdicionales
+            };
+            
+            if (!pagoData.fechaPago) {
+                Swal.fire('Error', 'Seleccione la fecha de pago', 'error');
+                return;
+            }
+            
+            try {
+                const btn = document.getElementById('btnProcesarPago');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+                
+                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/nomina`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pagoData)
+                });
+                
+                if (response.ok || response.status === 201) {
+                    const result = await response.json();
+                    Swal.fire({
+                        title: '¡Pago Procesado!',
+                        text: `Recibo #${result.pagoId || result} generado exitosamente`,
+                        icon: 'success'
+                    }).then(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
+                        loadEmpleado();
+                    });
+                } else {
+                    const error = await response.json();
+                    Swal.fire('Error', error.message || 'Error al procesar el pago', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error de conexión', 'error');
+            } finally {
+                const btn = document.getElementById('btnProcesarPago');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>Procesar Pago';
+            }
+        }
+        
+        // ============================================
+        // VER CONTRATO
+        // ============================================
+        function verContrato() {
+            const empleadoId = getEmpleadoIdFromUrl();
+            Swal.fire({
+                title: 'Ver Contrato',
+                html: `
+                    <p>Seleccione el tipo de contrato a generar:</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="generarContrato('persona-fisica')">
+                            <i class="fas fa-user me-2"></i>Contrato Persona Física
+                        </button>
+                        <button class="btn btn-info" onclick="generarContrato('empresa')">
+                            <i class="fas fa-building me-2"></i>Contrato Empresa
+                        </button>
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar'
+            });
+        }
+        
+        function generarContrato(tipo) {
+            const empleadoId = getEmpleadoIdFromUrl();
+            const token = getAuthToken();
+            // In a real implementation, this would call an API to generate the contract PDF
+            Swal.fire({
+                title: 'Generando Contrato...',
+                text: 'El contrato se está generando',
+                icon: 'info',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                Swal.fire('Info', 'Funcionalidad de generación de contratos en desarrollo', 'info');
+            });
+        }
+        
+        function verRecibo(pagoId) {
+            // Open receipt detail
+            window.open(`/Empleador/ImprimirRecibo?id=${pagoId}`, 'ReciboWindow', 'width=800,height=600');
+        }
+        
+        function imprimirRecibo(pagoId) {
+            // Print receipt
+            const token = getAuthToken();
+            window.open(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, '_blank');
+        }
+        
+        function imprimirDescargo() {
+            Swal.fire('Info', 'Funcionalidad de impresión de descargo en desarrollo', 'info');
+        }
+        
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('es-DO');
+        }
+        
+        function formatCedula(cedula) {
+            if (!cedula || cedula.length !== 11) return cedula || '-';
+            return `${cedula.substr(0, 3)}-${cedula.substr(3, 7)}-${cedula.substr(10, 1)}`;
+        }
+        
+        function formatPhone(phone) {
+            if (!phone) return null;
+            phone = phone.replace(/\D/g, '');
+            if (phone.length === 10) {
+                return `(${phone.substr(0,3)}) ${phone.substr(3,3)}-${phone.substr(6)}`;
+            }
+            return phone;
+        }
+        
+        function getPeriodoPagoText(periodo) {
+            switch(parseInt(periodo)) {
+                case 1: return 'Semanal';
+                case 2: return 'Quincenal';
+                case 3: return 'Mensual';
+                default: return '-';
+            }
         }
     </script>
 }
