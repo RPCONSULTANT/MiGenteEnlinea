@@ -418,13 +418,19 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var message = doc.RootElement.GetProperty("message").GetString();
         message.Should().Contain("actualizada");
 
-        // Note: Login verification skipped because UpdateCredencialCommand 
-        // doesn't sync password to AspNetUsers table (application bug)
-        // TODO: Fix UpdateCredencialCommandHandler to update Identity password
+        // Verify login works with new password (Identity should be synced now)
+        var loginWithNewPassword = new LoginCommand
+        {
+            Email = email,
+            Password = newPassword
+        };
+        var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginWithNewPassword);
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.OK, 
+            "Login should succeed with new password after UpdateCredencial syncs to Identity");
     }
 
     [Fact]
-    public async Task UpdateCredencial_DeactivateUser_ShouldUpdateCredencialesTable()
+    public async Task UpdateCredencial_DeactivateUser_ShouldPreventLogin()
     {
         // Arrange
         var email = $"deactivate-{Guid.NewGuid()}@test.com";
@@ -449,10 +455,15 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var message = doc.RootElement.GetProperty("message").GetString();
         message.Should().Contain("actualizada");
 
-        // Note: Login prevention test skipped because UpdateCredencialCommand
-        // doesn't sync Activo=false to AspNetUsers (LockoutEnabled or similar)
-        // This is a known limitation - login still succeeds because Identity user is still active
-        // TODO: Fix UpdateCredencialCommandHandler to lockout Identity user when Activo=false
+        // Verify login is prevented (Identity should be locked out now)
+        var loginCommand = new LoginCommand
+        {
+            Email = email,
+            Password = password
+        };
+        var loginResponse = await Client.PostAsJsonAsync("/api/auth/login", loginCommand);
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "Login should be prevented after user is deactivated via UpdateCredencial");
     }
 
     #endregion
