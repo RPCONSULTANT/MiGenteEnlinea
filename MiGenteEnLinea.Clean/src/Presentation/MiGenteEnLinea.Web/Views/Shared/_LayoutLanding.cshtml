@@ -1,0 +1,134 @@
+@*
+    Layout para páginas de Landing (público, sin autenticación)
+    Basado en: FRONT_Publicado/Landing/landing.Master
+*@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Mi Gente en línea</title>
+    
+    <!-- Bootstrap 4 -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" />
+    <!-- Custom Styles -->
+    <link href="~/css/animated.css" rel="stylesheet" />
+    <link href="~/css/Custom.css" rel="stylesheet" />
+    
+    <style>
+        @@font-face {
+            font-family: "Gurajada";
+            src: url(/fonts/Gurajada-Regular.ttf);
+        }
+
+        .headerText {
+            font-family: "Gurajada", Gurajada;
+        }
+
+        .navbar-brand {
+            padding: 0;
+        }
+
+        .navbar-brand img {
+            height: 50px;
+            margin-left: 10px;
+        }
+
+        .navbar-nav ml-auto {
+            margin-right: 10px;
+        }
+
+        .banner {
+            position: relative;
+            height: 500px;
+            background-image: linear-gradient(to bottom right, rgba(128, 0, 128, 0.4), rgba(147, 112, 219, 0.4), rgba(0, 0, 139, 1.9)), url(/images/back1.jpg);
+            background-size: auto;
+            background-position: unset;
+        }
+
+        .banner2 {
+            position: center;
+            height: 300px;
+            background: linear-gradient(123deg, #00176C 0%, #EE09A3 100%);
+            background-size: cover;
+            background-position: unset;
+        }
+
+        .banner-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .banner-content h1 {
+            font-size: 40px;
+        }
+
+        .link {
+            color: darkgrey;
+        }
+
+        .link:hover {
+            box-shadow: inset 30px 30px 30px 30px #007BFF;
+            color: darkgrey;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="/">
+            <img src="~/images/logoMiGene.png" alt="Logo" />
+        </a>
+
+        <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse" 
+                data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="fa fa-light fa-key"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="btn btn-transparent text-dark" asp-controller="Auth" asp-action="Register" 
+                       style="border-radius:10px; border-color:gray">Afiliate</a>
+                    <a class="btn btn-transparent" asp-controller="Auth" asp-action="Login" 
+                       style="border-radius:10px; border-color:gray">Acceder</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="form-control" style="background-color: dimgray; color: white; text-align: center;">
+            <a style="font-size: smaller">© Copyright Mi Gente en línea @DateTime.Now.Year</a>
+            <br />
+            <a style="font-size: smaller">Diseño y Desarrollo @@IntDoSystem, SRL</a>
+        </div>
+    </footer>
+
+    <!-- Scripts de Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
