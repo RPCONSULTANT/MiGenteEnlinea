@@ -103,15 +103,19 @@ public class SuscripcionConfiguration : IEntityTypeConfiguration<Suscripcion>
             .HasConstraintName("FK_Suscripciones_Credenciales")
             .OnDelete(DeleteBehavior.Cascade); // Si se elimina el usuario, se eliminan sus suscripciones
 
-        // ✅ FK: Suscripcion -> PlanEmpleador (PlanId)
-        // Según el EDMX legacy, Suscripciones.planID → Planes_empleadores.planID
-        // NOTA: En legacy, tanto empleadores como contratistas usan Planes_empleadores
-        builder.HasOne<Domain.Entities.Suscripciones.PlanEmpleador>()
-            .WithMany()
-            .HasForeignKey(s => s.PlanId)
-            .HasConstraintName("FK_Suscripciones_Planes_empleadores")
-            .OnDelete(DeleteBehavior.Restrict) // No borrar plan si tiene suscripciones activas
-            .IsRequired(false); // PlanId es nullable en la tabla
+        // ⚠️ NOTA: PlanId puede referirse a Planes_empleadores O Planes_Contratistas
+        // La base de datos legacy tiene FK hacia Planes_empleadores, pero esto causa problemas
+        // cuando un contratista adquiere un plan (PlanId de Planes_Contratistas no existe en Planes_empleadores).
+        // 
+        // SOLUCIÓN: No configuramos FK en EF Core. La validación de que el plan existe
+        // se hace en ProcesarVentaCommandHandler antes de crear la suscripción.
+        // 
+        // El PlanId se almacena como un entero simple sin navegación:
+        builder.Property(s => s.PlanId)
+            .HasColumnName("planID")
+            .IsRequired();
+        
+        // NO crear FK con HasOne<PlanEmpleador> ya que el PlanId puede venir de Planes_Contratistas
 
         // ========================================
         // ÍNDICES PARA OPTIMIZACIÓN

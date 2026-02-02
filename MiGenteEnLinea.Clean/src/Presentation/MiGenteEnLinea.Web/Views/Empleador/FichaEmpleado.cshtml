@@ -371,7 +371,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Fecha de Pago</label>
-                        <input type="date" class="form-control" id="fechaPago">
+                        <input type="date" class="form-control" id="fechaPago" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Tipo de Pago</label>
@@ -954,18 +954,28 @@
             const empleadoId = getEmpleadoIdFromUrl();
             const token = getAuthToken();
             
+            // Convertir número a string "Salario" o "Regalia"
+            const conceptoValue = parseInt(document.getElementById('ddlConceptoPago').value);
+            const tipoConcepto = conceptoValue === 1 ? 'Salario' : 'Regalia';
+            
+            // Si fechaPago está vacío, usar fecha actual en formato ISO
+            const fechaPagoInput = document.getElementById('fechaPago').value;
+            const fechaPago = fechaPagoInput || new Date().toISOString().split('T')[0];
+            
             const pagoData = {
                 empleadoId: parseInt(empleadoId),
-                tipoConcepto: parseInt(document.getElementById('ddlConceptoPago').value),
-                fechaPago: document.getElementById('fechaPago').value,
+                tipoConcepto: tipoConcepto,
+                fechaPago: fechaPago,
                 esFraccion: document.getElementById('ddlTipoPago').value === 'true',
-                descuentosAdicionales: descuentosAdicionales
+                aplicarTss: true // Siempre aplicar TSS por defecto
             };
             
-            if (!pagoData.fechaPago) {
-                Swal.fire('Error', 'Seleccione la fecha de pago', 'error');
-                return;
-            }
+            // DEBUG: Log request payload
+            console.log('=== PROCESAR PAGO DEBUG ===');
+            console.log('URL:', `${API_BASE_URL}/empleados/${empleadoId}/nomina`);
+            console.log('pagoData:', JSON.stringify(pagoData, null, 2));
+            console.log('Token exists:', !!token);
+            console.log('===========================');
             
             try {
                 const btn = document.getElementById('btnProcesarPago');
@@ -993,7 +1003,28 @@
                     });
                 } else {
                     const error = await response.json();
-                    Swal.fire('Error', error.message || 'Error al procesar el pago', 'error');
+                    console.error('Error procesando pago:', error);
+                    
+                    // Mostrar mensaje de error detallado
+                    let errorMessage = error.message || error.title || error.error || 'Error al procesar el pago';
+                    if (error.errors) {
+                        // FluentValidation errors
+                        errorMessage += '<br><br><ul style="text-align: left;">';
+                        for (const [field, messages] of Object.entries(error.errors)) {
+                            if (Array.isArray(messages)) {
+                                messages.forEach(msg => {
+                                    errorMessage += `<li>${msg}</li>`;
+                                });
+                            }
+                        }
+                        errorMessage += '</ul>';
+                    }
+                    
+                    Swal.fire({
+                        title: 'Error',
+                        html: errorMessage,
+                        icon: 'error'
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);

@@ -694,6 +694,10 @@
                     for (let i = 0; i < pagosAProcesar.length; i++) {
                         const pago = pagosAProcesar[i];
                         try {
+                            // Convertir número a string "Salario" o "Regalia"
+                            const conceptoValue = parseInt(pago.concepto);
+                            const tipoConcepto = conceptoValue === 1 ? 'Salario' : 'Regalia';
+                            
                             const response = await fetch(`${API_BASE_URL}/empleados/${pago.empleadoId}/nomina`, {
                                 method: 'POST',
                                 headers: {
@@ -702,9 +706,10 @@
                                 },
                                 body: JSON.stringify({
                                     empleadoId: pago.empleadoId,
-                                    tipoConcepto: parseInt(pago.concepto),
+                                    tipoConcepto: tipoConcepto,
                                     fechaPago: pago.fechaPago,
-                                    esFraccion: false
+                                    esFraccion: false,
+                                    aplicarTss: true
                                 })
                             });
                             

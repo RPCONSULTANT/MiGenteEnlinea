@@ -73,6 +73,11 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<MiGenteDbContext>());
 
         // ========================================
+        // UNIT OF WORK & REPOSITORIES
+        // ========================================
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // ========================================
         // IDENTITY SERVICES
         // ========================================
         
@@ -285,7 +290,8 @@ public static class DependencyInjection
         // ✅ NOTA: En producción actual hay un bug de Cardnet y se usa emulación
         services.AddScoped<IPaymentService, MockPaymentService>();
         
-        services.AddScoped<INominaCalculatorService, MockNominaCalculatorService>();
+        // ✅ Servicio REAL de cálculo de nómina (implementa lógica Legacy completa)
+        services.AddScoped<INominaCalculatorService, NominaCalculatorService>();
 
         // TODO: Agregar cuando se migren del legacy
         // services.AddScoped<IFileStorageService, FileStorageService>();

@@ -25,7 +25,7 @@ public record CreateEmpleadoTemporalCommand : IRequest<int>
     // DetalleContrataciones fields
     public string? Servicio { get; init; }
     public DateTime? FechaInicio { get; init; }
-    public DateTime? FechaFin { get; init; }
+    public DateTime? FechaFinal { get; init; }  // Renamed from FechaFin to match Domain entity
     public decimal? Pago { get; init; }
     public string? LugarTrabajo { get; init; }
     public string? HorarioTrabajo { get; init; }

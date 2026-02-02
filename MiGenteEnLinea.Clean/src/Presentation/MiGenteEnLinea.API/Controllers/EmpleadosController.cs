@@ -914,8 +914,40 @@ public class EmpleadosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<int>> ProcesarPago(int id, [FromBody] ProcesarPagoCommand command)
+    public async Task<ActionResult<int>> ProcesarPago(int id, [FromBody] ProcesarPagoCommand? command)
     {
+        // DEBUG: Log incoming request for troubleshooting
+        _logger.LogInformation("=== ProcesarPago REQUEST ===");
+        _logger.LogInformation("URL id: {UrlId}", id);
+        _logger.LogInformation("ModelState.IsValid: {IsValid}", ModelState.IsValid);
+        
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            _logger.LogWarning("ModelState errors: {Errors}", string.Join("; ", errors));
+            return BadRequest(new { error = "Datos inválidos", errors });
+        }
+        
+        _logger.LogInformation("Command is null: {IsNull}", command == null);
+        if (command != null)
+        {
+            _logger.LogInformation("Command.EmpleadoId: {EmpleadoId}", command.EmpleadoId);
+            _logger.LogInformation("Command.TipoConcepto: {TipoConcepto}", command.TipoConcepto);
+            _logger.LogInformation("Command.FechaPago: {FechaPago}", command.FechaPago);
+            _logger.LogInformation("Command.EsFraccion: {EsFraccion}", command.EsFraccion);
+            _logger.LogInformation("Command.AplicarTss: {AplicarTss}", command.AplicarTss);
+        }
+        _logger.LogInformation("===========================");
+        
+        if (command == null)
+        {
+            _logger.LogWarning("El comando es null - error de deserialización del body");
+            return BadRequest(new { error = "El body de la solicitud no es válido" });
+        }
+        
         if (id != command.EmpleadoId)
         {
             _logger.LogWarning("El ID del empleado en la URL ({UrlId}) no coincide con el del body ({BodyId})", id, command.EmpleadoId);

@@ -13,9 +13,9 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.ProcesarPago;
 public record ProcesarPagoCommand : IRequest<int>
 {
     /// <summary>
-    /// GUID del empleador que procesa el pago
+    /// GUID del empleador que procesa el pago (inyectado por el controlador desde JWT)
     /// </summary>
-    public string UserId { get; init; } = null!;
+    public string? UserId { get; init; }
 
     /// <summary>
     /// ID del empleado que recibe el pago
@@ -23,9 +23,9 @@ public record ProcesarPagoCommand : IRequest<int>
     public int EmpleadoId { get; init; }
 
     /// <summary>
-    /// Fecha del pago
+    /// Fecha del pago (si no se especifica, usa fecha actual)
     /// </summary>
-    public DateTime FechaPago { get; init; }
+    public DateTime FechaPago { get; init; } = DateTime.Now;
 
     /// <summary>
     /// Tipo de concepto: "Salario" o "Regalia"

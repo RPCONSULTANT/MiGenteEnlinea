@@ -12,13 +12,13 @@ public class UpdateDetalleContratacionCommandValidator : AbstractValidator<Updat
 
         RuleFor(x => x.FechaInicio)
             .NotNull()
-            .When(x => x.FechaFin.HasValue)
-            .WithMessage("La fecha de inicio es requerida cuando se especifica fecha de fin");
+            .When(x => x.FechaFinal.HasValue)
+            .WithMessage("La fecha de inicio es requerida cuando se especifica fecha final");
 
-        RuleFor(x => x.FechaFin)
+        RuleFor(x => x.FechaFinal)
             .GreaterThan(x => x.FechaInicio)
-            .When(x => x.FechaInicio.HasValue && x.FechaFin.HasValue)
-            .WithMessage("La fecha de fin debe ser posterior a la fecha de inicio");
+            .When(x => x.FechaInicio.HasValue && x.FechaFinal.HasValue)
+            .WithMessage("La fecha final debe ser posterior a la fecha de inicio");
 
         RuleFor(x => x.MontoAcordado)
             .GreaterThan(0)

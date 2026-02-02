@@ -12,7 +12,7 @@ public record UpdateDetalleContratacionCommand : IRequest<bool>
     public string? DescripcionCorta { get; init; }
     public string? DescripcionAmpliada { get; init; }
     public DateTime? FechaInicio { get; init; }
-    public DateTime? FechaFin { get; init; }
+    public DateTime? FechaFinal { get; init; }  // Renamed from FechaFin to match Domain entity
     public decimal? MontoAcordado { get; init; }
     public string? EsquemaPagos { get; init; }
     public int? Estatus { get; init; }

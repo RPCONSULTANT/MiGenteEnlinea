@@ -500,7 +500,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
                     },
-                    body: JSON.stringify({ detalleServicio: detalleServicio })
+                    body: JSON.stringify({ DetalleServicio: detalleServicio })
                 });
                 
                 if (response.ok) {

@@ -838,7 +838,7 @@
                 descripcionCorta: descripcionCorta,
                 descripcionAmpliada: document.getElementById('descripcionAmpliada').value.trim() || null,
                 fechaInicio: fechaInicio,
-                fechaFinal: fechaFin,
+                fechaFinal: fechaFin,  // Backend expects 'fechaFinal' not 'fechaFin'
                 montoAcordado: monto,
                 esquemaPagos: document.getElementById('esquemaPagos').value || null,
                 notas: document.getElementById('notas').value.trim() || null

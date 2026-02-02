@@ -355,7 +355,7 @@ public class LegacyDataService : ILegacyDataService
             ContratacionId = contratacionId,
             DescripcionCorta = command.Servicio, // "Servicio" maps to "DescripcionCorta"
             FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : null,
-            FechaFinal = command.FechaFin.HasValue ? DateOnly.FromDateTime(command.FechaFin.Value) : null,
+            FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : null,
             MontoAcordado = command.Pago,
             DescripcionAmpliada = command.LugarTrabajo, // Assuming LugarTrabajo maps to DescripcionAmpliada
             EsquemaPagos = command.HorarioTrabajo, // Assuming HorarioTrabajo maps to EsquemaPagos
@@ -379,7 +379,7 @@ public class LegacyDataService : ILegacyDataService
             DescripcionCorta = command.DescripcionCorta,
             DescripcionAmpliada = command.DescripcionAmpliada,
             FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : null,
-            FechaFinal = command.FechaFin.HasValue ? DateOnly.FromDateTime(command.FechaFin.Value) : null,
+            FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : null,
             MontoAcordado = command.MontoAcordado,
             EsquemaPagos = command.EsquemaPagos,
             Estatus = command.Estatus ?? 1
@@ -408,7 +408,7 @@ public class LegacyDataService : ILegacyDataService
         detalle.DescripcionCorta = command.DescripcionCorta;
         detalle.DescripcionAmpliada = command.DescripcionAmpliada;
         detalle.FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : detalle.FechaInicio;
-        detalle.FechaFinal = command.FechaFin.HasValue ? DateOnly.FromDateTime(command.FechaFin.Value) : detalle.FechaFinal;
+        detalle.FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : detalle.FechaFinal;
         detalle.MontoAcordado = command.MontoAcordado ?? detalle.MontoAcordado;
         detalle.EsquemaPagos = command.EsquemaPagos;
         detalle.Estatus = command.Estatus ?? detalle.Estatus;

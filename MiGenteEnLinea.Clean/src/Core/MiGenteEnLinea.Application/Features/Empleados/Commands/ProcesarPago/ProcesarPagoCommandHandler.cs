@@ -34,6 +34,12 @@ public class ProcesarPagoCommandHandler : IRequestHandler<ProcesarPagoCommand, i
 
     public async Task<int> Handle(ProcesarPagoCommand request, CancellationToken cancellationToken)
     {
+        // Validar que UserId fue inyectado por el controlador
+        if (string.IsNullOrEmpty(request.UserId))
+        {
+            throw new ValidationException("El ID del usuario es requerido para procesar el pago");
+        }
+        
         _logger.LogInformation(
             "Procesando pago para EmpleadoId={EmpleadoId}, Fecha={FechaPago}, Tipo={TipoConcepto}",
             request.EmpleadoId, request.FechaPago, request.TipoConcepto);

@@ -65,8 +65,17 @@ public class ReciboHeaderRepository : Repository<ReciboHeader>, IReciboHeaderRep
         int pagoId, 
         CancellationToken cancellationToken = default)
     {
+        // Cargar header y detalles por separado para evitar problemas con IReadOnlyCollection
+        var header = await _dbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.PagoId == pagoId, cancellationToken);
+        
+        if (header == null) return null;
+        
+        // Los detalles se cargarán automáticamente si el contexto tiene tracking,
+        // o pueden ser consultados por separado usando el DbContext directamente
         return await _dbSet
-            .Include(r => r.Detalles)
+            .Include("Detalles")
             .FirstOrDefaultAsync(r => r.PagoId == pagoId, cancellationToken);
     }
 }

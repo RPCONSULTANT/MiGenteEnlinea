@@ -6,17 +6,19 @@ public class ProcesarPagoCommandValidator : AbstractValidator<ProcesarPagoComman
 {
     public ProcesarPagoCommandValidator()
     {
+        // UserId es inyectado por el controlador desde JWT, no validar aquí
+        // Solo validar que no exceda el límite si está presente
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("El ID del usuario es requerido")
-            .MaximumLength(450).WithMessage("El ID del usuario no puede exceder 450 caracteres");
+            .MaximumLength(450).WithMessage("El ID del usuario no puede exceder 450 caracteres")
+            .When(x => !string.IsNullOrEmpty(x.UserId));
 
         RuleFor(x => x.EmpleadoId)
             .GreaterThan(0).WithMessage("El ID del empleado debe ser mayor a 0");
 
         RuleFor(x => x.FechaPago)
-            .NotEmpty().WithMessage("La fecha de pago es requerida")
             .LessThanOrEqualTo(DateTime.Now.AddDays(7))
-            .WithMessage("La fecha de pago no puede ser mayor a 7 días en el futuro");
+            .WithMessage("La fecha de pago no puede ser mayor a 7 días en el futuro")
+            .When(x => x.FechaPago != default);
 
         RuleFor(x => x.TipoConcepto)
             .NotEmpty().WithMessage("El tipo de concepto es requerido")

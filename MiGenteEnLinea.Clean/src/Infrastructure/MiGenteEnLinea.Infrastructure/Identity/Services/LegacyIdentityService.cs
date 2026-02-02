@@ -8,12 +8,20 @@ using MiGenteEnLinea.Domain.Interfaces.Repositories;
 namespace MiGenteEnLinea.Infrastructure.Identity.Services;
 
 /// <summary>
-/// Implementación del servicio de identidad usando el sistema Legacy
+/// [DEPRECATED] Implementación del servicio de identidad usando el sistema Legacy
 /// (tablas: Credenciales, Perfiles, Contratistas)
 /// 
-/// Este servicio reemplaza temporalmente IdentityService (ASP.NET Core Identity)
-/// para mantener compatibilidad 100% con la base de datos Legacy durante la migración.
+/// ⚠️ ESTE SERVICIO ESTÁ OBSOLETO Y NO SE USA.
+/// El sistema usa IdentityService (ASP.NET Core Identity) con fallback automático a Legacy.
+/// 
+/// IdentityService ya implementa:
+/// - Login con Identity-First + Legacy Fallback
+/// - Migración automática de usuarios Legacy a Identity
+/// - RefreshToken, RevokeToken, ResetPassword, etc.
+/// 
+/// Este archivo se mantiene solo como referencia histórica.
 /// </summary>
+[Obsolete("Use IdentityService instead. This class is deprecated and not registered in DI.")]
 public class LegacyIdentityService : IIdentityService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -82,13 +90,30 @@ public class LegacyIdentityService : IIdentityService
             roles.Add("Contratista");
         }
 
+        // 5.5 Obtener suscripción activa del usuario
+        var suscripcion = await _unitOfWork.Suscripciones.GetActivaByUserIdAsync(credencial.UserId);
+        int planId = 0;
+        DateTime? vencimientoPlan = null;
+        
+        if (suscripcion != null && suscripcion.EstaActiva())
+        {
+            planId = suscripcion.PlanId;
+            vencimientoPlan = suscripcion.Vencimiento.ToDateTime(TimeOnly.MinValue);
+            _logger.LogInformation("User {UserId} has active subscription: PlanId={PlanId}, Expires={Vencimiento}", 
+                credencial.UserId, planId, vencimientoPlan);
+        }
+        else
+        {
+            _logger.LogInformation("User {UserId} has no active subscription", credencial.UserId);
+        }
+
         // 6. Generar access token JWT
         var accessToken = _jwtTokenService.GenerateAccessToken(
             userId: credencial.UserId,
             email: credencial.Email.Value,
             tipo: perfil.Tipo.ToString(),
             nombreCompleto: $"{perfil.Nombre} {perfil.Apellido}",
-            planId: 0, // TODO: Agregar PlanId a entidad Perfile (campo existe en DB pero no en dominio)
+            planId: planId,
             roles: roles
         );
 
@@ -119,8 +144,8 @@ public class LegacyIdentityService : IIdentityService
                 Email = credencial.Email.Value,
                 NombreCompleto = $"{perfil.Nombre} {perfil.Apellido}",
                 Tipo = perfil.Tipo.ToString(),
-                PlanId = 0, // TODO: Agregar PlanId a Perfile
-                VencimientoPlan = null, // TODO: Agregar VencimientoPlan a Perfile
+                PlanId = planId,
+                VencimientoPlan = vencimientoPlan,
                 Roles = roles
             }
         };
@@ -270,6 +295,12 @@ public class LegacyIdentityService : IIdentityService
     public async Task<(string Email, bool IsActive)?> GetUserByIdAsync(string userId)
     {
         _logger.LogWarning("GetUserByIdAsync called on LegacyIdentityService - use IdentityService instead");
+        throw new NotImplementedException("Use IdentityService for Identity operations");
+    }
+
+    public async Task<bool> UpdateUserPlanAsync(string userId, int planId, DateTime vencimientoPlan)
+    {
+        _logger.LogWarning("UpdateUserPlanAsync called on LegacyIdentityService - use IdentityService instead");
         throw new NotImplementedException("Use IdentityService for Identity operations");
     }
 }

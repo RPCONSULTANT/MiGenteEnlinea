@@ -116,13 +116,11 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Success
-                    showAlert('activarAlert', '¡Cuenta activada exitosamente! Redirigiendo al login...', 'success');
+                    // Success - ahora auto-login
+                    showAlert('activarAlert', '¡Cuenta activada exitosamente! Iniciando sesión...', 'success');
                     
-                    // Redirect to login after 2 seconds
-                    setTimeout(() => {
-                        window.location.href = '@Url.Action("Login", "Auth")';
-                    }, 2000);
+                    // Auto-login después de activación
+                    await performAutoLogin(email, password);
                     
                 } else if (response.status === 400) {
                     // Validation error
@@ -163,6 +161,72 @@
             // At least 8 characters, one uppercase, one lowercase, one number, one special character
             const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@@$!%*?&#])[A-Za-z\d@@$!%*?&#]{8,}$/;
             return regex.test(password);
+        }
+        
+        // ============================================
+        // AUTO-LOGIN AFTER ACTIVATION
+        // ============================================
+        async function performAutoLogin(email, password) {
+            try {
+                const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+                
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    
+                    // Store tokens in localStorage
+                    localStorage.setItem('accessToken', loginData.accessToken);
+                    localStorage.setItem('refreshToken', loginData.refreshToken);
+                    localStorage.setItem('accessTokenExpires', loginData.accessTokenExpires);
+                    localStorage.setItem('refreshTokenExpires', loginData.refreshTokenExpires);
+                    localStorage.setItem('userInfo', JSON.stringify(loginData.user));
+                    
+                    showAlert('activarAlert', '¡Sesión iniciada! Redirigiendo...', 'success');
+                    
+                    // Determine redirect based on user type and plan status
+                    const userType = loginData.user.tipo;
+                    const hasPlan = loginData.user.planId > 0;
+                    const planActivo = loginData.user.planActivo;
+                    
+                    setTimeout(() => {
+                        if (!hasPlan || !planActivo) {
+                            // User needs to select a plan
+                            if (userType === '1') {
+                                window.location.href = '@Url.Action("AdquirirPlan", "Empleador")';
+                            } else {
+                                window.location.href = '@Url.Action("AdquirirPlan", "Contratista")';
+                            }
+                        } else {
+                            // User has active plan - go to dashboard
+                            if (userType === '1') {
+                                window.location.href = '@Url.Action("Index", "Empleador")';
+                            } else {
+                                window.location.href = '@Url.Action("Index", "Contratista")';
+                            }
+                        }
+                    }, 1000);
+                    
+                } else {
+                    // Login failed - redirect to login page
+                    console.error('Auto-login failed:', await loginResponse.text());
+                    showAlert('activarAlert', 'Cuenta activada. Por favor inicie sesión manualmente.', 'warning');
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Login", "Auth")';
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Auto-login error:', error);
+                showAlert('activarAlert', 'Cuenta activada. Por favor inicie sesión manualmente.', 'warning');
+                setTimeout(() => {
+                    window.location.href = '@Url.Action("Login", "Auth")';
+                }, 2000);
+            }
         }
         
         function togglePasswordVisibility(fieldId, iconId) {

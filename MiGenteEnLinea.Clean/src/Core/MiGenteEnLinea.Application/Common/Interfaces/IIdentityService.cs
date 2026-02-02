@@ -130,4 +130,15 @@ public interface IIdentityService
     /// <param name="userId">ID del usuario</param>
     /// <returns>Email y estado activo del usuario, o null si no existe</returns>
     Task<(string Email, bool IsActive)?> GetUserByIdAsync(string userId);
+
+    /// <summary>
+    /// Actualiza el PlanID y VencimientoPlan de un usuario en AspNetUsers.
+    /// Debe llamarse después de crear/renovar una suscripción para que
+    /// el próximo login devuelva los datos correctos.
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="planId">ID del plan activo</param>
+    /// <param name="vencimientoPlan">Fecha de vencimiento del plan</param>
+    /// <returns>True si se actualizó exitosamente</returns>
+    Task<bool> UpdateUserPlanAsync(string userId, int planId, DateTime vencimientoPlan);
 }

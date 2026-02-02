@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
-using MiGenteEnLinea.Domain.Interfaces;
-using MiGenteEnLinea.Domain.Interfaces.Repositories;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.CreateContratacion;
 
@@ -12,20 +14,20 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.CreateCont
 /// LÓGICA DE NEGOCIO:
 /// 1. Validar datos de entrada (FluentValidation se ejecuta antes)
 /// 2. Crear entidad DetalleContratacion usando factory method
-/// 3. Guardar en base de datos vía UnitOfWork
+/// 3. Guardar en base de datos vía DbContext
 /// 4. Domain Event ContratacionCreadaEvent se dispara automáticamente
 /// 5. Retornar ID del detalle creado
 /// </summary>
 public class CreateContratacionCommandHandler : IRequestHandler<CreateContratacionCommand, int>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<CreateContratacionCommandHandler> _logger;
 
     public CreateContratacionCommandHandler(
-        IUnitOfWork unitOfWork,
+        IApplicationDbContext context,
         ILogger<CreateContratacionCommandHandler> logger)
     {
-        _unitOfWork = unitOfWork;
+        _context = context;
         _logger = logger;
     }
 
@@ -57,8 +59,8 @@ public class CreateContratacionCommandHandler : IRequestHandler<CreateContrataci
             }
 
             // Guardar en base de datos
-            await _unitOfWork.DetallesContrataciones.AddAsync(contratacion, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _context.DetalleContrataciones.AddAsync(contratacion, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "Contratacion created successfully with ID: {DetalleId}",

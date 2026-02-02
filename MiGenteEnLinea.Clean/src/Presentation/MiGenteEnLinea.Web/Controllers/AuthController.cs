@@ -115,7 +115,19 @@ public class AuthController : Controller
     /// </summary>
     public IActionResult Logout()
     {
-        HttpContext.Session.Clear();
+        // Clear session if it's configured
+        try
+        {
+            if (HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.ISessionFeature>()?.Session != null)
+            {
+                HttpContext.Session.Clear();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Session not configured, ignore
+        }
+        
         return RedirectToAction("Login", new { logout = true });
     }
 }

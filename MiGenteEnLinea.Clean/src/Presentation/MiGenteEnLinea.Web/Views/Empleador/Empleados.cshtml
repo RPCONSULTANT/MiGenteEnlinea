@@ -913,9 +913,14 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('API Response (raw):', data);
+                    console.log('data.items:', data.items);
+                    console.log('data type:', typeof data, 'isArray:', Array.isArray(data));
+                    
                     // API devuelve PaginatedList, extraer .items
                     allEmpleadosActivos = data.items || data;
                     console.log('Empleados activos cargados:', allEmpleadosActivos.length);
+                    console.log('Primer empleado:', allEmpleadosActivos[0]);
                     renderEmpleadosTable(allEmpleadosActivos, 'tbodyActivos', true);
                 } else if (response.status === 401) {
                     document.getElementById('tbodyActivos').innerHTML = `
@@ -1028,17 +1033,7 @@
                                     onclick="editEmpleado(${emp.empleadoId})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            ${isActive ? `
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="deleteEmpleado(${emp.empleadoId}, '${emp.nombre} ${emp.apellido}')" title="Dar de baja">
-                                <i class="fas fa-user-minus"></i>
-                            </button>
-                            ` : `
-                            <button type="button" class="btn btn-sm btn-outline-success" 
-                                    onclick="reactivarEmpleado(${emp.empleadoId}, '${emp.nombre} ${emp.apellido}')" title="Reactivar">
-                                <i class="fas fa-user-check"></i>
-                            </button>
-                            `}
+                            ${isActive ? '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEmpleado(' + emp.empleadoId + ', \'' + emp.nombre + ' ' + emp.apellido + '\')" title="Dar de baja"><i class="fas fa-user-minus"></i></button>' : '<button type="button" class="btn btn-sm btn-outline-success" onclick="reactivarEmpleado(' + emp.empleadoId + ', \'' + emp.nombre + ' ' + emp.apellido + '\')" title="Reactivar"><i class="fas fa-user-check"></i></button>'}
                         </div>
                     </td>
                 </tr>
@@ -1083,7 +1078,7 @@
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ fechaSalida: fechaSalida })
+                        body: JSON.stringify({ fechaBaja: fechaSalida })
                     });
                     
                     if (response.ok) {
@@ -1279,17 +1274,7 @@
                                     onclick="editEmpleado(${emp.empleadoId})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            ${isActive ? `
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="deleteEmpleado(${emp.empleadoId}, '${emp.nombre} ${emp.apellido}')" title="Dar de baja">
-                                <i class="fas fa-user-minus"></i>
-                            </button>
-                            ` : `
-                            <button type="button" class="btn btn-sm btn-outline-success" 
-                                    onclick="reactivarEmpleado(${emp.empleadoId}, '${emp.nombre} ${emp.apellido}')" title="Reactivar">
-                                <i class="fas fa-user-check"></i>
-                            </button>
-                            `}
+                            ${isActive ? '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEmpleado(' + emp.empleadoId + ', \'' + emp.nombre + ' ' + emp.apellido + '\')" title="Dar de baja"><i class="fas fa-user-minus"></i></button>' : '<button type="button" class="btn btn-sm btn-outline-success" onclick="reactivarEmpleado(' + emp.empleadoId + ', \'' + emp.nombre + ' ' + emp.apellido + '\')" title="Reactivar"><i class="fas fa-user-check"></i></button>'}
                         </div>
                     </td>
                 </tr>

@@ -71,8 +71,12 @@ public class GetNominaResumenQueryHandler : IRequestHandler<GetNominaResumenQuer
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+        // Contar empleados ACTIVOS del empleador (no recibos generados)
+        var totalEmpleados = await _context.Empleados
+            .Where(e => e.UserId == empleador.UserId && e.Activo)
+            .CountAsync(cancellationToken);
+        
         // Calcular totales (sin Include porque Detalles está ignorado en EF config)
-        var totalEmpleados = recibos.Select(r => r.EmpleadoId).Distinct().Count();
         var totalSalarioBruto = recibos.Sum(r => r.TotalIngresos);
         var totalDeducciones = recibos.Sum(r => r.TotalDeducciones);
         var totalSalarioNeto = recibos.Sum(r => r.NetoPagar);

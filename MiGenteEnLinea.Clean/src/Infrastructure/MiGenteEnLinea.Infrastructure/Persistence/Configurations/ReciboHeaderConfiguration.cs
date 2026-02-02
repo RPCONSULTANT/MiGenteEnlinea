@@ -104,10 +104,15 @@ public sealed class ReciboHeaderConfiguration : IEntityTypeConfiguration<ReciboH
             .IsRequired(false);
 
         // Relaciones
-        builder.HasMany<ReciboDetalle>()
+        // Usar backing field para navigation property de solo lectura
+        builder.HasMany(r => r.Detalles)
             .WithOne()
             .HasForeignKey(d => d.PagoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Configurar acceso al backing field para la colección
+        builder.Navigation(r => r.Detalles)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // Índices
         builder.HasIndex(r => r.UserId)

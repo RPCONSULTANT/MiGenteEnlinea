@@ -70,6 +70,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
+// Desactivar respuesta automática 400 para ModelState inválido (permite logging manual en controladores)
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
+
 // API Explorer para Swagger
 builder.Services.AddEndpointsApiExplorer();
 

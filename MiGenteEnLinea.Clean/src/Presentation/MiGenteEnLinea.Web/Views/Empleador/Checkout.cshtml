@@ -365,20 +365,29 @@
                     }
                 };
                 
-                // Llamar API para procesar pago
-                // NOTE: El endpoint de Cardnet aún no está implementado completamente
-                // Por ahora creamos la suscripción directamente
-                const response = await fetch(`${API_BASE_URL}/suscripciones`, {
+                // Formatear fecha de expiración a MMYY
+                const expirationDate = datosTransaccion.tarjeta.mesVencimiento.toString().padStart(2, '0') + 
+                                      datosTransaccion.tarjeta.anoVencimiento.toString().substring(2);
+                
+                // Preparar datos del pago usando ProcesarVentaCommand
+                const pagoData = {
+                    userId: userId,
+                    planId: parseInt(planId),
+                    cardNumber: datosTransaccion.tarjeta.numero,
+                    cvv: datosTransaccion.tarjeta.cvv,
+                    expirationDate: expirationDate,
+                    referenceNumber: 'REF-E-' + Date.now(),
+                    invoiceNumber: 'INV-E-' + Date.now()
+                };
+                
+                // Llamar API para procesar pago con Cardnet
+                const response = await fetch(`${API_BASE_URL}/pagos/procesar`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken}`
                     },
-                    body: JSON.stringify({
-                        userId: userId,
-                        planId: parseInt(planId),
-                        duracionMeses: planData.duracionMeses || 12
-                    })
+                    body: JSON.stringify(pagoData)
                 });
                 
                 const result = await response.json();

@@ -198,18 +198,20 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (empleadosResponse.ok) {
-                    const empleados = await empleadosResponse.json();
-                    document.getElementById('lbEmpleados').textContent = empleados.length || 0;
+                    const empleadosData = await empleadosResponse.json();
+                    // API devuelve PaginatedList con .items, o array directo
+                    const empleadosCount = empleadosData.totalCount || empleadosData.items?.length || empleadosData.length || 0;
+                    document.getElementById('lbEmpleados').textContent = empleadosCount;
                 }
 
                 // Load ventas/pagos history
                 if (userId) {
-                    const ventasResponse = await fetch(`${API_BASE_URL}/suscripciones/ventas?userId=${userId}`, {
+                    const ventasResponse = await fetch(`${API_BASE_URL}/suscripciones/ventas/${userId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (ventasResponse.ok) {
                         const ventas = await ventasResponse.json();
-                        const totalPagos = ventas.reduce((sum, v) => sum + (v.monto || v.precio || 0), 0);
+                        const totalPagos = ventas.reduce((sum, v) => sum + (v.precio || 0), 0);
                         document.getElementById('lbPagos').textContent = `$${totalPagos.toLocaleString('es-DO', { minimumFractionDigits: 2 })}`;
                         
                         // Fill payments table
@@ -217,10 +219,10 @@
                         if (ventas.length > 0) {
                             tablaPagos.innerHTML = ventas.slice(0, 5).map(v => `
                                 <tr>
-                                    <td>${new Date(v.fecha || v.fechaCreacion).toLocaleDateString('es-DO')}</td>
+                                    <td>${v.fechaTransaccion ? new Date(v.fechaTransaccion).toLocaleDateString('es-DO') : '-'}</td>
                                     <td>Plan ${v.planId}</td>
-                                    <td>$${(v.monto || v.precio || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 })}</td>
-                                    <td><span class="badge bg-${v.estado === 1 ? 'success' : 'warning'}">${v.estado === 1 ? 'Aprobado' : 'Pendiente'}</span></td>
+                                    <td>$${(v.precio || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 })}</td>
+                                    <td><span class="badge bg-${v.estado === 2 ? 'success' : 'warning'}">${v.estadoTexto || (v.estado === 2 ? 'Aprobado' : 'Pendiente')}</span></td>
                                 </tr>
                             `).join('');
                         }

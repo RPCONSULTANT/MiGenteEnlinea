@@ -622,5 +622,39 @@ public class IdentityService : IIdentityService
 
         return (user.Email!, isActive);
     }
-}
 
+    /// <summary>
+    /// Actualiza el PlanID y VencimientoPlan de un usuario en AspNetUsers.
+    /// Debe llamarse después de crear/renovar una suscripción para que
+    /// el próximo login devuelva los datos correctos.
+    /// </summary>
+    public async Task<bool> UpdateUserPlanAsync(string userId, int planId, DateTime vencimientoPlan)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        
+        if (user == null)
+        {
+            _logger.LogWarning("UpdateUserPlan failed: User {UserId} not found", userId);
+            return false;
+        }
+
+        user.PlanID = planId;
+        user.VencimientoPlan = vencimientoPlan;
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (result.Succeeded)
+        {
+            _logger.LogInformation(
+                "User {UserId} plan updated - PlanID: {PlanId}, Vencimiento: {Vencimiento}",
+                userId, planId, vencimientoPlan);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Failed to update plan for user {UserId}. Errors: {Errors}",
+                userId, string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        return result.Succeeded;
+    }}

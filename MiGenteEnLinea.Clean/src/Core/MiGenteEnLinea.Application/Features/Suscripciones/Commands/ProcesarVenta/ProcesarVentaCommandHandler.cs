@@ -15,7 +15,7 @@ namespace MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVen
 /// LÓGICA LEGACY REPLICADA:
 /// 1. PaymentService.consultarIdempotency() → genera idempotency key
 /// 2. PaymentService.Payment() → llama a Cardnet API sales endpoint
-/// 3. Si ResponseCode == "00": Crear Venta + Suscripción
+/// 3. Si ResponseCode == "00": Crear Venta + Suscripción + Actualizar AspNetUsers.PlanID/VencimientoPlan
 /// 4. Si ResponseCode != "00": Crear Venta (rechazada) + throw exception
 /// 
 /// CARDNET API:
@@ -28,15 +28,18 @@ public class ProcesarVentaCommandHandler : IRequestHandler<ProcesarVentaCommand,
     private readonly IApplicationDbContext _context;
     private readonly ILogger<ProcesarVentaCommandHandler> _logger;
     private readonly IPaymentService _paymentService;
+    private readonly IIdentityService _identityService;
 
     public ProcesarVentaCommandHandler(
         IApplicationDbContext context,
         ILogger<ProcesarVentaCommandHandler> logger,
-        IPaymentService paymentService)
+        IPaymentService paymentService,
+        IIdentityService identityService)
     {
         _context = context;
         _logger = logger;
         _paymentService = paymentService;
+        _identityService = identityService;
     }
 
     public async Task<int> Handle(ProcesarVentaCommand request, CancellationToken cancellationToken)
@@ -181,6 +184,8 @@ public class ProcesarVentaCommandHandler : IRequestHandler<ProcesarVentaCommand,
             .Where(s => s.UserId == request.UserId && !s.Cancelada)
             .FirstOrDefaultAsync(cancellationToken);
 
+        DateTime fechaVencimiento;
+
         if (suscripcionExistente != null)
         {
             // Renovar existente
@@ -190,6 +195,7 @@ public class ProcesarVentaCommandHandler : IRequestHandler<ProcesarVentaCommand,
                 duracionMeses);
 
             suscripcionExistente.Renovar(duracionMeses);
+            fechaVencimiento = suscripcionExistente.Vencimiento.ToDateTime(TimeOnly.MinValue);
         }
         else
         {
@@ -205,10 +211,26 @@ public class ProcesarVentaCommandHandler : IRequestHandler<ProcesarVentaCommand,
                 duracionMeses: duracionMeses);
 
             _context.Suscripciones.Add(nuevaSuscripcion);
+            fechaVencimiento = nuevaSuscripcion.Vencimiento.ToDateTime(TimeOnly.MinValue);
         }
 
-        // PASO 7: Guardar cambios
+        // PASO 7: Guardar cambios en base de datos
         await _context.SaveChangesAsync(cancellationToken);
+
+        // PASO 8: Actualizar AspNetUsers.PlanID y VencimientoPlan
+        // Esto asegura que el próximo login devuelva el plan correcto
+        var planUpdated = await _identityService.UpdateUserPlanAsync(
+            request.UserId,
+            request.PlanId,
+            fechaVencimiento);
+
+        if (!planUpdated)
+        {
+            _logger.LogWarning(
+                "No se pudo actualizar PlanID/VencimientoPlan en AspNetUsers para usuario {UserId}. " +
+                "El usuario deberá re-autenticar para ver el plan actualizado.",
+                request.UserId);
+        }
 
         _logger.LogInformation(
             "Venta procesada exitosamente. VentaId: {VentaId}, Usuario: {UserId}, Monto: {Monto:C}",

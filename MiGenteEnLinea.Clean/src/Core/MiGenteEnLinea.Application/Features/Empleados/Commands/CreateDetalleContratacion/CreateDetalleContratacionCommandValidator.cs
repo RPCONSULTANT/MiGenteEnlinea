@@ -19,11 +19,11 @@ public class CreateDetalleContratacionCommandValidator : AbstractValidator<Creat
             .NotNull()
             .WithMessage("La fecha de inicio es requerida");
 
-        RuleFor(x => x.FechaFin)
+        RuleFor(x => x.FechaFinal)
             .NotNull()
-            .WithMessage("La fecha de fin es requerida")
+            .WithMessage("La fecha final es requerida")
             .GreaterThan(x => x.FechaInicio)
-            .WithMessage("La fecha de fin debe ser posterior a la fecha de inicio");
+            .WithMessage("La fecha final debe ser posterior a la fecha de inicio");
 
         RuleFor(x => x.MontoAcordado)
             .GreaterThan(0)
