@@ -1,3 +1,5 @@
+@inject IOptions<ApiOptions> ApiOptions
+
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -31,6 +33,13 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- API Configuration (injected from server) -->
+    <script>
+      window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
+    </script>
+    
     <!-- Custom JS -->
     <script src="~/js/custom.js"></script>
 

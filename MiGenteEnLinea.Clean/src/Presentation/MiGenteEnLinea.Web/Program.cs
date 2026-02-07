@@ -1,4 +1,27 @@
+using MiGenteEnLinea.Web.Configuration;
+using Microsoft.Extensions.Options;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// ========================================
+// CONFIGURACIÓN DE API
+// ========================================
+
+// Registrar ApiOptions desde appsettings.json
+builder.Services.Configure<ApiOptions>(
+    builder.Configuration.GetSection(ApiOptions.SectionName));
+
+// Logging inicial de configuración
+var apiOptions = builder.Configuration
+    .GetSection(ApiOptions.SectionName)
+    .Get<ApiOptions>() ?? new ApiOptions();
+
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+Console.WriteLine($"🌐 Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"🔗 API Base URL: {apiOptions.BaseUrl}");
+Console.WriteLine($"⏱️ API Timeout: {apiOptions.TimeoutSeconds}s");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

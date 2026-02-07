@@ -1,6 +1,7 @@
 using MiGenteEnLinea.Infrastructure;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Application;
+using MiGenteEnLinea.API.Configuration;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -178,30 +179,47 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // ========================================
-// CORS (permitir frontend localhost)
+// CORS (Configuration-driven)
 // ========================================
+builder.Services.Configure<CorsOptions>(
+    builder.Configuration.GetSection(CorsOptions.SectionName));
+
+var corsOptions = builder.Configuration
+    .GetSection(CorsOptions.SectionName)
+    .Get<CorsOptions>() ?? new CorsOptions();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevelopmentPolicy", policy =>
+    options.AddPolicy("AppPolicy", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000", 
-                "http://localhost:4200", 
-                "http://localhost:5173",
-                "http://localhost:5244",  // MiGenteEnLinea.Web
-                "https://localhost:5244"  // MiGenteEnLinea.Web HTTPS
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
+        // AllowedOrigins
+        if (corsOptions.AllowedOrigins.Length > 0)
+            policy.WithOrigins(corsOptions.AllowedOrigins);
+        else
+            policy.AllowAnyOrigin();
 
-    options.AddPolicy("ProductionPolicy", policy =>
-    {
-        policy.WithOrigins("https://migenteenlinea.com", "https://www.migenteenlinea.com")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        // AllowedMethods
+        if (corsOptions.AllowedMethods.Length > 0)
+            policy.WithMethods(corsOptions.AllowedMethods);
+        else
+            policy.AllowAnyMethod();
+
+        // AllowedHeaders
+        if (corsOptions.AllowedHeaders.Length > 0)
+            policy.WithHeaders(corsOptions.AllowedHeaders);
+        else
+            policy.AllowAnyHeader();
+
+        // ExposedHeaders
+        if (corsOptions.ExposedHeaders.Length > 0)
+            policy.WithExposedHeaders(corsOptions.ExposedHeaders);
+
+        // AllowCredentials (cannot be used with AllowAnyOrigin)
+        if (corsOptions.AllowCredentials && corsOptions.AllowedOrigins.Length > 0)
+            policy.AllowCredentials();
+
+        // Preflight cache
+        policy.SetPreflightMaxAge(TimeSpan.FromSeconds(corsOptions.MaxAgeSeconds));
     });
 });
 
@@ -239,14 +257,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // CORS - DEBE IR ANTES DE HttpsRedirection para permitir preflight requests
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("DevelopmentPolicy");
-}
-else
-{
-    app.UseCors("ProductionPolicy");
-}
+app.UseCors("AppPolicy");
 
 // HTTPS Redirection (después de CORS para no bloquear preflight)
 app.UseHttpsRedirection();

@@ -63,172 +63,12 @@
 
     <!-- Resultados -->
     <div class="row" id="resultadosContainer">
-        <!-- Empleador Card 1 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-building fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">Constructora ABC, SRL</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Distrito Nacional</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Construcción</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <span class="text-dark ms-2">4.0</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
+        <!-- Los empleadores se cargarán dinámicamente desde el API -->
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
             </div>
-        </div>
-
-        <!-- Empleador Card 2 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-success text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-home fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">María García</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santo Domingo Este</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Hogar</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star-half-alt"></i>
-                        <span class="text-dark ms-2">4.5</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empleador Card 3 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-info text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-store fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">Comercial El Progreso</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santiago</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Comercio</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <span class="text-dark ms-2">5.0</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empleador Card 4 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-warning text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-utensils fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">Restaurante Don Pepe</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Distrito Nacional</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Servicios</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <span class="text-dark ms-2">3.0</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empleador Card 5 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-danger text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-cogs fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">Industrias Metálicas, SA</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> La Vega</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Manufactura</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <span class="text-dark ms-2">4.0</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empleador Card 6 -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-body text-center">
-                    <div class="rounded-circle bg-secondary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fa fa-user fa-2x"></i>
-                    </div>
-                    <h5 class="card-title">Carlos Rodríguez</h5>
-                    <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> Santo Domingo Norte</p>
-                    <p class="text-muted mb-2"><i class="fa fa-industry"></i> Hogar</p>
-                    <div class="text-warning mb-3">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star-half-alt"></i>
-                        <span class="text-dark ms-2">4.5</span>
-                    </div>
-                    <span class="badge bg-success mb-3">Activo</span>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary btn-ver-empleador">
-                            <i class="fa fa-eye"></i> Ver Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <p class="mt-3 text-muted">Cargando empleadores...</p>
         </div>
     </div>
 
@@ -320,24 +160,151 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        let empleadores = [];
+        const iconos = ['fa-building', 'fa-home', 'fa-store', 'fa-utensils', 'fa-cogs', 'fa-user', 'fa-industry'];
+        const colores = ['primary', 'success', 'info', 'warning', 'danger', 'secondary', 'dark'];
+
         $(document).ready(function() {
-            // Ver empleador
-            $('.btn-ver-empleador').on('click', function() {
-                $('#modalEmpleador').modal('show');
+            // Cargar catálogos desde Custom.js
+            loadSectores('ddlSector', 'Todos los sectores');
+            loadProvincias('ddlZona', 'Todas las zonas');
+
+            // Cargar empleadores al inicio
+            cargarEmpleadores();
+
+            // Buscar con filtros
+            $('#btnBuscar').on('click', cargarEmpleadores);
+
+            // Buscar al presionar Enter en el campo de búsqueda
+            $('#txtBuscar').on('keypress', function(e) {
+                if (e.which === 13) cargarEmpleadores();
             });
 
-            // Buscar
-            $('#btnBuscar').on('click', function() {
-                Swal.fire({
-                    title: 'Buscando...',
-                    text: 'Por favor espere',
-                    timer: 1500,
-                    timerProgressBar: true,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+            // Ver empleador (event delegation)
+            $(document).on('click', '.btn-ver-empleador', function() {
+                const id = $(this).data('id');
+                mostrarModal(id);
             });
         });
+
+        async function cargarEmpleadores() {
+            try {
+                // Mostrar loading
+                $('#resultadosContainer').html(
+                    '<div class="col-12 text-center py-5">' +
+                    '    <div class="spinner-border text-primary" role="status">' +
+                    '        <span class="visually-hidden">Cargando...</span>' +
+                    '    </div>' +
+                    '    <p class="mt-3 text-muted">Cargando empleadores...</p>' +
+                    '</div>'
+                );
+
+                // Obtener filtros
+                const searchTerm = $('#txtBuscar').val().trim();
+                const sector = $('#ddlSector').val();
+                const zona = $('#ddlZona').val();
+
+                // Construir URL con query params
+                let url = `${API_BASE}/empleadores?soloActivos=true`;
+                if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
+                if (sector) url += `&sector=${encodeURIComponent(sector)}`;
+                if (zona) url += `&provincia=${encodeURIComponent(zona)}`;
+
+                // Llamar al API
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Error al cargar empleadores');
+
+                empleadores = await response.json();
+                renderEmpleadores(empleadores);
+
+            } catch (error) {
+                console.error('Error:', error);
+                $('#resultadosContainer').html(
+                    '<div class="col-12">' +
+                    '    <div class="alert alert-danger" role="alert">' +
+                    '        <i class="fa fa-exclamation-triangle"></i> ' +
+                    '        Error al cargar empleadores. Por favor intente nuevamente.' +
+                    '    </div>' +
+                    '</div>'
+                );
+            }
+        }
+
+        function renderEmpleadores(items) {
+            if (!items || items.length === 0) {
+                $('#resultadosContainer').html(
+                    '<div class="col-12">' +
+                    '    <div class="alert alert-info text-center" role="alert">' +
+                    '        <i class="fa fa-info-circle"></i> ' +
+                    '        No se encontraron empleadores con los criterios de búsqueda.' +
+                    '    </div>' +
+                    '</div>'
+                );
+                return;
+            }
+
+            let html = '';
+            items.forEach((emp, index) => {
+                const icono = iconos[index % iconos.length];
+                const color = colores[index % colores.length];
+                const rating = emp.promedioCalificaciones || 0;
+                const badgeStatus = emp.activo ? 'bg-success' : 'bg-secondary';
+                const statusText = emp.activo ? 'Activo' : 'Inactivo';
+
+                html += `
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow h-100">
+                            <div class="card-body text-center">
+                                <div class="rounded-circle bg-${color} text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+                                    <i class="fa ${icono} fa-2x"></i>
+                                </div>
+                                <h5 class="card-title">${emp.nombreComercial || emp.nombreCompleto || 'Sin nombre'}</h5>
+                                <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> ${emp.provincia || 'N/A'}</p>
+                                <p class="text-muted mb-2"><i class="fa fa-industry"></i> ${emp.sector || 'N/A'}</p>
+                                <div class="text-warning mb-3">
+                                    ${renderStars(rating)}
+                                    <span class="text-dark ms-2">${rating.toFixed(1)}</span>
+                                </div>
+                                <span class="badge ${badgeStatus} mb-3">${statusText}</span>
+                                <div class="d-grid">
+                                    <button class="btn btn-outline-primary btn-ver-empleador" data-id="${emp.empleadorId}">
+                                        <i class="fa fa-eye"></i> Ver Perfil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $('#resultadosContainer').html(html);
+        }
+
+        function mostrarModal(empleadorId) {
+            const empleador = empleadores.find(e => e.empleadorId === empleadorId);
+            if (!empleador) return;
+
+            // Llenar modal con datos reales
+            $('#modalNombre').text(empleador.nombreComercial || empleador.nombreCompleto || 'Sin nombre');
+            $('#modalSector').text(empleador.sector || 'N/A');
+            $('#modalRNC').text(empleador.rnc || empleador.cedula || 'N/A');
+            $('#modalUbicacion').text(`${empleador.provincia || 'N/A'}${empleador.ciudad ? ', ' + empleador.ciudad : ''}`);
+            $('#modalTelefono').text(empleador.telefono1 || empleador.telefono2 || 'N/A');
+            $('#modalEmail').text(empleador.email || 'N/A');
+            $('#modalMiembro').text(formatDate(empleador.fechaIngreso));
+            $('#modalContrataciones').text(empleador.totalContrataciones || 0);
+
+            // Actualizar WhatsApp link
+            const whatsapp = empleador.whatsapp1 || empleador.whatsapp2;
+            if (whatsapp) {
+                $('#btnContactar').attr('href', `https://wa.me/${whatsapp.replace(/\D/g, '')}`);
+                $('#btnContactar').show();
+            } else {
+                $('#btnContactar').hide();
+            }
+
+            // Mostrar modal
+            $('#modalEmpleador').modal('show');
+        }
     </script>
 }

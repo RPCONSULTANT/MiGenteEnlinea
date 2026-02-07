@@ -252,6 +252,14 @@
                 // window.location.href = '/Auth/Login';
             }
             
+            // Cargar catálogos dinámicamente desde Custom.js
+            if (window.loadSectores) {
+                window.loadSectores('ddlSector', '-- Seleccione Sector --');
+            }
+            if (window.loadProvincias) {
+                window.loadProvincias('comboProvincias', '-- Seleccione Provincia --');
+            }
+            
             // Cargar perfil al iniciar
             loadPerfil();
             
