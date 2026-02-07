@@ -125,6 +125,22 @@ public class LegacyDataService : ILegacyDataService
         string motivo,
         CancellationToken cancellationToken = default)
     {
+        // ✅ FIX: Validar que el empleado existe y está activo ANTES de actualizar
+        var empleado = await _context.Empleados
+            .Where(e => e.EmpleadoId == empleadoId && e.UserId == userId)
+            .Select(e => new { e.EmpleadoId, e.Activo })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (empleado == null)
+        {
+            throw new InvalidOperationException($"Empleado {empleadoId} no encontrado o no pertenece al usuario {userId}");
+        }
+
+        if (!empleado.Activo)
+        {
+            throw new InvalidOperationException($"Empleado {empleadoId} ya está dado de baja");
+        }
+
         // Legacy: 
         // empleado.Activo = false;
         // empleado.fechaSalida = fechaBaja.Date;
@@ -132,11 +148,17 @@ public class LegacyDataService : ILegacyDataService
         // empleado.prestaciones = prestaciones;
         // db.SaveChanges();
 
-        await _context.Database.ExecuteSqlRawAsync(
+        var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
             "UPDATE Empleados SET Activo = 0, fechaSalida = {0}, motivoBaja = {1}, prestaciones = {2} " +
-            "WHERE empleadoID = {3} AND userID = {4}",
+            "WHERE empleadoID = {3} AND userID = {4} AND Activo = 1",
             [fechaBaja.Date, motivo, prestaciones, empleadoId, userId],
             cancellationToken);
+
+        // ✅ FIX: Validar que la actualización fue exitosa
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException($"No se pudo dar de baja al empleado {empleadoId}");
+        }
 
         return true;
     }
