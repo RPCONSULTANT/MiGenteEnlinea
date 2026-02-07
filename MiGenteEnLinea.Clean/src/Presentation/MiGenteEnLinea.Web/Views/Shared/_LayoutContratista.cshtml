@@ -1,3 +1,5 @@
+@inject IOptions<ApiOptions> ApiOptions
+
 @* Layout para dashboard de Contratistas Basado en:
 FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
 <!DOCTYPE html>
@@ -248,6 +250,15 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
     <script src="~/lib/argon/js/core/bootstrap.min.js"></script>
     <script src="~/lib/argon/js/argon-dashboard.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- API Configuration (injected from server) -->
+    <script>
+      window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="~/js/custom.js"></script>
     
     <!-- Validación de Plan Activo para Contratistas -->
     <script>

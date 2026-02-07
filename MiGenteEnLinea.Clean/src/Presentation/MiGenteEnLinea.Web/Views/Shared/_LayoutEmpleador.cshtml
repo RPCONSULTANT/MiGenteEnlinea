@@ -1,3 +1,5 @@
+@inject IOptions<ApiOptions> ApiOptions
+
 @* Layout para dashboard de Empleadores
 EXACTO al: FRONT_Publicado/Empleador/dashboard.Master
 Tema: Argon Dashboard 2.0 *@
@@ -276,6 +278,15 @@ Tema: Argon Dashboard 2.0 *@
     <script src="~/lib/argon/js/plugins/perfect-scrollbar.min.js"></script>
     <script src="~/lib/argon/js/plugins/smooth-scrollbar.min.js"></script>
     <script src="~/lib/argon/js/argon-dashboard.min.js"></script>
+    
+    <!-- API Configuration (injected from server) -->
+    <script>
+      window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="~/js/custom.js"></script>
     
     <!-- Initialize scrollbar for sidenav -->
     <script>
