@@ -1,3 +1,5 @@
+@using Microsoft.Extensions.Options
+@inject IOptions<MiGenteEnLinea.Web.Configuration.ApiOptions> ApiOptions
 @* Buscador de Contratistas / Directorio
    REPLICADO DE: FRONT_Publicado/Empleador/index_empleador.aspx 
    Layout: comunity.Master (diferente al dashboard) *@
@@ -426,6 +428,10 @@
     <script src="~/js/Custom.js"></script>
     
     <script>
+        // Configuración de la aplicación
+        window.API_BASE = '@ApiOptions.Value.BaseUrl';
+        window.STATIC_FILES_BASE = '@ApiOptions.Value.StaticFilesBaseUrl';
+        
         // Obtener token del almacenamiento
         function getToken() {
             return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
