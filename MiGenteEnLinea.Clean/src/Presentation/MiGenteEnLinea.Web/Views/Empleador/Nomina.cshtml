@@ -438,16 +438,8 @@
         // LOAD EMPLEADOS
         // ============================================
         async function loadEmpleados() {
-            const token = getAuthToken();
-            
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados?pageSize=500&activos=true`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch('/empleados?pageSize=500&activos=true');
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -491,13 +483,7 @@
             
             try {
                 const periodo = new Date().toISOString().slice(0, 7); // YYYY-MM
-                const response = await fetch(`${API_BASE_URL}/nominas/resumen?periodo=${periodo}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/nominas/resumen?periodo=${periodo}`);
                 
                 if (response.ok) {
                     const resumen = await response.json();
@@ -698,12 +684,8 @@
                             const conceptoValue = parseInt(pago.concepto);
                             const tipoConcepto = conceptoValue === 1 ? 'Salario' : 'Regalia';
                             
-                            const response = await fetch(`${API_BASE_URL}/empleados/${pago.empleadoId}/nomina`, {
+                            const response = await authenticatedFetch(`/empleados/${pago.empleadoId}/nomina`, {
                                 method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'application/json'
-                                },
                                 body: JSON.stringify({
                                     empleadoId: pago.empleadoId,
                                     tipoConcepto: tipoConcepto,
@@ -822,12 +804,8 @@
                     didOpen: () => Swal.showLoading()
                 });
                 
-                const response = await fetch(`${API_BASE_URL}/nominas/procesar-lote`, {
+                const response = await authenticatedFetch('/nominas/procesar-lote', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         empleadoIds: selectedIds,
                         fechaPago: fechaPago,
@@ -872,13 +850,7 @@
             if (empleadoId) url += `&empleadoId=${empleadoId}`;
             
             try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(url);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -939,12 +911,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await authenticatedFetch(`/nominas/recibo/${pagoId}/pdf`);
                 
                 if (!response.ok) {
                     throw new Error('Error al obtener PDF');

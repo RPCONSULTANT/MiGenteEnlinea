@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 
 /// <summary>
@@ -6,7 +8,10 @@ namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 /// </summary>
 public class DeduccionTssDto
 {
+    [JsonPropertyName("id")]
     public int Id { get; set; }
+    [JsonPropertyName("descripcion")]
     public string Descripcion { get; set; } = string.Empty;
+    [JsonPropertyName("porcentaje")]
     public decimal Porcentaje { get; set; }
 }

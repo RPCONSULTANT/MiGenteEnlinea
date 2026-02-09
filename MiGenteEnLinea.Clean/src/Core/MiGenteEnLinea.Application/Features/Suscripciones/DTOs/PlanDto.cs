@@ -20,48 +20,57 @@ public record PlanDto
     /// <summary>
     /// Nombre del plan (ej: "Básico", "Pro", "Enterprise").
     /// </summary>
+    [JsonPropertyName("nombre")]
     public string Nombre { get; init; } = string.Empty;
 
     /// <summary>
     /// Precio mensual en DOP (Pesos Dominicanos).
     /// </summary>
+    [JsonPropertyName("precio")]
     public decimal Precio { get; init; }
 
     /// <summary>
     /// Duración del plan en meses.
     /// </summary>
+    [JsonPropertyName("duracionMeses")]
     public int DuracionMeses { get; init; } = 12;
 
     /// <summary>
     /// Indica si el plan está disponible para compra.
     /// </summary>
+    [JsonPropertyName("activo")]
     public bool Activo { get; init; }
 
     /// <summary>
     /// Tipo de plan: "Empleador" o "Contratista".
     /// </summary>
+    [JsonPropertyName("tipoPlan")]
     public string TipoPlan { get; init; } = string.Empty;
 
     /// <summary>
     /// Número máximo de empleados permitidos.
     /// Solo aplica para planes de empleadores (null para contratistas).
     /// </summary>
+    [JsonPropertyName("limiteEmpleados")]
     public int? LimiteEmpleados { get; init; }
 
     /// <summary>
     /// Meses de historial disponibles.
     /// Solo aplica para planes de empleadores (null para contratistas).
     /// </summary>
+    [JsonPropertyName("mesesHistorico")]
     public int? MesesHistorico { get; init; }
 
     /// <summary>
     /// Indica si el plan incluye procesamiento de nómina.
     /// Solo aplica para planes de empleadores (null para contratistas).
     /// </summary>
+    [JsonPropertyName("incluyeNomina")]
     public bool? IncluyeNomina { get; init; }
 
     /// <summary>
     /// Características del plan (para mostrar en UI).
     /// </summary>
+    [JsonPropertyName("caracteristicas")]
     public List<string>? Caracteristicas { get; init; }
 }

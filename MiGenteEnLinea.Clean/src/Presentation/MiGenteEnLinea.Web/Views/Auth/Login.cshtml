@@ -86,9 +86,6 @@
 
 @section Scripts {
     <script>
-        // API Configuration - usa global API_BASE del custom.js
-        const API_BASE_URL = API_BASE;
-        
         // ============================================
         // LOGIN HANDLER
         // ============================================
@@ -109,7 +106,7 @@
             hideAlert('loginAlert');
             
             try {
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -222,7 +219,7 @@
             hideAlert('forgotAlert');
             
             try {
-                const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+                const response = await fetch(`${API_BASE}/auth/forgot-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

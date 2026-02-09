@@ -64,8 +64,6 @@
 
 @section Scripts {
     <script>
-        // API Configuration - usa global API_BASE del custom.js
-        const API_BASE_URL = API_BASE;
         
         // ============================================
         // ACTIVATION HANDLER
@@ -105,7 +103,7 @@
                     confirmPassword: confirmPassword
                 };
                 
-                const response = await fetch(`${API_BASE_URL}/auth/activate`, {
+                const response = await fetch(`${API_BASE}/auth/activate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -168,7 +166,7 @@
         // ============================================
         async function performAutoLogin(email, password) {
             try {
-                const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
+                const loginResponse = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

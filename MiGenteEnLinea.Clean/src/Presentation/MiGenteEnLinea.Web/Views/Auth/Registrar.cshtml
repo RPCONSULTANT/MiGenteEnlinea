@@ -147,8 +147,6 @@
 
 @section Scripts {
     <script>
-        // API Configuration - usa global API_BASE del custom.js
-        const API_BASE_URL = API_BASE;
         
         // ============================================
         // REGISTER HANDLER
@@ -194,7 +192,7 @@
                     host: window.location.origin  // Host para el link de activación
                 };
                 
-                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                const response = await fetch(`${API_BASE}/auth/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -298,12 +298,8 @@
                 };
 
                 // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
-                const response = await fetch(`${API_BASE_URL}/pagos/procesar`, {
+                const response = await authenticatedFetch('/pagos/procesar', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(pagoData)
                 });
 

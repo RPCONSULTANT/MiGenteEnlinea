@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 
 /// <summary>
@@ -12,9 +14,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 /// </summary>
 public class RemuneracionDto
 {
+    [JsonPropertyName("id")]
     public int Id { get; set; }
+    [JsonPropertyName("userId")]
     public string UserId { get; set; } = string.Empty;
+    [JsonPropertyName("empleadoId")]
     public int EmpleadoId { get; set; }
+    [JsonPropertyName("descripcion")]
     public string Descripcion { get; set; } = string.Empty;
+    [JsonPropertyName("monto")]
     public decimal Monto { get; set; }
 }

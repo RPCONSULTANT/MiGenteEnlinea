@@ -381,12 +381,8 @@
                 };
                 
                 // Llamar API para procesar pago con Cardnet
-                const response = await fetch(`${API_BASE_URL}/pagos/procesar`, {
+                const response = await authenticatedFetch('/pagos/procesar', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`
-                    },
                     body: JSON.stringify(pagoData)
                 });
                 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MiGenteEnLinea.Application.Features.Calificaciones.DTOs;
 
 /// <summary>
@@ -12,46 +14,55 @@ public class PromedioCalificacionDto
     /// <summary>
     /// Identificación de la persona calificada
     /// </summary>
+    [JsonPropertyName("identificacion")]
     public string Identificacion { get; set; } = string.Empty;
 
     /// <summary>
     /// Promedio general de calificaciones (1-5)
     /// </summary>
+    [JsonPropertyName("promedioGeneral")]
     public decimal PromedioGeneral { get; set; }
 
     /// <summary>
     /// Total de calificaciones recibidas
     /// </summary>
+    [JsonPropertyName("totalCalificaciones")]
     public int TotalCalificaciones { get; set; }
 
     /// <summary>
     /// Cantidad de calificaciones de 5 estrellas
     /// </summary>
+    [JsonPropertyName("calificaciones5Estrellas")]
     public int Calificaciones5Estrellas { get; set; }
 
     /// <summary>
     /// Cantidad de calificaciones de 4 estrellas
     /// </summary>
+    [JsonPropertyName("calificaciones4Estrellas")]
     public int Calificaciones4Estrellas { get; set; }
 
     /// <summary>
     /// Cantidad de calificaciones de 3 estrellas
     /// </summary>
+    [JsonPropertyName("calificaciones3Estrellas")]
     public int Calificaciones3Estrellas { get; set; }
 
     /// <summary>
     /// Cantidad de calificaciones de 2 estrellas
     /// </summary>
+    [JsonPropertyName("calificaciones2Estrellas")]
     public int Calificaciones2Estrellas { get; set; }
 
     /// <summary>
     /// Cantidad de calificaciones de 1 estrella
     /// </summary>
+    [JsonPropertyName("calificaciones1Estrella")]
     public int Calificaciones1Estrella { get; set; }
 
     /// <summary>
     /// Porcentaje de calificaciones positivas (4-5 estrellas)
     /// </summary>
+    [JsonPropertyName("porcentajePositivas")]
     public decimal PorcentajePositivas
     {
         get
@@ -67,6 +78,7 @@ public class PromedioCalificacionDto
     /// <summary>
     /// Porcentaje de calificaciones negativas (1-2 estrellas)
     /// </summary>
+    [JsonPropertyName("porcentajeNegativas")]
     public decimal PorcentajeNegativas
     {
         get

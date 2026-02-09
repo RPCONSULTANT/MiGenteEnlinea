@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 
 /// <summary>
@@ -7,21 +9,31 @@ namespace MiGenteEnLinea.Application.Features.Empleados.DTOs;
 public class ReciboContratacionDto
 {
     // Header fields
+    [JsonPropertyName("pagoId")]
     public int PagoId { get; set; }
+    [JsonPropertyName("userId")]
     public string? UserId { get; set; }
+    [JsonPropertyName("contratacionId")]
     public int? ContratacionId { get; set; }
+    [JsonPropertyName("fechaRegistro")]
     public DateTime? FechaRegistro { get; set; }
+    [JsonPropertyName("fechaPago")]
     public DateTime? FechaPago { get; set; }
+    [JsonPropertyName("conceptoPago")]
     public string? ConceptoPago { get; set; }
+    [JsonPropertyName("tipo")]
     public int? Tipo { get; set; }
 
     // Detalle
+    [JsonPropertyName("detalles")]
     public List<ReciboContratacionDetalleDto> Detalles { get; set; } = new();
 
     // EmpleadoTemporal (from Include)
+    [JsonPropertyName("empleadoTemporal")]
     public EmpleadoTemporalSimpleDto? EmpleadoTemporal { get; set; }
 
     // Calculated total from detalles
+    [JsonPropertyName("total")]
     public decimal Total => Detalles.Sum(d => d.Monto ?? 0);
 }
 
@@ -30,9 +42,13 @@ public class ReciboContratacionDto
 /// </summary>
 public class ReciboContratacionDetalleDto
 {
+    [JsonPropertyName("detalleId")]
     public int DetalleId { get; set; }
+    [JsonPropertyName("pagoId")]
     public int? PagoId { get; set; }
+    [JsonPropertyName("concepto")]
     public string? Concepto { get; set; }
+    [JsonPropertyName("monto")]
     public decimal? Monto { get; set; }
 }
 
@@ -41,9 +57,14 @@ public class ReciboContratacionDetalleDto
 /// </summary>
 public class EmpleadoTemporalSimpleDto
 {
+    [JsonPropertyName("contratacionId")]
     public int ContratacionId { get; set; }
+    [JsonPropertyName("nombre")]
     public string? Nombre { get; set; }
+    [JsonPropertyName("apellido")]
     public string? Apellido { get; set; }
+    [JsonPropertyName("cedula")]
     public string? Cedula { get; set; }
+    [JsonPropertyName("nombreCompleto")]
     public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
 }

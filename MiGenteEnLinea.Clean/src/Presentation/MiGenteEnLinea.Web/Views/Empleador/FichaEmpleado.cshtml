@@ -493,16 +493,9 @@
         // ============================================
         async function loadEmpleado() {
             const empleadoId = getEmpleadoIdFromUrl();
-            const token = getAuthToken();
             
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados/${empleadoId}`);
                 
                 if (!response.ok) {
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -626,16 +619,8 @@
         // LOAD RECIBOS (PAYMENT HISTORY)
         // ============================================
         async function loadRecibos(empleadoId) {
-            const token = getAuthToken();
-            
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/recibos?pageSize=50`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados/${empleadoId}/recibos?pageSize=50`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -767,12 +752,8 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
                 
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}`, {
+                const response = await authenticatedFetch(`/empleados/${empleadoId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(updateData)
                 });
                 
@@ -843,15 +824,10 @@
             
             if (formValues) {
                 const empleadoId = getEmpleadoIdFromUrl();
-                const token = getAuthToken();
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/dar-de-baja`, {
+                    const response = await authenticatedFetch(`/empleados/${empleadoId}/dar-de-baja`, {
                         method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify({
                             fechaBaja: formValues.fechaBaja,
                             motivo: formValues.motivo,
@@ -982,12 +958,8 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
                 
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/nomina`, {
+                const response = await authenticatedFetch(`/empleados/${empleadoId}/nomina`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(pagoData)
                 });
                 
@@ -1063,13 +1035,7 @@
             try {
                 // Obtener el perfil del empleador para determinar el tipo de contrato
                 const userId = localStorage.getItem('userId');
-                const perfilResponse = await fetch(`${API_BASE_URL}/empleadores/perfil/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const perfilResponse = await authenticatedFetch(`/empleadores/perfil/${userId}`);
                 
                 if (!perfilResponse.ok) {
                     throw new Error('No se pudo obtener el perfil del empleador');
@@ -1133,12 +1099,7 @@
             });
             
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/contrato?tipoContrato=${tipo}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados/${empleadoId}/contrato?tipoContrato=${tipo}`);
                 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -1164,20 +1125,8 @@
         }
         
         async function verRecibo(pagoId) {
-            const token = getAuthToken();
-            if (!token) {
-                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
-                window.location.href = '/Auth/Login';
-                return;
-            }
-            
             try {
-                const response = await fetch(`${API_BASE_URL}/nominas/recibo/${pagoId}/pdf`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await authenticatedFetch(`/nominas/recibo/${pagoId}/pdf`);
                 
                 if (!response.ok) {
                     throw new Error('Error al obtener recibo');
@@ -1231,13 +1180,7 @@
             try {
                 // Obtener el perfil del empleador para determinar el tipo
                 const userId = localStorage.getItem('userId');
-                const perfilResponse = await fetch(`${API_BASE_URL}/empleadores/perfil/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const perfilResponse = await authenticatedFetch(`/empleadores/perfil/${userId}`);
                 
                 if (!perfilResponse.ok) {
                     throw new Error('No se pudo obtener el perfil del empleador');
@@ -1300,12 +1243,7 @@
             });
             
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados/${empleadoId}/descargo?tipoContrato=${tipo}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados/${empleadoId}/descargo?tipoContrato=${tipo}`);
                 
                 if (!response.ok) {
                     const errorText = await response.text();

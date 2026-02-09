@@ -670,14 +670,7 @@
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Validando...';
             
             try {
-                const token = getAuthToken();
-                const response = await fetch(`${API_BASE_URL}/empleados/consultar-padron/${cedula}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados/consultar-padron/${cedula}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -791,13 +784,8 @@
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
             
             try {
-                const token = getAuthToken();
-                const response = await fetch(`${API_BASE_URL}/empleados`, {
+                const response = await authenticatedFetch('/empleados', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(empleado)
                 });
                 
@@ -903,13 +891,7 @@
             
             try {
                 // Load active employees (usando soloActivos como parámetro correcto)
-                const response = await fetch(`${API_BASE_URL}/empleados?soloActivos=true&pageSize=100`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch('/empleados?soloActivos=true&pageSize=100');
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -937,13 +919,7 @@
                 }
                 
                 // Load inactive employees
-                const responseInactive = await fetch(`${API_BASE_URL}/empleados?soloActivos=false&pageSize=100`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const responseInactive = await authenticatedFetch('/empleados?soloActivos=false&pageSize=100');
                 
                 if (responseInactive.ok) {
                     const dataInactive = await responseInactive.json();
@@ -1071,13 +1047,8 @@
                 const fechaSalida = document.getElementById('swal-fecha-salida').value;
                 
                 try {
-                    const token = getAuthToken();
-                    const response = await fetch(`${API_BASE_URL}/empleados/${id}/dar-de-baja`, {
+                    const response = await authenticatedFetch(`/empleados/${id}/dar-de-baja`, {
                         method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify({ fechaBaja: fechaSalida })
                     });
                     
@@ -1126,13 +1097,8 @@
             
             if (result.isConfirmed) {
                 try {
-                    const token = getAuthToken();
-                    const response = await fetch(`${API_BASE_URL}/empleados/${id}/reactivar`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
+                    const response = await authenticatedFetch(`/empleados/${id}/reactivar`, {
+                        method: 'PUT'
                     });
                     
                     if (response.ok) {
