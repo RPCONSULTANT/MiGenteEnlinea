@@ -309,20 +309,15 @@
                 return;
             }
             
-            $.ajax({
-                url: API_BASE + '/calificaciones/por-empleador/' + userId,
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token'))
-                },
-                success: function(data) {
+            authenticatedFetch('/calificaciones/por-empleador/' + userId)
+                .then(response => response.json())
+                .then(data => {
                     renderizarTablaCalificaciones(data);
-                },
-                error: function(xhr) {
-                    console.error('Error cargando calificaciones:', xhr);
+                })
+                .catch(error => {
+                    console.error('Error cargando calificaciones:', error);
                     // No mostrar error si no hay calificaciones aún
-                }
-            });
+                });
         }
         
         function renderizarTablaCalificaciones(calificaciones) {
@@ -359,13 +354,9 @@
         
         function cargarPerfilesCalificables() {
             // ✅ Cargar contrataciones completadas sin calificar
-            $.ajax({
-                url: API_BASE + '/contrataciones?soloNoCalificadas=true&pageSize=100',
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token'))
-                },
-                success: function(data) {
+            authenticatedFetch('/contrataciones?soloNoCalificadas=true&pageSize=100')
+                .then(response => response.json())
+                .then(data => {
                     if (data && data.length > 0) {
                         // Mapear contrataciones a formato de perfiles
                         perfilesCalificables = data.map(function(c) {
@@ -401,16 +392,15 @@
                             timer: 3000
                         });
                     }
-                },
-                error: function(xhr) {
-                    console.error('Error cargando perfiles:', xhr);
+                })
+                .catch(error => {
+                    console.error('Error cargando perfiles calificables:', error);
                     Swal.fire({
-                        title: '❌ Error',
-                        text: 'No se pudieron cargar los perfiles. Intente nuevamente.',
+                        title: 'Error',
+                        text: 'No se pudieron cargar los perfiles disponibles para calificar.',
                         icon: 'error'
                     });
-                }
-            });
+                });
         }
         
         function llenarDropdownPerfiles() {
@@ -494,35 +484,34 @@
             };
             
             // ✅ Enviar calificación al API
-            $.ajax({
-                url: API_BASE + '/calificaciones/calificar-perfil',
+            authenticatedFetch('/calificaciones/calificar-perfil', {
                 method: 'POST',
-                contentType: 'application/json',
                 headers: {
-                    'Authorization': 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token'))
+                    'Content-Type': 'application/json'
                 },
-                data: JSON.stringify(datos),
-                success: function(response) {
+                body: JSON.stringify(datos)
+            })
+                .then(response => response.json())
+                .then(response => {
                     onSuccess(response);
-                },
-                error: function(xhr) {
-                    console.error('Error al calificar:', xhr);
+                })
+                .catch(error => {
+                    console.error('Error al calificar:', error);
                     var errorMsg = 'No se pudo guardar la calificación. Intente nuevamente.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
+                    if (error.response && error.response.message) {
+                        errorMsg = error.response.message;
                     }
                     Swal.fire({
                         title: '❌ Error',
                         text: errorMsg,
                         icon: 'error'
                     });
-                }
-            });
+                });
         }
         
         // ✅ Helper: Extract userId from JWT token
         function getUserIdFromToken() {
-            var token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            var token = localStorage.getItem('accessToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
             if (!token) return null;
             
             try {
