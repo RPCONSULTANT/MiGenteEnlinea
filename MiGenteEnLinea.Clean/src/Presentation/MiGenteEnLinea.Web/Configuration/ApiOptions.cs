@@ -44,4 +44,10 @@ public class ApiOptions
     /// User-Agent personalizado para las peticiones HTTP
     /// </summary>
     public string UserAgent { get; set; } = "MiGenteEnLinea.Web/1.0";
+
+    /// <summary>
+    /// URL base del servidor para archivos estáticos (sin /api)
+    /// Ej: http://localhost:5015 o https://api.migenteenlinea.com
+    /// </summary>
+    public string StaticFilesBaseUrl { get; set; } = "http://localhost:5015";
 }

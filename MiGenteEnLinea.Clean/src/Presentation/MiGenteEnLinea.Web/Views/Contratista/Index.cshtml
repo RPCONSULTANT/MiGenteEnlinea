@@ -460,11 +460,12 @@
                     
                     // Imagen de perfil
                     if (perfil.imagenUrl) {
-                        // Si la URL es relativa, construir URL completa del API
+                        // Si la URL es relativa, usar STATIC_FILES_BASE (sin /api)
                         const imageUrl = perfil.imagenUrl.startsWith('http') 
                             ? perfil.imagenUrl 
-                            : `${API_BASE}${perfil.imagenUrl}`;
+                            : `${STATIC_FILES_BASE}${perfil.imagenUrl}`;
                         $('#profileImage').attr('src', imageUrl);
+                        console.log('Image URL constructed:', imageUrl);
                     }
                     
                     // Mostrar/ocultar botones según estado
