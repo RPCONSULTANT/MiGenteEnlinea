@@ -303,7 +303,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <img src="https://via.placeholder.com/150" id="imgProfile" style="width: 100px; height: 100px;" class="card-img-top avatar"/>
+                            <img src="/images/circular1.png" id="imgProfile" style="width: 100px; height: 100px;" class="card-img-top avatar"/>
                             <h5 class="card-title" id="NombrePerfil" style="font-weight: bold">Nombre</h5>
                             <div class="rating horizontal">
                                 <span class="fa fa-star" style="color:darkorange"></span>
@@ -455,42 +455,14 @@
             const ciudad = document.getElementById('ddlCiudad').value;
             
             try {
-                // Get authentication token
-                const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-                if (!token) {
-                    console.error('No authentication token found');
-                    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                    return;
-                }
-                
                 // Construir URL del API
                 let url = `${API_BASE}/contratistas?soloActivos=true`;
                 if (busqueda) url += `&searchTerm=${encodeURIComponent(busqueda)}`;
                 if (ciudad && ciudad !== 'Cualquier Ubicacion') {
                     url += `&provincia=${encodeURIComponent(ciudad)}`;
                 }
-                
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                // Handle 401 Unauthorized (expired/invalid token)
-                if (response.status === 401) {
-                    Swal.fire({
-                        title: 'Sesión Expirada',
-                        text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
-                        icon: 'warning',
-                        confirmButtonText: 'Ir a Login'
-                    }).then(() => {
-                        localStorage.removeItem('accessToken');
-                        localStorage.removeItem('token');
-                        window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                    });
-                    return;
-                }
+
+                const response = await authenticatedFetch(url);
                 
                 if (response.ok) {
                     const result = await response.json();
@@ -546,14 +518,16 @@
                 const rating = c.promedioCalificacion || 0;
                 const nombre = c.nombreCompleto || `${c.nombre || ''} ${c.apellido || ''}`.trim() || 'Sin nombre';
                 const titulo = c.titulo || c.sector || 'Profesional';
+                const imageUrl = c.imagenUrl || `${API_BASE}/contratistas/${c.contratistaId}/foto`;
                 
                 return `
                     <div class="col-md-3 col-sm-6 mb-3">
                         <div class="card p-2 py-3 text-center" style="text-align: center; align-items: center; justify-items: center">
                             <div class="img mb-2" style="width: 100px; height: 100px; overflow: hidden; border-radius: 50%;">
-                                <img src="${c.imagenUrl || 'https://via.placeholder.com/150'}" 
-                                     style="width: 100px; height: 100px; object-fit: cover;" 
-                                     class="card-img-top avatar">
+                                  <img src="${imageUrl}" 
+                                      style="width: 100px; height: 100px; object-fit: cover;" 
+                                      class="card-img-top avatar"
+                                     onerror="this.src='/images/circular1.png'">
                             </div>
                             <h5 style="font-weight: bold" class="mb-0">${nombre}</h5>
                             <medium>${titulo}</medium>
@@ -596,7 +570,12 @@
         function mostrarPerfilEnModal(perfil) {
             const nombre = perfil.nombreCompleto || `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim();
             
-            document.getElementById('imgProfile').src = perfil.imagenUrl || 'https://via.placeholder.com/150';
+            const modalImageUrl = perfil.imagenUrl || `${API_BASE}/contratistas/${perfil.contratistaId}/foto`;
+            const modalImage = document.getElementById('imgProfile');
+            modalImage.src = modalImageUrl;
+            modalImage.onerror = function() {
+                this.src = '/images/circular1.png';
+            };
             document.getElementById('NombrePerfil').textContent = nombre || 'Sin nombre';
             document.getElementById('presentacion').textContent = perfil.presentacion || 'Sin presentación';
             document.getElementById('titulo').textContent = perfil.titulo || perfil.sector || 'Sin título';

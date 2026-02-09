@@ -212,22 +212,8 @@
                 if (sector) url += `&sector=${encodeURIComponent(sector)}`;
                 if (zona) url += `&provincia=${encodeURIComponent(zona)}`;
 
-                // Obtener token JWT
-                const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('token');
-                if (!token) {
-                    console.error('No token found. Redirecting to login...');
-                    window.location.href = '/Auth/Login';
-                    return;
-                }
-
-                // Llamar al API con autenticación
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                // Llamar al API con autenticación centralizada
+                const response = await authenticatedFetch(url);
 
                 // Manejar sesión expirada
                 if (response.status === 401) {

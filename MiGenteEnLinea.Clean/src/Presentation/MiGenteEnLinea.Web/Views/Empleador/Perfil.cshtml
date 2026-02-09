@@ -217,8 +217,53 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            // Cargar datos del perfil desde API
-            // TODO: Implementar carga de datos
+            async function cargarPerfil() {
+                const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                if (!userId) {
+                    Swal.fire('Error', 'No se encontró el ID de usuario. Por favor inicie sesión nuevamente.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await authenticatedFetch(`/empleadores/by-user/${userId}`);
+                    if (!response.ok) {
+                        throw new Error('No se pudo cargar el perfil');
+                    }
+
+                    const perfil = await response.json();
+
+                    $('#txtNombre').val(perfil.nombre || '');
+                    $('#txtApellido').val(perfil.apellido || '');
+                    $('#txtEmail').val(perfil.email || '');
+                    $('#txtTelefono1').val(perfil.telefono1 || '');
+                    $('#txtTelefono2').val(perfil.telefono2 || '');
+                    $('#txtDireccion').val(perfil.direccion || '');
+                    $('#txtNombreComercial').val(perfil.nombreComercial || '');
+                    $('#txtCedula').val(perfil.cedula || '');
+                    $('#txtRNC').val(perfil.rnc || '');
+
+                    const esEmpresa = !!(perfil.nombreComercial || perfil.rnc);
+                    if (esEmpresa) {
+                        $('#tipoEmpresa').prop('checked', true).trigger('change');
+                    } else {
+                        $('#tipoPersonaFisica').prop('checked', true).trigger('change');
+                    }
+
+                    if (perfil.provincia) {
+                        $('#ddlProvincia').val(perfil.provincia);
+                    }
+                } catch (error) {
+                    console.error('Error cargando perfil:', error);
+                    Swal.fire('Error', 'No se pudo cargar el perfil. Intente nuevamente.', 'error');
+                }
+            }
+
+            // Cargar provincias desde API
+            if (window.loadProvincias) {
+                loadProvincias('ddlProvincia', '-- Seleccione --').then(cargarPerfil);
+            } else {
+                cargarPerfil();
+            }
             
             // Toggle tipo de cuenta
             $('input[name="tipoCuenta"]').on('change', function() {

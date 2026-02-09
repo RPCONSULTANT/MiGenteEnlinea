@@ -136,4 +136,9 @@ public record ContratistaDto
     /// ¿Puede recibir trabajos? (calculado en Query)
     /// </summary>
     public bool PuedeRecibirTrabajos { get; init; }
+
+    /// <summary>
+    /// Calificacion promedio (calculado en Query)
+    /// </summary>
+    public decimal? PromedioCalificacion { get; init; }
 }

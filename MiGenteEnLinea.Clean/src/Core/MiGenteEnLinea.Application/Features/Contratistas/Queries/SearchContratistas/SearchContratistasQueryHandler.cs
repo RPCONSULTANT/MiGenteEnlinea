@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Contratistas.Common;
 using MiGenteEnLinea.Domain.Interfaces.Repositories.Contratistas;
 
@@ -11,13 +13,16 @@ namespace MiGenteEnLinea.Application.Features.Contratistas.Queries.SearchContrat
 public class SearchContratistasQueryHandler : IRequestHandler<SearchContratistasQuery, SearchContratistasResult>
 {
     private readonly IContratistaRepository _contratistaRepository;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<SearchContratistasQueryHandler> _logger;
 
     public SearchContratistasQueryHandler(
         IContratistaRepository contratistaRepository,
+        IApplicationDbContext context,
         ILogger<SearchContratistasQueryHandler> logger)
     {
         _contratistaRepository = contratistaRepository;
+        _context = context;
         _logger = logger;
     }
 
@@ -83,10 +88,49 @@ public class SearchContratistasQueryHandler : IRequestHandler<SearchContratistas
             },
             ct: cancellationToken);
 
+        var contratistasList = contratistas.ToList();
+
+        if (contratistasList.Count > 0)
+        {
+            var identifications = contratistasList
+                .Select(c => c.Identificacion)
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Distinct()
+                .ToList();
+
+            if (identifications.Count > 0)
+            {
+                var promedioByIdentificacion = await _context.Calificaciones
+                    .AsNoTracking()
+                    .Where(c => identifications.Contains(c.ContratistaIdentificacion))
+                    .GroupBy(c => c.ContratistaIdentificacion)
+                    .Select(g => new
+                    {
+                        Identificacion = g.Key,
+                        Promedio = g.Average(x => (x.Puntualidad + x.Cumplimiento + x.Conocimientos + x.Recomendacion) / 4.0m)
+                    })
+                    .ToListAsync(cancellationToken);
+
+                var promedioLookup = promedioByIdentificacion
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Identificacion))
+                    .ToDictionary(p => p.Identificacion!, p => p.Promedio);
+
+                for (var i = 0; i < contratistasList.Count; i++)
+                {
+                    var contratista = contratistasList[i];
+                    if (!string.IsNullOrWhiteSpace(contratista.Identificacion) &&
+                        promedioLookup.TryGetValue(contratista.Identificacion, out var promedio))
+                    {
+                        contratistasList[i] = contratista with { PromedioCalificacion = promedio };
+                    }
+                }
+            }
+        }
+
         _logger.LogInformation(
             "Búsqueda completada. Total: {TotalRecords}, Página: {PageIndex}/{TotalPages}",
             totalRecords, pageIndex, (int)Math.Ceiling(totalRecords / (double)pageSize));
 
-        return new SearchContratistasResult(contratistas.ToList(), totalRecords, pageIndex, pageSize);
+        return new SearchContratistasResult(contratistasList, totalRecords, pageIndex, pageSize);
     }
 }

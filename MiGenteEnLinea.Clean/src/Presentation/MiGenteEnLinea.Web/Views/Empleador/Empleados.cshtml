@@ -398,16 +398,6 @@
                                         <label for="provincia" class="form-label fw-bold">Provincia</label>
                                         <select class="form-select" id="provincia">
                                             <option value="">Seleccione...</option>
-                                            <option value="Distrito Nacional">Distrito Nacional</option>
-                                            <option value="Santo Domingo">Santo Domingo</option>
-                                            <option value="Santiago">Santiago</option>
-                                            <option value="La Vega">La Vega</option>
-                                            <option value="San Cristóbal">San Cristóbal</option>
-                                            <option value="Puerto Plata">Puerto Plata</option>
-                                            <option value="Duarte">Duarte</option>
-                                            <option value="La Romana">La Romana</option>
-                                            <option value="San Pedro de Macorís">San Pedro de Macorís</option>
-                                            <option value="Otra">Otra</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -606,6 +596,11 @@
             document.getElementById('direccion').addEventListener('input', function() {
                 document.getElementById('direccionCount').textContent = this.value.length;
             });
+
+            // Load provincias for direccion section
+            if (window.loadProvincias) {
+                loadProvincias('provincia', 'Seleccione...');
+            }
             
             // Load empleados on page load
             loadEmpleados();

@@ -9,6 +9,7 @@ using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratist
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratistaFoto;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratistaImagen;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratistaById;
+using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratistaFotoById;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratistaByUserId;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetCedulaByUserId;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetServiciosContratista;
@@ -91,6 +92,29 @@ public class ContratistasController : ControllerBase
             return NotFound(new { error = $"No existe un contratista con ID {contratistaId}" });
 
         return Ok(contratista);
+    }
+
+    /// <summary>
+    /// Obtiene la foto de perfil de un contratista por ID
+    /// </summary>
+    /// <param name="contratistaId">ID del contratista</param>
+    /// <returns>Imagen de perfil</returns>
+    /// <response code="200">Foto encontrada</response>
+    /// <response code="404">Foto no encontrada</response>
+    [HttpGet("{contratistaId:int}/foto")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetContratistaFotoById(int contratistaId)
+    {
+        var foto = await _mediator.Send(new GetContratistaFotoByIdQuery(contratistaId));
+
+        if (foto == null || foto.Length == 0)
+        {
+            return NotFound(new { error = "Foto no encontrada" });
+        }
+
+        return File(foto, "image/jpeg");
     }
 
     /// <summary>

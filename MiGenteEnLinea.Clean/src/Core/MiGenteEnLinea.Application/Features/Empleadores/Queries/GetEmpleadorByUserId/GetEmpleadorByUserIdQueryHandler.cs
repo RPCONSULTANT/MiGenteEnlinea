@@ -13,13 +13,16 @@ namespace MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorBy
 public sealed class GetEmpleadorByUserIdQueryHandler : IRequestHandler<GetEmpleadorByUserIdQuery, EmpleadorDto?>
 {
     private readonly IEmpleadorRepository _empleadorRepository;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetEmpleadorByUserIdQueryHandler> _logger;
 
     public GetEmpleadorByUserIdQueryHandler(
         IEmpleadorRepository empleadorRepository,
+        IApplicationDbContext context,
         ILogger<GetEmpleadorByUserIdQueryHandler> logger)
     {
         _empleadorRepository = empleadorRepository;
+        _context = context;
         _logger = logger;
     }
 
@@ -56,6 +59,52 @@ public sealed class GetEmpleadorByUserIdQueryHandler : IRequestHandler<GetEmplea
             "Empleador encontrado. EmpleadorId: {EmpleadorId}, UserId: {UserId}",
             empleador.EmpleadorId, request.UserId);
 
-        return empleador;
+        var perfil = await _context.VPerfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == empleador.UserId && p.Tipo == 1, cancellationToken);
+
+        if (perfil == null)
+        {
+            return empleador;
+        }
+
+        var nombreCompleto = string.Join(" ", new[] { perfil.Nombre, perfil.Apellido }
+            .Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+
+        var rnc = perfil.TipoIdentificacion == 3 ? perfil.Identificacion : null;
+        var cedula = perfil.TipoIdentificacion == 1 ? perfil.Identificacion : null;
+
+        return new EmpleadorDto
+        {
+            EmpleadorId = empleador.EmpleadorId,
+            UserId = empleador.UserId,
+            FechaPublicacion = empleador.FechaPublicacion,
+            Habilidades = empleador.Habilidades,
+            Experiencia = empleador.Experiencia,
+            Descripcion = empleador.Descripcion,
+            TieneFoto = empleador.TieneFoto,
+            CreatedAt = empleador.CreatedAt,
+            UpdatedAt = empleador.UpdatedAt,
+            Nombre = perfil.Nombre,
+            Apellido = perfil.Apellido,
+            NombreCompleto = string.IsNullOrWhiteSpace(nombreCompleto) ? null : nombreCompleto,
+            NombreComercial = perfil.NombreComercial,
+            Identificacion = perfil.Identificacion,
+            Rnc = rnc,
+            Cedula = cedula,
+            Email = perfil.Email,
+            Telefono1 = perfil.Telefono1,
+            Telefono2 = perfil.Telefono2,
+            Direccion = perfil.Direccion,
+            FechaIngreso = perfil.FechaCreacion,
+            Activo = true,
+            TotalContrataciones = 0,
+            PromedioCalificaciones = empleador.PromedioCalificaciones,
+            Provincia = empleador.Provincia,
+            Ciudad = empleador.Ciudad,
+            Sector = empleador.Sector,
+            Whatsapp1 = empleador.Whatsapp1,
+            Whatsapp2 = empleador.Whatsapp2
+        };
     }
 }

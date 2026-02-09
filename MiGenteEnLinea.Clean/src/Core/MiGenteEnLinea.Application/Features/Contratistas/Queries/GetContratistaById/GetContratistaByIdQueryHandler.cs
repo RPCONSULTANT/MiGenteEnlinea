@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Contratistas.Common;
 using MiGenteEnLinea.Domain.Interfaces.Repositories.Contratistas;
 
@@ -11,13 +13,16 @@ namespace MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratist
 public class GetContratistaByIdQueryHandler : IRequestHandler<GetContratistaByIdQuery, ContratistaDto?>
 {
     private readonly IContratistaRepository _contratistaRepository;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetContratistaByIdQueryHandler> _logger;
 
     public GetContratistaByIdQueryHandler(
         IContratistaRepository contratistaRepository,
+        IApplicationDbContext context,
         ILogger<GetContratistaByIdQueryHandler> logger)
     {
         _contratistaRepository = contratistaRepository;
+        _context = context;
         _logger = logger;
     }
 
@@ -64,6 +69,18 @@ public class GetContratistaByIdQueryHandler : IRequestHandler<GetContratistaById
                                        (!string.IsNullOrWhiteSpace(c.Presentacion) || !string.IsNullOrWhiteSpace(c.Titulo))
             },
             cancellationToken);
+
+        if (contratista != null && !string.IsNullOrWhiteSpace(contratista.Identificacion))
+        {
+            var promedio = await _context.Calificaciones
+                .AsNoTracking()
+                .Where(c => c.ContratistaIdentificacion == contratista.Identificacion)
+                .Select(c => (decimal?)(c.Puntualidad + c.Cumplimiento + c.Conocimientos + c.Recomendacion) / 4.0m)
+                .DefaultIfEmpty(null)
+                .AverageAsync(cancellationToken);
+
+            contratista = contratista with { PromedioCalificacion = promedio };
+        }
 
         if (contratista == null)
         {
