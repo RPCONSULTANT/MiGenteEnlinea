@@ -42,12 +42,19 @@ async function authenticatedFetch(url, options = {}) {
   // Ensure URL is absolute (add API_BASE if relative)
   const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
   
+  // Detectar si el body es FormData (no agregar Content-Type para que browser lo maneje)
+  const isFormData = options.body instanceof FormData;
+  
   // Merge headers with Authorization
   const headers = {
-    'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
     ...options.headers
   };
+  
+  // Solo agregar Content-Type si NO es FormData
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
   
   // Perform fetch
   const response = await fetch(fullUrl, {

@@ -493,7 +493,13 @@
                 }
                 
                 if (response.ok) {
-                    const contratistas = await response.json();
+                    const result = await response.json();
+                    console.log('Search result:', result);
+                    
+                    // El API devuelve un objeto SearchContratistasResult con { items, totalCount, pageIndex, pageSize }
+                    // Extraer el array de contratistas del resultado
+                    const contratistas = result.items || result.contratistas || result || [];
+                    
                     renderContratistas(contratistas);
                 } else {
                     throw new Error('Error al cargar contratistas');
@@ -524,7 +530,14 @@
             const container = document.getElementById('contratistasContainer');
             if (!container) return;
             
-            if (!contratistas || contratistas.length === 0) {
+            // Asegurar que contratistas es un array
+            if (!Array.isArray(contratistas)) {
+                console.error('renderContratistas: Expected array, received:', typeof contratistas, contratistas);
+                container.innerHTML = '<div class="col-12 text-center"><div class="alert alert-warning">Formato de respuesta inválido del servidor.</div></div>';
+                return;
+            }
+            
+            if (contratistas.length === 0) {
                 container.innerHTML = '<div class="col-12 text-center"><div class="alert alert-info">No se encontraron contratistas disponibles.</div></div>';
                 return;
             }

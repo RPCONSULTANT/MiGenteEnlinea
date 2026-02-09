@@ -213,7 +213,7 @@
                 if (zona) url += `&provincia=${encodeURIComponent(zona)}`;
 
                 // Obtener token JWT
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('token');
                 if (!token) {
                     console.error('No token found. Redirecting to login...');
                     window.location.href = '/Auth/Login';

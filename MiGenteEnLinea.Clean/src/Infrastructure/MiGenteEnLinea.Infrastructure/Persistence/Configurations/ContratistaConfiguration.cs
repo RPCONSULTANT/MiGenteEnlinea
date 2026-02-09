@@ -219,5 +219,9 @@ public sealed class ContratistaConfiguration : IEntityTypeConfiguration<Contrati
         // ===========================
         // Los eventos de dominio no se persisten en la base de datos
         builder.Ignore(c => c.Events);
+
+        // La propiedad Foto (byte array) no existe en la tabla legacy
+        // Por ahora usamos solo imagenURL (string)
+        builder.Ignore(c => c.Foto);
     }
 }

@@ -299,9 +299,8 @@
             // Función para subir imagen
             async function uploadImage(file) {
                 const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                 
-                if (!userId || !token) {
+                if (!userId) {
                     Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
                     return;
                 }
@@ -321,20 +320,36 @@
                     const formData = new FormData();
                     formData.append('file', file);
                     
-                    // Subir al API con authenticatedFetch (sin Content-Type para FormData)
+                    // Subir al API (authenticatedFetch detecta FormData automáticamente)
                     const response = await authenticatedFetch(`/contratistas/${userId}/foto`, {
                         method: 'POST',
-                        headers: {}, // Vacío para que browser agregue boundary automático
                         body: formData
                     });
                     
                     if (response.ok) {
                         const result = await response.json();
                         Swal.fire('Éxito', 'Foto actualizada correctamente', 'success');
+                        
+                        // Recargar la imagen para mostrar la nueva
+                        if (result.fotoBase64) {
+                            $('#profileImage').attr('src', `data:image/jpeg;base64,${result.fotoBase64}`);
+                        }
+                        
                         console.log('Upload result:', result);
                     } else {
-                        const error = await response.json();
-                        Swal.fire('Error', error.error || 'No se pudo subir la imagen', 'error');
+                        // Intentar leer error como JSON, si falla usar texto genérico
+                        let errorMessage = 'No se pudo subir la imagen';
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) {
+                                const errorJson = JSON.parse(errorText);
+                                errorMessage = errorJson.error || errorJson.message || errorMessage;
+                            }
+                        } catch (parseError) {
+                            console.warn('Could not parse error response:', parseError);
+                            errorMessage = `Error ${response.status}: ${response.statusText}`;
+                        }
+                        Swal.fire('Error', errorMessage, 'error');
                     }
                 } catch (error) {
                     console.error('Error uploading image:', error);
@@ -477,18 +492,11 @@
         // Guardar perfil del contratista
         async function savePerfil() {
             const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             
-            // Validar que tenemos userId y token
+            // Validar que tenemos userId
             if (!userId) {
                 Swal.fire('Error', 'No se encontró el ID de usuario. Por favor inicie sesión nuevamente.', 'error');
                 console.error('Missing userId');
-                return;
-            }
-            
-            if (!token) {
-                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
-                console.error('Missing token');
                 return;
             }
             
@@ -509,7 +517,6 @@
             // Log para debugging
             console.log('=== SAVE PERFIL DEBUG ===');
             console.log('UserId:', userId);
-            console.log('Token:', token ? 'Present' : 'Missing');
             console.log('Perfil Data:', perfilData);
             console.log('API URL:', `${API_BASE}/contratistas/${userId}`);
             
