@@ -293,8 +293,9 @@ public static class DependencyInjection
         // ✅ Servicio REAL de cálculo de nómina (implementa lógica Legacy completa)
         services.AddScoped<INominaCalculatorService, NominaCalculatorService>();
 
-        // TODO: Agregar cuando se migren del legacy
-        // services.AddScoped<IFileStorageService, FileStorageService>();
+        // ✅ Servicio de almacenamiento de archivos (local wwwroot)
+        // Maneja guardado, lectura y eliminación de archivos (fotos, documentos, etc.)
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }

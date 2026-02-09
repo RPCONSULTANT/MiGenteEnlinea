@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.ActivarPerfil;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.AddServicio;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.CreateContratista;
@@ -33,11 +34,16 @@ public class ContratistasController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ContratistasController> _logger;
+    private readonly IFileStorageService _fileStorageService;
 
-    public ContratistasController(IMediator mediator, ILogger<ContratistasController> logger)
+    public ContratistasController(
+        IMediator mediator,
+        ILogger<ContratistasController> logger,
+        IFileStorageService fileStorageService)
     {
         _mediator = mediator;
         _logger = logger;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -316,11 +322,22 @@ public class ContratistasController : ControllerBase
     /// <param name="userId">ID del usuario (identifica al contratista)</param>
     /// <param name="file">Archivo de imagen a subir</param>
     /// <returns>Confirmación de actualización</returns>
-    /// <response code="200">Foto actualizada exitosamente</response>
+    /// <summary>
+    /// Carga la foto de perfil del contratista
+    /// </summary>
+    /// <param name="userId">ID del usuario (Credencial.UserId)</param>
+    /// <param name="file">Archivo de imagen (multipart/form-data)</param>
+    /// <returns>URL de la foto guardada</returns>
+    /// <response code="200">Foto cargada y actualizada exitosamente</response>
     /// <response code="400">Archivo inválido o excede tamaño máximo (5MB)</response>
     /// <response code="404">Contratista no encontrado</response>
     /// <remarks>
-    /// Este endpoint acepta un archivo de imagen directamente (multipart/form-data).
+    /// Este endpoint:
+    /// 1. Recibe un archivo de imagen (multipart/form-data)
+    /// 2. Valida tipo y tamaño
+    /// 3. Guarda el archivo en wwwroot/uploads/contratistas-fotos/
+    /// 4. Actualiza la URL de foto en la BD
+    /// 
     /// Formatos soportados: JPG, JPEG, PNG, GIF
     /// Tamaño máximo: 5MB
     /// </remarks>
@@ -333,13 +350,19 @@ public class ContratistasController : ControllerBase
     {
         try
         {
-            // Validar que se envió un archivo
+            _logger.LogInformation("Iniciando carga de foto. UserId: {UserId}, FileName: {FileName}", userId, file?.FileName);
+
+            // ============================================
+            // VALIDACIÓN 1: Archivo proporcionado
+            // ============================================
             if (file == null || file.Length == 0)
             {
                 return BadRequest(new { error = "No se proporcionó ningún archivo" });
             }
 
-            // Validar tipo de archivo
+            // ============================================
+            // VALIDACIÓN 2: Tipo de archivo
+            // ============================================
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!allowedExtensions.Contains(fileExtension))
@@ -347,43 +370,72 @@ public class ContratistasController : ControllerBase
                 return BadRequest(new { error = "Formato de archivo no soportado. Use JPG, PNG o GIF" });
             }
 
-            // Validar tamaño (5MB)
+            // ============================================
+            // VALIDACIÓN 3: Tamaño del archivo
+            // ============================================
             const long maxFileSize = 5 * 1024 * 1024; // 5MB
             if (file.Length > maxFileSize)
             {
                 return BadRequest(new { error = "El archivo excede el tamaño máximo permitido de 5MB" });
             }
 
-            // Leer archivo a byte array
-            byte[] fotoBytes;
-            using (var memoryStream = new MemoryStream())
+            // ============================================
+            // PASO 1: Guardar archivo usando IFileStorageService
+            // ============================================
+            string fotoUrl;
+            using (var fileStream = file.OpenReadStream())
             {
-                await file.CopyToAsync(memoryStream);
-                fotoBytes = memoryStream.ToArray();
+                fotoUrl = await _fileStorageService.SaveFileAsync(
+                    fileStream,
+                    file.FileName,
+                    "contratistas-fotos",
+                    HttpContext.RequestAborted);
             }
 
-            // Ejecutar comando
-            var command = new UpdateContratistaFotoCommand(userId, fotoBytes);
-            await _mediator.Send(command);
+            _logger.LogInformation("Archivo guardado exitosamente. FotoUrl: {FotoUrl}", fotoUrl);
 
-            _logger.LogInformation("Foto de contratista actualizada. UserId: {UserId}, FileName: {FileName}", userId, file.FileName);
+            // ============================================
+            // PASO 2: Ejecutar comando para actualizar BD
+            // ============================================
+            var command = new UpdateContratistaFotoCommand(userId, fotoUrl);
+            var result = await _mediator.Send(command);
 
-            return Ok(new 
-            { 
+            // ============================================
+            // PASO 3: Retornar resultado
+            // ============================================
+            if (!result.Success)
+            {
+                // Si hay error en la BD, eliminar el archivo guardado
+                await _fileStorageService.DeleteFileAsync(fotoUrl);
+                return BadRequest(new { error = result.Message });
+            }
+
+            _logger.LogInformation("Foto actualizada exitosamente. UserId: {UserId}, FotoUrl: {FotoUrl}", userId, fotoUrl);
+
+            return Ok(new
+            {
+                success = true,
                 message = "Foto actualizada exitosamente",
+                fotoUrl = fotoUrl,
                 fileName = file.FileName,
                 size = file.Length
             });
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Error de validación al actualizar foto");
+            _logger.LogWarning(ex, "Error de validación al cargar foto. UserId: {UserId}", userId);
             return BadRequest(new { error = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Error al actualizar foto");
-            return NotFound(new { error = ex.Message });
+            _logger.LogWarning(ex, "Error en lógica de negocio. UserId: {UserId}", userId);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al cargar foto. UserId: {UserId}", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { error = "Error al procesar la carga de foto" });
         }
     }
 

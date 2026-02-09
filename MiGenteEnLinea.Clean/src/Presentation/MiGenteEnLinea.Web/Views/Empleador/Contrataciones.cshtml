@@ -28,6 +28,9 @@
             <p class="text-muted mb-0">Gestiona tus contrataciones de servicios con proveedores independientes</p>
         </div>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" onclick="abrirModalFoto()" title="Cargar foto de perfil del contratista">
+                <i class="fas fa-camera me-1"></i>Cargar Foto
+            </button>
             <a href="@Url.Action("Index", "Empleador")" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i>Volver
             </a>
@@ -1210,5 +1213,212 @@
                 </tr>
             `;
         }
+        
+        // ============================================================
+        // FUNCIONES DEL MODAL DE CARGA DE FOTO
+        // ============================================================
+        
+        function abrirModalFoto() {
+            const modal = new bootstrap.Modal(document.getElementById('modalCargarFoto'));
+            modal.show();
+        }
+        
+        function previewFoto(input) {
+            const preview = document.getElementById('fotoPreview');
+            const fileName = document.getElementById('fotoFileName');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validar tipo
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    Swal.fire({
+                        title: 'Formato no permitido',
+                        text: 'Solo se permiten: JPG, PNG y GIF',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    input.value = '';
+                    return;
+                }
+                
+                // Validar tamaño (5MB)
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        title: 'Archivo muy grande',
+                        text: 'El tamaño máximo es 5MB',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    input.value = '';
+                    return;
+                }
+                
+                // Preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                fileName.textContent = `Archivo: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            }
+        }
+        
+        async function cargarFoto() {
+            const fileInput = document.getElementById('fotoInput');
+            const loginCookie = document.cookie.split('; ').find(row => row.startsWith('login='));
+            
+            if (!fileInput.files || !fileInput.files[0]) {
+                Swal.fire({
+                    title: 'Sin archivo',
+                    text: 'Selecciona una foto primero',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            
+            // Mostrar progreso
+            const btn = document.getElementById('btnCargarFoto');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cargando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                
+                const token = getTokenFromStorage();
+                const apiUrl = `http://localhost:5015/api/contratistas/${token.userId}/foto`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token.accessToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Foto cargada y actualizada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        // Cerrar modal
+                        bootstrap.Modal.getInstance(document.getElementById('modalCargarFoto')).hide();
+                        
+                        // Limpiar formulario
+                        fileInput.value = '';
+                        document.getElementById('fotoPreview').style.display = 'none';
+                        document.getElementById('fotoFileName').textContent = '';
+                        
+                        // Recargar datos
+                        cargarContrataciones();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'No se pudo cargar la foto',
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: `${error.message}`,
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload me-2"></i>Cargar foto';
+            }
+        }
+        
+        function getTokenFromStorage() {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) throw new Error('No hay token de autenticación');
+            
+            // Decodificar token para obtener userId
+            const parts = token.split('.');
+            if (parts.length !== 3) throw new Error('Token inválido');
+            
+            const payload = JSON.parse(atob(parts[1]));
+            return {
+                accessToken: token,
+                userId: payload.nameid || payload.sub
+            };
+        }
     </script>
 }
+
+<!-- MODAL: Cargar Foto de Perfil del Contratista -->
+<div class="modal fade" id="modalCargarFoto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>Cargar Foto de Perfil
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCargarFoto" enctype="multipart/form-data">
+                    <!-- File Input -->
+                    <div class="mb-3">
+                        <label for="fotoInput" class="form-label">
+                            Seleccionar Imagen
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input 
+                            type="file" 
+                            class="form-control" 
+                            id="fotoInput" 
+                            accept=".jpg,.jpeg,.png,.gif"
+                            onchange="previewFoto(this)"
+                            required>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Formatos: JPG, PNG, GIF | Máximo: 5MB
+                        </small>
+                    </div>
+                    
+                    <!-- Preview -->
+                    <div class="mb-3 text-center">
+                        <img id="fotoPreview" src="" alt="Vista previa" style="display:none; max-width:100%; height:150px; object-fit:cover; border-radius:8px;">
+                    </div>
+                    
+                    <!-- File Info -->
+                    <div id="fotoFileName" class="mb-3">
+                        <small class="text-muted"></small>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div id="progressContainer" style="display:none;" class="mb-3">
+                        <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="progressBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnCargarFoto" onclick="cargarFoto()">
+                    <i class="fas fa-upload me-2"></i>Cargar foto
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
