@@ -41,44 +41,80 @@ public class GetHistorialNominaByUserIdQueryHandler : IRequestHandler<GetHistori
 
         try
         {
-            // Obtener la tabla de recibos de empleador
-            // Nota: Se asume que existe la entidad EmpleadorRecibosHeader con relación a Empleador
-            // La tabla contiene registros de nóminas procesadas
+            // Construir filtro de período si se proporciona
+            var periodoFilter = "";
+            if (!string.IsNullOrEmpty(request.Periodo))
+            {
+                // Período en formato "YYYY-MM"
+                var parts = request.Periodo.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[0], out int year) && int.TryParse(parts[1], out int month))
+                {
+                    periodoFilter = $"AND YEAR(rh.fechaPago) = {year} AND MONTH(rh.fechaPago) = {month}";
+                }
+            }
 
-            var query = _context.Set<dynamic>()
-                .FromSqlInterpolated($@"
-                    SELECT 
-                        rh.id AS NominaId,
-                        CONCAT(DATENAME(MONTH, rh.FechaProcesamiento), ' ', YEAR(rh.FechaProcesamiento)) AS Periodo,
-                        COUNT(DISTINCT rd.EmpleadoId) AS CantidadEmpleados,
-                        COALESCE(SUM(rd.TotalSalario), 0) AS TotalNomina,
-                        rh.FechaProcesamiento,
-                        COALESCE(rh.Estado, 1) AS Estado,
-                        0 AS EmailEnviado
-                    FROM [EmpleadorRecibosHeader] rh
-                    LEFT JOIN [EmpleadorRecibosDetalle] rd ON rh.id = rd.ReceiptId
-                    WHERE rh.UserId = {request.UserId}
-                    GROUP BY rh.id, rh.FechaProcesamiento, rh.Estado
-                    ORDER BY rh.FechaProcesamiento DESC
-                    OFFSET {(request.PageIndex - 1) * request.PageSize} ROWS
-                    FETCH NEXT {request.PageSize} ROWS ONLY
-                ");
+            // Usar raw SQL para obtener el histórico
+            var sql = $@"
+                SELECT 
+                    rh.pagoID AS NominaId,
+                    FORMAT(rh.fechaPago, 'MMMM yyyy', 'es-ES') AS Periodo,
+                    COUNT(DISTINCT rd.detalleID) AS CantidadEmpleados,
+                    COALESCE(SUM(rd.Monto), 0) AS TotalNomina,
+                    COALESCE(rh.fechaPago, rh.fechaRegistro) AS FechaProcesamiento,
+                    COALESCE(rh.tipo, 1) AS Estado,
+                    CASE COALESCE(rh.tipo, 1)
+                        WHEN 1 THEN 'Procesado'
+                        WHEN 2 THEN 'Parcial'
+                        WHEN 3 THEN 'Error'
+                        ELSE 'Desconocido'
+                    END AS EstadoTexto,
+                    0 AS EmailEnviado,
+                    CAST(NULL AS datetime2) AS FechaEnvioEmail,
+                    rh.conceptoPago AS Notas
+                FROM [Empleador_Recibos_Header] rh
+                LEFT JOIN [Empleador_Recibos_Detalle] rd ON rh.pagoID = rd.pagoID
+                WHERE rh.userID = {{0}}
+                {periodoFilter}
+                GROUP BY rh.pagoID, rh.fechaPago, rh.fechaRegistro, rh.tipo, rh.conceptoPago
+                ORDER BY rh.fechaPago DESC, rh.fechaRegistro DESC
+                OFFSET {(request.PageIndex - 1) * request.PageSize} ROWS
+                FETCH NEXT {request.PageSize} ROWS ONLY
+            ";
 
-            // Nota: Alternativa si la query SQL anterior falla - usar EntityFramework LINQ
-            // será necesario ajustar según la estructura real de las entidades en la BD
-
-            var nominas = await query.ToListAsync(cancellationToken);
-
-            // Convertir dinámicos a DTOs
+            // Obtener los datos como dinámicos
             var result = new List<NominaHistorialDto>();
+            
+            try
+            {
+                // Ejecutar la query y mapear a DTOs
+                var data = await _context.Database
+                    .SqlQueryRaw<NominaHistorialDto>(sql, request.UserId)
+                    .ToListAsync(cancellationToken);
 
-            // Descomentar y usar cuando las entidades estén disponibles
-            // Para ahora, retornar lista vacía como placeholder
-            // que será reemplazada cuando se valide la estructura de BD
-
-            _logger.LogInformation(
-                "Histórico de nómina obtenido - Registros encontrados: {TotalRegistros}",
-                nominas.Count);
+                if (data.Any())
+                {
+                    result = data;
+                    _logger.LogInformation(
+                        "Histórico de nómina obtenido - Registros encontrados: {TotalRegistros}",
+                        result.Count);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "No se encontraron registros de histórico de nómina para UserId: {UserId}",
+                        request.UserId);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Si falla la query raw, retornar lista vacía con log
+                _logger.LogWarning(
+                    ex,
+                    "Error ejecutando query de histórico de nómina. Retornando lista vacía. UserId: {UserId}",
+                    request.UserId);
+                
+                result = new List<NominaHistorialDto>();
+            }
 
             return result;
         }

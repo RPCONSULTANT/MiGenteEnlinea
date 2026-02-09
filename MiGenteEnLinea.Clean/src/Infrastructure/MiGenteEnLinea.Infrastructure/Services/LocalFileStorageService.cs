@@ -12,6 +12,7 @@ public class LocalFileStorageService : IFileStorageService
 {
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<LocalFileStorageService> _logger;
+    private readonly string _basePath;
     private const int MaxFileSize = 5 * 1024 * 1024; // 5MB
     private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
 
@@ -21,6 +22,15 @@ public class LocalFileStorageService : IFileStorageService
     {
         _environment = environment;
         _logger = logger;
+        
+        // Calcular la ruta base: usar WebRootPath o un fallback si es null
+        _basePath = string.IsNullOrEmpty(_environment?.WebRootPath)
+            ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
+            : _environment.WebRootPath;
+        
+        _logger.LogInformation(
+            "LocalFileStorageService inicializado con BasePath: {BasePath}",
+            _basePath);
     }
 
     /// <summary>
@@ -52,7 +62,7 @@ public class LocalFileStorageService : IFileStorageService
             }
 
             // Crear directorio si no existe
-            var uploadsDir = Path.Combine(_environment.WebRootPath, "uploads", folder);
+            var uploadsDir = Path.Combine(_basePath, "uploads", folder);
             Directory.CreateDirectory(uploadsDir);
 
             // Generar nombre único
@@ -98,7 +108,7 @@ public class LocalFileStorageService : IFileStorageService
         {
             // Normalizar la ruta (remover leading /)
             var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_environment.WebRootPath, normalizedPath);
+            var fullPath = Path.Combine(_basePath, normalizedPath);
 
             if (!System.IO.File.Exists(fullPath))
             {
@@ -127,7 +137,7 @@ public class LocalFileStorageService : IFileStorageService
         {
             // Normalizar la ruta
             var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_environment.WebRootPath, normalizedPath);
+            var fullPath = Path.Combine(_basePath, normalizedPath);
 
             if (!System.IO.File.Exists(fullPath))
             {
@@ -154,7 +164,7 @@ public class LocalFileStorageService : IFileStorageService
         try
         {
             var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_environment.WebRootPath, normalizedPath);
+            var fullPath = Path.Combine(_basePath, normalizedPath);
             return System.IO.File.Exists(fullPath);
         }
         catch (Exception ex)
