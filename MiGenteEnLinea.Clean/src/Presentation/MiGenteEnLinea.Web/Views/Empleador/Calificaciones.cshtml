@@ -303,8 +303,14 @@
         
         function cargarMisCalificaciones() {
             // ✅ Cargar mis calificaciones históricas
+            const userId = getUserIdFromToken();
+            if (!userId) {
+                console.warn('No userId available for loading calificaciones');
+                return;
+            }
+            
             $.ajax({
-                url: '/api/calificaciones/por-empleador/' + getUserIdFromToken(),
+                url: API_BASE + '/calificaciones/por-empleador/' + userId,
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token'))
@@ -354,7 +360,7 @@
         function cargarPerfilesCalificables() {
             // ✅ Cargar contrataciones completadas sin calificar
             $.ajax({
-                url: '/api/contrataciones?soloNoCalificadas=true&pageSize=100',
+                url: API_BASE + '/contrataciones?soloNoCalificadas=true&pageSize=100',
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token'))
@@ -489,7 +495,7 @@
             
             // ✅ Enviar calificación al API
             $.ajax({
-                url: '/api/calificaciones/calificar-perfil',
+                url: API_BASE + '/calificaciones/calificar-perfil',
                 method: 'POST',
                 contentType: 'application/json',
                 headers: {
