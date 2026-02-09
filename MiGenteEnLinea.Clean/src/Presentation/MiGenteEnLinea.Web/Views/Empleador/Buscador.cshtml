@@ -387,8 +387,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody id="tablaServicios">
-                                                <tr><td>Servicio de ejemplo 1</td></tr>
-                                                <tr><td>Servicio de ejemplo 2</td></tr>
+                                                <tr><td class="text-center text-muted">Seleccione un contratista para ver sus servicios</td></tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -527,7 +526,7 @@
                                   <img src="${imageUrl}" 
                                       style="width: 100px; height: 100px; object-fit: cover;" 
                                       class="card-img-top avatar"
-                                     onerror="this.src='/images/circular1.png'">
+                                     onerror="this.onerror=null; this.src='/images/circular1.png';"
                             </div>
                             <h5 style="font-weight: bold" class="mb-0">${nombre}</h5>
                             <medium>${titulo}</medium>
@@ -576,6 +575,11 @@
             modalImage.onerror = function() {
                 this.src = '/images/circular1.png';
             };
+            
+            // Cargar servicios del contratista de forma asíncrona
+            if (perfil.contratistaId) {
+                cargarServiciosContratista(perfil.contratistaId);
+            }
             document.getElementById('NombrePerfil').textContent = nombre || 'Sin nombre';
             document.getElementById('presentacion').textContent = perfil.presentacion || 'Sin presentación';
             document.getElementById('titulo').textContent = perfil.titulo || perfil.sector || 'Sin título';
@@ -605,17 +609,78 @@
             }
         }
         
+        // Cargar servicios del contratista
+        async function cargarServiciosContratista(contratistaId) {
+            const tablaServicios = document.getElementById('tablaServicios');
+            if (!tablaServicios) return;
+            
+            // Mostrar loading
+            tablaServicios.innerHTML = '<tr><td class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div> Cargando servicios...</td></tr>';
+            
+            try {
+                const response = await authenticatedFetch(`/contratistas/${contratistaId}/servicios`);
+                
+                if (response.ok) {
+                    const servicios = await response.json();
+                    renderizarTablaServicios(servicios);
+                } else {
+                    throw new Error('Error al cargar servicios');
+                }
+            } catch (error) {
+                console.error('Error cargando servicios:', error);
+                tablaServicios.innerHTML = '<tr><td class="text-center text-muted">Error al cargar servicios</td></tr>';
+            }
+        }
+        
+        // Renderizar tabla de servicios
+        function renderizarTablaServicios(servicios) {
+            const tablaServicios = document.getElementById('tablaServicios');
+            if (!tablaServicios) return;
+            
+            if (!servicios || servicios.length === 0) {
+                tablaServicios.innerHTML = '<tr><td class="text-center text-muted">No hay servicios disponibles</td></tr>';
+                return;
+            }
+            
+            tablaServicios.innerHTML = servicios
+                .filter(s => s.activo) // Solo servicios activos
+                .map(servicio => {
+                    let detalles = [];
+                    if (servicio.aniosExperiencia) {
+                        detalles.push(`${servicio.aniosExperiencia} años de experiencia`);
+                    }
+                    if (servicio.tarifaBase) {
+                        detalles.push(`Tarifa: ${servicio.tarifaBase}`);
+                    }
+                    if (servicio.certificaciones) {
+                        detalles.push(`Certificaciones: ${servicio.certificaciones}`);
+                    }
+                    
+                    const detallesTexto = detalles.length > 0 ? `<br><small class="text-muted">${detalles.join(' • ')}</small>` : '';
+                    
+                    return `
+                        <tr>
+                            <td>
+                                <strong>${servicio.detalleServicio}</strong>
+                                ${detallesTexto}
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join('');
+        }
+        
         // Variable global para almacenar contratistas cargados
         function getContratistaImageUrl(contratista) {
             if (!contratista) return '/images/circular1.png';
 
             const rawUrl = contratista.imagenUrl || contratista.ImagenUrl || contratista.fotoUrl || contratista.FotoUrl;
             if (rawUrl && typeof rawUrl === 'string' && rawUrl.trim().length > 0) {
-                return rawUrl.startsWith('/') ? `${API_BASE}${rawUrl}` : rawUrl;
+                return rawUrl.startsWith('/') ? `${STATIC_FILES_BASE}${rawUrl}` : rawUrl;
             }
 
             if (contratista.contratistaId) {
-                return `${API_BASE}/contratistas/${contratista.contratistaId}/foto`;
+                return `${STATIC_FILES_BASE}/api/contratistas/${contratista.contratistaId}/foto`;
             }
 
             return '/images/circular1.png';
