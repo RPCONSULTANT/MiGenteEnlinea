@@ -160,6 +160,9 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // API Base URL - usar del layout o fallback a localhost
+        const API_BASE = window.API_BASE || 'http://localhost:5015/api';
+        
         let empleadores = [];
         const iconos = ['fa-building', 'fa-home', 'fa-store', 'fa-utensils', 'fa-cogs', 'fa-user', 'fa-industry'];
         const colores = ['primary', 'success', 'info', 'warning', 'danger', 'secondary', 'dark'];
@@ -210,11 +213,42 @@
                 if (sector) url += `&sector=${encodeURIComponent(sector)}`;
                 if (zona) url += `&provincia=${encodeURIComponent(zona)}`;
 
-                // Llamar al API
-                const response = await fetch(url);
+                // Obtener token JWT
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('No token found. Redirecting to login...');
+                    window.location.href = '/Auth/Login';
+                    return;
+                }
+
+                // Llamar al API con autenticación
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // Manejar sesión expirada
+                if (response.status === 401) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Sesión expirada',
+                        text: 'Por favor inicie sesión nuevamente',
+                        confirmButtonText: 'Ir a login'
+                    }).then(() => {
+                        window.location.href = '/Auth/Login';
+                    });
+                    return;
+                }
+
                 if (!response.ok) throw new Error('Error al cargar empleadores');
 
-                empleadores = await response.json();
+                const result = await response.json();
+                
+                // El API devuelve un objeto con estructura: { empleadores: [], totalRecords: 0, pageIndex: 1, pageSize: 10, totalPages: 1 }
+                empleadores = result.empleadores || [];
                 renderEmpleadores(empleadores);
 
             } catch (error) {

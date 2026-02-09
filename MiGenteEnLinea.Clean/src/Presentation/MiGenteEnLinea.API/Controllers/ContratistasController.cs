@@ -6,6 +6,7 @@ using MiGenteEnLinea.Application.Features.Contratistas.Commands.CreateContratist
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.DesactivarPerfil;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.RemoveServicio;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratista;
+using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratistaFoto;
 using MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContratistaImagen;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratistaById;
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetContratistaByUserId;
@@ -215,6 +216,10 @@ public class ContratistasController : ControllerBase
     {
         try
         {
+            _logger.LogInformation(
+                "UpdateContratista called. UserId: {UserId}, Request: {@Request}",
+                userId, request);
+            
             var command = new UpdateContratistaCommand(
                 userId,
                 request.Titulo,
@@ -232,12 +237,19 @@ public class ContratistasController : ControllerBase
 
             await _mediator.Send(command);
 
+            _logger.LogInformation("Contratista updated successfully. UserId: {UserId}", userId);
+
             return Ok(new { message = "Perfil actualizado exitosamente" });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Error al actualizar contratista");
+            _logger.LogWarning(ex, "Contratista not found. UserId: {UserId}", userId);
             return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating contratista. UserId: {UserId}", userId);
+            return BadRequest(new { error = $"Error al actualizar perfil: {ex.Message}" });
         }
     }
 
@@ -271,6 +283,83 @@ public class ContratistasController : ControllerBase
         {
             _logger.LogWarning(ex, "Error al actualizar imagen");
             return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Sube/actualiza la foto de perfil del contratista (multipart/form-data)
+    /// </summary>
+    /// <param name="userId">ID del usuario (identifica al contratista)</param>
+    /// <param name="file">Archivo de imagen a subir</param>
+    /// <returns>Confirmación de actualización</returns>
+    /// <response code="200">Foto actualizada exitosamente</response>
+    /// <response code="400">Archivo inválido o excede tamaño máximo (5MB)</response>
+    /// <response code="404">Contratista no encontrado</response>
+    /// <remarks>
+    /// Este endpoint acepta un archivo de imagen directamente (multipart/form-data).
+    /// Formatos soportados: JPG, JPEG, PNG, GIF
+    /// Tamaño máximo: 5MB
+    /// </remarks>
+    [HttpPost("{userId}/foto")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadContratistaFoto(string userId, IFormFile file)
+    {
+        try
+        {
+            // Validar que se envió un archivo
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { error = "No se proporcionó ningún archivo" });
+            }
+
+            // Validar tipo de archivo
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                return BadRequest(new { error = "Formato de archivo no soportado. Use JPG, PNG o GIF" });
+            }
+
+            // Validar tamaño (5MB)
+            const long maxFileSize = 5 * 1024 * 1024; // 5MB
+            if (file.Length > maxFileSize)
+            {
+                return BadRequest(new { error = "El archivo excede el tamaño máximo permitido de 5MB" });
+            }
+
+            // Leer archivo a byte array
+            byte[] fotoBytes;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                fotoBytes = memoryStream.ToArray();
+            }
+
+            // Ejecutar comando
+            var command = new UpdateContratistaFotoCommand(userId, fotoBytes);
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Foto de contratista actualizada. UserId: {UserId}, FileName: {FileName}", userId, file.FileName);
+
+            return Ok(new 
+            { 
+                message = "Foto actualizada exitosamente",
+                fileName = file.FileName,
+                size = file.Length
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Error de validación al actualizar foto");
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Error al actualizar foto");
+            return NotFound(new { error = ex.Message });
         }
     }
 

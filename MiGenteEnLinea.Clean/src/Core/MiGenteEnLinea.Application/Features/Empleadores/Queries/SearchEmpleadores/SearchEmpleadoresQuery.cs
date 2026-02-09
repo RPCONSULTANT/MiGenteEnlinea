@@ -10,10 +10,14 @@ namespace MiGenteEnLinea.Application.Features.Empleadores.Queries.SearchEmpleado
 /// LÓGICA DE NEGOCIO:
 /// - Búsqueda case-insensitive en Habilidades, Experiencia, Descripcion
 /// - Soporta paginación (PageIndex, PageSize)
+/// - Filtros: SoloActivos, Sector, Provincia
 /// - Retorna total de registros para paginación en frontend
 /// </remarks>
 public record SearchEmpleadoresQuery(
     string? SearchTerm = null,
+    bool? SoloActivos = null,
+    string? Sector = null,
+    string? Provincia = null,
     int PageIndex = 1,
     int PageSize = 10
 ) : IRequest<SearchEmpleadoresResult>;

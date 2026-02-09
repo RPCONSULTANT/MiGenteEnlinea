@@ -99,6 +99,9 @@ public class EmpleadorRepository : Repository<Empleador>, IEmpleadorRepository
 
     public async Task<(IEnumerable<TResult> Items, int TotalCount)> SearchProjectedAsync<TResult>(
         string? searchTerm,
+        bool? soloActivos,
+        string? sector,
+        string? provincia,
         int pageNumber,
         int pageSize,
         Expression<Func<Empleador, TResult>> selector,
@@ -118,6 +121,24 @@ public class EmpleadorRepository : Repository<Empleador>, IEmpleadorRepository
                 (e.Descripcion != null && e.Descripcion.ToLower().Contains(searchLower))
             );
         }
+
+        // TODO: Implementar filtro soloActivos cuando el campo Activo exista en la entidad
+        // if (soloActivos.HasValue)
+        // {
+        //     query = query.Where(e => e.Activo == soloActivos.Value);
+        // }
+
+        // TODO: Implementar filtro sector cuando se agregue relación con Perfil/Sector
+        // if (!string.IsNullOrWhiteSpace(sector))
+        // {
+        //     query = query.Where(e => e.Sector == sector);
+        // }
+
+        // TODO: Implementar filtro provincia cuando se agregue relación con Perfil/Provincia
+        // if (!string.IsNullOrWhiteSpace(provincia))
+        // {
+        //     query = query.Where(e => e.Provincia == provincia);
+        // }
 
         // Contar total
         var totalCount = await query.CountAsync(ct);

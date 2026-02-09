@@ -1,4 +1,5 @@
 using MiGenteEnLinea.Web.Configuration;
+using MiGenteEnLinea.Web.Services;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,26 @@ builder.Logging.AddDebug();
 Console.WriteLine($"🌐 Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"🔗 API Base URL: {apiOptions.BaseUrl}");
 Console.WriteLine($"⏱️ API Timeout: {apiOptions.TimeoutSeconds}s");
+
+// ========================================
+// CONFIGURACIÓN DE HTTP CLIENT Y API SERVICES
+// ========================================
+
+// Register HttpClient for ApiService with base URL and timeout
+builder.Services.AddHttpClient<IApiService, ApiService>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<IOptions<ApiOptions>>().Value;
+    client.BaseAddress = new Uri(options.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// Register typed API services
+builder.Services.AddScoped<EmpleadoresApiService>();
+builder.Services.AddScoped<ContratistasApiService>();
+builder.Services.AddScoped<SuscripcionesApiService>();
+
+Console.WriteLine("✅ API Services registered successfully");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -264,19 +264,86 @@
             loadPerfil();
             
             // Preview de imagen al seleccionar archivo
-            $('#fileUpload').change(function () {
+            $('#fileUpload').change(async function () {
                 var input = this;
                 if (input.files && input.files[0]) {
+                    var file = input.files[0];
+                    
+                    // Validar tamaño (5MB)
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    if (file.size > maxSize) {
+                        Swal.fire('Error', 'La imagen no puede exceder 5MB', 'error');
+                        input.value = ''; // Limpiar input
+                        return;
+                    }
+                    
+                    // Validar tipo de archivo
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        Swal.fire('Error', 'Solo se permiten imágenes JPG, PNG o GIF', 'error');
+                        input.value = ''; // Limpiar input
+                        return;
+                    }
+                    
+                    // Preview local
                     var reader = new FileReader();
                     reader.onload = function (e) {
                         $('#profileImage').attr('src', e.target.result);
                     };
-                    reader.readAsDataURL(input.files[0]);
+                    reader.readAsDataURL(file);
                     
-                    // TODO: Subir imagen a storage y actualizar URL
-                    // uploadImage(input.files[0]);
+                    // Subir imagen al servidor
+                    await uploadImage(file);
                 }
             });
+            
+            // Función para subir imagen
+            async function uploadImage(file) {
+                const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                
+                if (!userId || !token) {
+                    Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                    return;
+                }
+                
+                try {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Subiendo imagen...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Crear FormData
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    // Subir al API
+                    const response = await fetch(`${API_BASE}/contratistas/${userId}/foto`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        Swal.fire('Éxito', 'Foto actualizada correctamente', 'success');
+                        console.log('Upload result:', result);
+                    } else {
+                        const error = await response.json();
+                        Swal.fire('Error', error.error || 'No se pudo subir la imagen', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    Swal.fire('Error', 'Error de conexión al servidor', 'error');
+                }
+            }
 
             // Cambiar entre Persona Fisica y Empresa
             $('#ddlTipoPerfil').on('change', function () {
@@ -418,6 +485,22 @@
         
         // Guardar perfil del contratista
         async function savePerfil() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            
+            // Validar que tenemos userId y token
+            if (!userId) {
+                Swal.fire('Error', 'No se encontró el ID de usuario. Por favor inicie sesión nuevamente.', 'error');
+                console.error('Missing userId');
+                return;
+            }
+            
+            if (!token) {
+                Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
+                console.error('Missing token');
+                return;
+            }
+            
             const perfilData = {
                 titulo: $('#txtTitulo').val().trim(),
                 sector: $('#ddlSector').val(),
@@ -432,17 +515,40 @@
                 email: $('#txtEmail').val().trim()
             };
             
+            // Log para debugging
+            console.log('=== SAVE PERFIL DEBUG ===');
+            console.log('UserId:', userId);
+            console.log('Token:', token ? 'Present' : 'Missing');
+            console.log('Perfil Data:', perfilData);
+            console.log('API URL:', `${API_BASE}/contratistas/${userId}`);
+            
             try {
                 const response = await fetch(`${API_BASE}/contratistas/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(perfilData)
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
                 if (response.ok) {
+                    let result = null;
+                    if (responseText) {
+                        try {
+                            result = JSON.parse(responseText);
+                            console.log('Response JSON:', result);
+                        } catch (e) {
+                            console.warn('Could not parse response as JSON:', e);
+                        }
+                    }
+                    
                     Swal.fire({
                         title: 'Perfil Actualizado',
                         text: 'Tu perfil ha sido actualizado correctamente.',
@@ -450,12 +556,22 @@
                         confirmButtonText: 'OK'
                     });
                 } else {
-                    const error = await response.json();
-                    Swal.fire('Error', error.error || 'No se pudo guardar el perfil', 'error');
+                    let errorMessage = 'No se pudo guardar el perfil';
+                    try {
+                        const error = JSON.parse(responseText);
+                        console.error('Error response:', error);
+                        errorMessage = error.error || error.message || errorMessage;
+                    } catch (e) {
+                        console.error('Raw error response:', responseText);
+                    }
+                    Swal.fire('Error', errorMessage, 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Error de conexión al servidor', 'error');
+                console.error('=== SAVE PERFIL ERROR ===');
+                console.error('Error object:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                Swal.fire('Error', `Error de conexión: ${error.message}`, 'error');
             }
         }
         

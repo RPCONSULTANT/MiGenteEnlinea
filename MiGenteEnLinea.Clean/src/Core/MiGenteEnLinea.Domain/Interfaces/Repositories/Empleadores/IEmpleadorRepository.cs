@@ -102,6 +102,9 @@ public interface IEmpleadorRepository : IRepository<Empleador>
     /// </summary>
     /// <typeparam name="TResult">Tipo del DTO de resultado</typeparam>
     /// <param name="searchTerm">Término de búsqueda (opcional)</param>
+    /// <param name="soloActivos">Filtrar solo empleadores activos (opcional)</param>
+    /// <param name="sector">Filtrar por sector (opcional)</param>
+    /// <param name="provincia">Filtrar por provincia (opcional)</param>
     /// <param name="pageNumber">Número de página</param>
     /// <param name="pageSize">Cantidad de registros por página</param>
     /// <param name="selector">Proyección LINQ</param>
@@ -109,6 +112,9 @@ public interface IEmpleadorRepository : IRepository<Empleador>
     /// <returns>Tupla con lista de DTOs y total de registros</returns>
     Task<(IEnumerable<TResult> Items, int TotalCount)> SearchProjectedAsync<TResult>(
         string? searchTerm,
+        bool? soloActivos,
+        string? sector,
+        string? provincia,
         int pageNumber,
         int pageSize,
         Expression<Func<Empleador, TResult>> selector,

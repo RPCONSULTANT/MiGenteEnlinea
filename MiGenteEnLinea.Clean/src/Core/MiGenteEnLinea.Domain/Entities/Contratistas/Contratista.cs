@@ -151,6 +151,13 @@ public sealed class Contratista : AggregateRoot
     public string? ImagenUrl { get; private set; }
 
     /// <summary>
+    /// Foto de perfil del contratista (byte array)
+    /// TODO: Migrar a Azure Blob Storage en el futuro (guardar solo URL)
+    /// Tamaño máximo recomendado: 5MB
+    /// </summary>
+    public byte[]? Foto { get; private set; }
+
+    /// <summary>
     /// Constructor privado para EF Core
     /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor
@@ -381,11 +388,43 @@ public sealed class Contratista : AggregateRoot
     }
 
     /// <summary>
+    /// DOMAIN METHOD: Actualiza la foto de perfil (byte array)
+    /// </summary>
+    /// <param name="foto">Imagen en formato byte array</param>
+    /// <exception cref="ArgumentException">Si la foto está vacía o excede el tamaño máximo</exception>
+    public void ActualizarFoto(byte[] foto)
+    {
+        if (foto == null || foto.Length == 0)
+            throw new ArgumentException("Foto no puede estar vacía", nameof(foto));
+
+        // Validar tamaño máximo (5MB)
+        const int maxSizeBytes = 5 * 1024 * 1024; // 5MB
+        if (foto.Length > maxSizeBytes)
+        {
+            var maxSizeMB = maxSizeBytes / (1024 * 1024);
+            throw new ArgumentException($"Foto no puede exceder {maxSizeMB}MB. Tamaño actual: {foto.Length / (1024 * 1024)}MB", nameof(foto));
+        }
+
+        Foto = foto;
+
+        // Levantar evento de dominio
+        RaiseDomainEvent(new FotoActualizadaEvent(Id));
+    }
+
+    /// <summary>
     /// DOMAIN METHOD: Elimina la imagen de perfil
     /// </summary>
     public void EliminarImagen()
     {
         ImagenUrl = null;
+    }
+
+    /// <summary>
+    /// DOMAIN METHOD: Elimina la foto de perfil
+    /// </summary>
+    public void EliminarFoto()
+    {
+        Foto = null;
     }
 
     /// <summary>

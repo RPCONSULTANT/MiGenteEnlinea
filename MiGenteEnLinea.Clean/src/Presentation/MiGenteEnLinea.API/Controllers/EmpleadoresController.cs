@@ -107,6 +107,10 @@ public class EmpleadoresController : ControllerBase
     /// Buscar empleadores con paginación
     /// </summary>
     /// <param name="searchTerm">Término de búsqueda (opcional)</param>
+    /// <param name="searchTerm">Término de búsqueda</param>
+    /// <param name="soloActivos">Filtrar solo empleadores activos</param>
+    /// <param name="sector">Filtrar por sector</param>
+    /// <param name="provincia">Filtrar por provincia</param>
     /// <param name="pageIndex">Número de página (default: 1)</param>
     /// <param name="pageSize">Tamaño de página (default: 10, max: 100)</param>
     /// <returns>Lista paginada de empleadores</returns>
@@ -115,6 +119,9 @@ public class EmpleadoresController : ControllerBase
     [ProducesResponseType(typeof(SearchEmpleadoresResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> SearchEmpleadores(
         [FromQuery] string? searchTerm = null,
+        [FromQuery] bool? soloActivos = null,
+        [FromQuery] string? sector = null,
+        [FromQuery] string? provincia = null,
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -123,7 +130,7 @@ public class EmpleadoresController : ControllerBase
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100;
 
-        var query = new SearchEmpleadoresQuery(searchTerm, pageIndex, pageSize);
+        var query = new SearchEmpleadoresQuery(searchTerm, soloActivos, sector, provincia, pageIndex, pageSize);
         var result = await _mediator.Send(query);
 
         return Ok(result);

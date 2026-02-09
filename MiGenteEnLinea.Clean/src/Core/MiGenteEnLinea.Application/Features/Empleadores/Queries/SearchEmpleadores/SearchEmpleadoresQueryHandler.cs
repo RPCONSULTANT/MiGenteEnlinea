@@ -26,12 +26,15 @@ public sealed class SearchEmpleadoresQueryHandler : IRequestHandler<SearchEmplea
     public async Task<SearchEmpleadoresResult> Handle(SearchEmpleadoresQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Búsqueda de empleadores. SearchTerm: {SearchTerm}, PageIndex: {PageIndex}, PageSize: {PageSize}",
-            request.SearchTerm ?? "N/A", request.PageIndex, request.PageSize);
+            "Búsqueda de empleadores. SearchTerm: {SearchTerm}, SoloActivos: {SoloActivos}, Sector: {Sector}, Provincia: {Provincia}, PageIndex: {PageIndex}, PageSize: {PageSize}",
+            request.SearchTerm ?? "N/A", request.SoloActivos, request.Sector ?? "N/A", request.Provincia ?? "N/A", request.PageIndex, request.PageSize);
 
         // Usar método SearchProjectedAsync del repositorio
         var (empleadores, totalRecords) = await _empleadorRepository.SearchProjectedAsync(
             request.SearchTerm,
+            request.SoloActivos,
+            request.Sector,
+            request.Provincia,
             request.PageIndex,
             request.PageSize,
             e => new EmpleadorDto

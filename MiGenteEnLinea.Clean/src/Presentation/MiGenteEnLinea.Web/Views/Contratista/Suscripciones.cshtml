@@ -208,19 +208,40 @@
         async function cancelarSuscripcion() {
             const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
             
+            // Primero confirmar con el usuario
+            const confirmResult = await Swal.fire({
+                title: '¿Cancelar suscripción?',
+                text: 'Tu suscripción no se renovará automáticamente. Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No, mantener'
+            });
+            
+            if (!confirmResult.isConfirmed) {
+                return;
+            }
+            
             try {
-                const response = await fetch(`${API_BASE}/suscripciones/cancelar/${userId}`, {
-                    method: 'POST',
+                const response = await fetch(`${API_BASE}/suscripciones/${userId}`, {
+                    method: 'DELETE',
                     headers: {
+                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        motivo: 'Cancelación solicitada por el usuario desde el panel web'
+                    })
                 });
                 
                 if (response.ok) {
                     Swal.fire({
                         title: 'Suscripción cancelada',
-                        text: 'Tu suscripción no se renovará automáticamente.',
-                        icon: 'info',
+                        text: 'Tu suscripción ha sido cancelada exitosamente. No se renovará automáticamente.',
+                        icon: 'success',
                         confirmButtonText: 'OK'
                     });
                     loadSuscripcion(); // Recargar datos
