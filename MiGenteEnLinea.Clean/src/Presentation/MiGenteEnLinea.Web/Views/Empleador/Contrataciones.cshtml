@@ -444,7 +444,7 @@
 
 @section Scripts {
     <script>
-        const API_BASE_URL = 'http://localhost:5015/api';
+        const API_BASE_URL = API_BASE;
         
         // Variables globales para datos
         let allPendientes = [];
@@ -476,13 +476,7 @@
             
             try {
                 // Cargar todas las contrataciones
-                const response = await fetch(`${API_BASE_URL}/contrataciones?pageSize=100`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch('/contrataciones?pageSize=100');
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -866,12 +860,8 @@
                 document.getElementById('btnGuardarContratacion').disabled = true;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
                 
-                const response = await fetch(`${API_BASE_URL}/contrataciones`, {
+                const response = await authenticatedFetch('/contrataciones', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(command)
                 });
                 
@@ -932,9 +922,7 @@
             if (!token) return;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/contrataciones/${detalleId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const response = await authenticatedFetch(`/contrataciones/${detalleId}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -979,9 +967,8 @@
             
             const token = getAuthToken();
             try {
-                const response = await fetch(`${API_BASE_URL}/contrataciones/${detalleId}/start`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const response = await authenticatedFetch(`/contrataciones/${detalleId}/start`, {
+                    method: 'PUT'
                 });
                 
                 if (response.ok) {
@@ -1011,9 +998,8 @@
             
             const token = getAuthToken();
             try {
-                const response = await fetch(`${API_BASE_URL}/contrataciones/${detalleId}/complete`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const response = await authenticatedFetch(`/contrataciones/${detalleId}/complete`, {
+                    method: 'PUT'
                 });
                 
                 if (response.ok) {
@@ -1050,12 +1036,8 @@
             
             const token = getAuthToken();
             try {
-                const response = await fetch(`${API_BASE_URL}/contrataciones/${detalleId}/cancel`, {
+                const response = await authenticatedFetch(`/contrataciones/${detalleId}/cancel`, {
                     method: 'PUT',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({ detalleId: detalleId, motivo: result.value })
                 });
                 

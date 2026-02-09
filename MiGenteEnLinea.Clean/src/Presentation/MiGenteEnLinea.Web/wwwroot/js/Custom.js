@@ -18,7 +18,63 @@ const API_BASE =
     : "/api");
 
 /**
- * Renderiza estrellas de calificaci\u00f3n basado en un rating num\u00e9rico
+ * Realiza un fetch autenticado con manejo automático de errores 401
+ * @param {string} url - URL relativa o absoluta del endpoint
+ * @param {object} options - Opciones de fetch (method, body, etc.)
+ * @returns {Promise<Response>} - Promesa con la respuesta del fetch
+ * 
+ * Uso ejemplo:
+ * const response = await authenticatedFetch('/empleados?soloActivos=true');
+ * if (response.ok) {
+ *   const data = await response.json();
+ * }
+ */
+async function authenticatedFetch(url, options = {}) {
+  // Get authentication token
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+  
+  if (!token) {
+    console.error('No authentication token found');
+    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+    throw new Error('No authentication token');
+  }
+  
+  // Ensure URL is absolute (add API_BASE if relative)
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  
+  // Merge headers with Authorization
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    ...options.headers
+  };
+  
+  // Perform fetch
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers
+  });
+  
+  // Handle 401 Unauthorized (expired/invalid token)
+  if (response.status === 401) {
+    await Swal.fire({
+      title: 'Sesión Expirada',
+      text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+      icon: 'warning',
+      confirmButtonText: 'Ir a Login'
+    });
+    
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
+    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+    throw new Error('Unauthorized - Session expired');
+  }
+  
+  return response;
+}
+
+/**
+ * Renderiza estrellas de calificación basado en un rating numérico
  * @param {number} rating - Calificaci\u00f3n de 0 a 5
  * @returns {string} HTML con iconos de estrellas
  */

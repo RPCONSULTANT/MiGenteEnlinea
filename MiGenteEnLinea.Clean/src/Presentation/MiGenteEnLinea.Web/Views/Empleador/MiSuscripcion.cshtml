@@ -270,7 +270,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:5015/api';
+        const API_BASE_URL = API_BASE;
         let suscripcionActual = null;
 
         function getAuthToken() {
@@ -314,13 +314,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/suscripciones/activa/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/suscripciones/activa/${userId}`);
 
                 if (response.status === 404) {
                     // No tiene suscripción
@@ -398,13 +392,7 @@
             const userId = localStorage.getItem('userId');
 
             try {
-                const response = await fetch(`${API_BASE_URL}/empleados?userId=${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/empleados?userId=${userId}`);
 
                 if (response.ok) {
                     const empleados = await response.json();
@@ -431,13 +419,7 @@
             if (!token || !userId) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/suscripciones/ventas/${userId}?pageSize=10`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authenticatedFetch(`/suscripciones/ventas/${userId}?pageSize=10`);
 
                 if (!response.ok) {
                     throw new Error('Error al cargar historial');
@@ -534,12 +516,8 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/suscripciones/${userId}`, {
+                const response = await authenticatedFetch(`/suscripciones/${userId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         userId: userId,
                         motivo: motivo === 'otro' ? otroMotivo : motivo

@@ -177,7 +177,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:5015/api';
+        const API_BASE_URL = API_BASE;
 
         function getAuthToken() {
             return localStorage.getItem('accessToken');
@@ -194,9 +194,7 @@
 
             try {
                 // Load empleados count
-                const empleadosResponse = await fetch(`${API_BASE_URL}/empleados`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const empleadosResponse = await authenticatedFetch('/empleados');
                 if (empleadosResponse.ok) {
                     const empleadosData = await empleadosResponse.json();
                     // API devuelve PaginatedList con .items, o array directo
@@ -206,9 +204,7 @@
 
                 // Load ventas/pagos history
                 if (userId) {
-                    const ventasResponse = await fetch(`${API_BASE_URL}/suscripciones/ventas/${userId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const ventasResponse = await authenticatedFetch(`/suscripciones/ventas/${userId}`);
                     if (ventasResponse.ok) {
                         const ventas = await ventasResponse.json();
                         const totalPagos = ventas.reduce((sum, v) => sum + (v.precio || 0), 0);
@@ -231,9 +227,7 @@
 
                 // Load calificaciones hechas por este empleador
                 if (userId) {
-                    const calificacionesResponse = await fetch(`${API_BASE_URL}/calificaciones/por-empleador/${userId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const calificacionesResponse = await authenticatedFetch(`/calificaciones/por-empleador/${userId}`);
                     if (calificacionesResponse.ok) {
                         const calificaciones = await calificacionesResponse.json();
                         document.getElementById('lbCalificaciones').textContent = calificaciones.length || 0;
@@ -245,9 +239,7 @@
 
                 // Load consultas (perfiles consultados por este empleador)
                 if (userId) {
-                    const consultasResponse = await fetch(`${API_BASE_URL}/consultas/count/${userId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    const consultasResponse = await authenticatedFetch(`/consultas/count/${userId}`);
                     if (consultasResponse.ok) {
                         const consultasData = await consultasResponse.json();
                         document.getElementById('lbConsultas').textContent = consultasData.count || 0;

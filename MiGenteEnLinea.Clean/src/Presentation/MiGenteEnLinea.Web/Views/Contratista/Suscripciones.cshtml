@@ -82,8 +82,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // API Base URL - Configurar según ambiente
-        const API_BASE = 'http://localhost:5015/api';
+        // API Base URL viene del global custom.js
         
         $(document).ready(function () {
             loadSuscripcion();
@@ -118,13 +117,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/suscripciones/usuario/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const response = await authenticatedFetch(`/suscripciones/usuario/${userId}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -153,13 +146,7 @@
             if (!userId) return;
             
             try {
-                const response = await fetch(`${API_BASE}/suscripciones/ventas/usuario/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const response = await authenticatedFetch(`/suscripciones/ventas/usuario/${userId}`);
                 
                 if (response.ok) {
                     const ventas = await response.json();
@@ -225,12 +212,8 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/suscripciones/${userId}`, {
+                const response = await authenticatedFetch(`/suscripciones/${userId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
                     body: JSON.stringify({
                         userId: userId,
                         motivo: 'Cancelación solicitada por el usuario desde el panel web'

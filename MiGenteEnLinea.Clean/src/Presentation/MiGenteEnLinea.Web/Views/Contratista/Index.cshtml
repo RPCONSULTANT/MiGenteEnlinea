@@ -234,8 +234,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // API Base URL - Configurar según ambiente
-        const API_BASE = 'http://localhost:5015/api';
+        // API Base URL viene del global custom.js
         
         // Variables globales
         let contratistaId = null;
@@ -322,12 +321,10 @@
                     const formData = new FormData();
                     formData.append('file', file);
                     
-                    // Subir al API
-                    const response = await fetch(`${API_BASE}/contratistas/${userId}/foto`, {
+                    // Subir al API con authenticatedFetch (sin Content-Type para FormData)
+                    const response = await authenticatedFetch(`/contratistas/${userId}/foto`, {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
+                        headers: {}, // Vacío para que browser agregue boundary automático
                         body: formData
                     });
                     
@@ -423,13 +420,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/contratistas/by-user/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const response = await authenticatedFetch(`/contratistas/by-user/${userId}`);
                 
                 if (response.ok) {
                     const perfil = await response.json();
@@ -523,12 +514,8 @@
             console.log('API URL:', `${API_BASE}/contratistas/${userId}`);
             
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${userId}`, {
+                const response = await authenticatedFetch(`/contratistas/${userId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
                     body: JSON.stringify(perfilData)
                 });
                 
@@ -580,13 +567,7 @@
             if (!contratistaId) return;
             
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${contratistaId}/servicios`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const response = await authenticatedFetch(`/contratistas/${contratistaId}/servicios`);
                 
                 if (response.ok) {
                     const servicios = await response.json();
@@ -618,12 +599,8 @@
         // Agregar servicio vía API
         async function addServicio(detalleServicio) {
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${contratistaId}/servicios`, {
+                const response = await authenticatedFetch(`/contratistas/${contratistaId}/servicios`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    },
                     body: JSON.stringify({ DetalleServicio: detalleServicio })
                 });
                 
@@ -663,11 +640,8 @@
         // Remover servicio vía API
         async function removeServicio(servicioId, rowElement) {
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${contratistaId}/servicios/${servicioId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
+                const response = await authenticatedFetch(`/contratistas/${contratistaId}/servicios/${servicioId}`, {
+                    method: 'DELETE'
                 });
                 
                 if (response.ok) {
@@ -693,11 +667,8 @@
         // Activar perfil
         async function activarPerfil() {
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${userId}/activar`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
+                const response = await authenticatedFetch(`/contratistas/${userId}/activar`, {
+                    method: 'POST'
                 });
                 
                 if (response.ok) {
@@ -722,11 +693,8 @@
         // Desactivar perfil
         async function desactivarPerfil() {
             try {
-                const response = await fetch(`${API_BASE}/contratistas/${userId}/desactivar`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
+                const response = await authenticatedFetch(`/contratistas/${userId}/desactivar`, {
+                    method: 'POST'
                 });
                 
                 if (response.ok) {

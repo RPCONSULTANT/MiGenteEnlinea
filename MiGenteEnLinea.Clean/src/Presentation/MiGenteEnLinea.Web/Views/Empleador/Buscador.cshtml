@@ -455,6 +455,14 @@
             const ciudad = document.getElementById('ddlCiudad').value;
             
             try {
+                // Get authentication token
+                const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    return;
+                }
+                
                 // Construir URL del API
                 let url = `${API_BASE}/contratistas?soloActivos=true`;
                 if (busqueda) url += `&searchTerm=${encodeURIComponent(busqueda)}`;
@@ -462,7 +470,27 @@
                     url += `&provincia=${encodeURIComponent(ciudad)}`;
                 }
                 
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                // Handle 401 Unauthorized (expired/invalid token)
+                if (response.status === 401) {
+                    Swal.fire({
+                        title: 'Sesión Expirada',
+                        text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+                        icon: 'warning',
+                        confirmButtonText: 'Ir a Login'
+                    }).then(() => {
+                        localStorage.removeItem('accessToken');
+                        localStorage.removeItem('token');
+                        window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    });
+                    return;
+                }
                 
                 if (response.ok) {
                     const contratistas = await response.json();

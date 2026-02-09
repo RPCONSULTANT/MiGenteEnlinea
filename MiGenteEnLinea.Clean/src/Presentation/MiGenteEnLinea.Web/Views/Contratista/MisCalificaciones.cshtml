@@ -69,8 +69,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // API Base URL - Configurar según ambiente
-        const API_BASE = 'http://localhost:5015/api';
+        // API Base URL viene del global custom.js
         
         // Función para renderizar estrellas
         function renderStars(rating) {
@@ -100,13 +99,7 @@
             
             try {
                 // Primero obtener la cédula del contratista
-                const cedulaResponse = await fetch(`${API_BASE}/contratistas/cedula/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const cedulaResponse = await authenticatedFetch(`/contratistas/cedula/${userId}`);
                 
                 if (!cedulaResponse.ok) {
                     console.log('No se pudo obtener cédula del contratista');
@@ -116,13 +109,7 @@
                 const cedula = await cedulaResponse.text();
                 
                 // Cargar calificaciones por cédula
-                const response = await fetch(`${API_BASE}/calificaciones/contratista/${cedula}?pageSize=50`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                    }
-                });
+                const response = await authenticatedFetch(`/calificaciones/contratista/${cedula}?pageSize=50`);
                 
                 if (response.ok) {
                     const data = await response.json();

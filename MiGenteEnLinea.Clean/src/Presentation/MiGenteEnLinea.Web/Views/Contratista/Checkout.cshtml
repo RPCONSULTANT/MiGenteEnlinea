@@ -206,8 +206,8 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // API Base URL
-        const API_BASE_URL = 'http://localhost:5015/api';
+        // API Configuration - usa global API_BASE del custom.js
+        const API_BASE_URL = API_BASE;
         var planId = '@planId' || '10';
         var planData = null;
         
