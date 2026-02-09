@@ -90,24 +90,44 @@
 
     <hr class="my-5">
 
-    <!-- Historial de Facturación -->
-    <h3><i class="fa fa-history"></i> Historial de Facturación</h3>
-    <p class="text-muted">Revisa todos tus pagos y facturas anteriores.</p>
+    <!-- Historial de Pagos - Tabs -->
+    <h3><i class="fa fa-history"></i> Historial de Pagos</h3>
+    <p class="text-muted">Revisa todos tus pagos de suscripción y nómina.</p>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered" id="gridPagos">
-            <thead class="table-dark">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Descripción</th>
-                    <th>Método de Pago</th>
-                    <th>Monto</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
+    <!-- Tabs -->
+    <div class="mb-4">
+        <ul class="nav nav-tabs" id="tabsHistorial" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabSuscripciones-tab" data-bs-toggle="tab" data-bs-target="#tabSuscripciones" type="button" role="tab" aria-controls="tabSuscripciones" aria-selected="true">
+                    <i class="fa fa-credit-card"></i> Pagos de Suscripción
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabNomina-tab" data-bs-toggle="tab" data-bs-target="#tabNomina" type="button" role="tab" aria-controls="tabNomina" aria-selected="false">
+                    <i class="fa fa-money-bill"></i> Pagos de Nómina
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="tabsHistorialContent">
+        <!-- Tab 1: Pagos de Suscripción -->
+        <div class="tab-pane fade show active" id="tabSuscripciones" role="tabpanel" aria-labelledby="tabSuscripciones-tab">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered" id="gridPagos">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Método de Pago</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
                     <td>01/01/2024</td>
                     <td>Suscripción Anual - Plan Básico</td>
                     <td>Visa ****1234</td>
@@ -118,25 +138,66 @@
                             <i class="fa fa-file-pdf"></i> Ver Factura
                         </button>
                     </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                    </tbody>
+                </table>
+            </div>
 
-    <!-- Paginación -->
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1">Anterior</a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link" href="#">Siguiente</a>
-            </li>
-        </ul>
-    </nav>
+            <!-- Paginación Suscripciones -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center" id="paginacionSuscripciones">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Tab 2: Pagos de Nómina -->
+        <div class="tab-pane fade" id="tabNomina" role="tabpanel" aria-labelledby="tabNomina-tab">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered" id="gridRecibos">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Período</th>
+                            <th>Clasificación</th>
+                            <th>Empleados</th>
+                            <th>Total Nómina</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fa fa-info-circle"></i> Cargando histórico de nómina...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación Nómina -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center" id="paginacionNomina">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
 
     <hr class="my-5">
 
@@ -288,6 +349,7 @@
             // Cargar datos de suscripción desde API
             cargarSuscripcion();
             cargarHistorialPagos();
+            cargarHistorialNomina();
             
             // Mostrar modal de cancelación
             $('#btnCancelarSuscripcion').on('click', function() {
@@ -383,29 +445,54 @@
             `;
             $('#caracteristicasPlan').html(caracteristicas);
 
-            // Cargar uso actual (empleados registrados)
-            cargarUsoActual(plan.empleados);
+            // Cargar uso actual (empleados, contratistas y nominas)
+            cargarUsoActual();
         }
 
-        async function cargarUsoActual(limiteEmpleados) {
-            const token = getAuthToken();
-            const userId = localStorage.getItem('userId');
-
+        async function cargarUsoActual() {
             try {
-                const response = await authenticatedFetch(`/empleados?userId=${userId}`);
+                const response = await authenticatedFetch('/empleados/resumen-uso');
 
-                if (response.ok) {
-                    const empleados = await response.json();
-                    const total = Array.isArray(empleados) ? empleados.length : 0;
-                    const porcentaje = limiteEmpleados > 0 ? (total / limiteEmpleados) * 100 : 0;
-                    
-                    $('#barraEmpleados')
-                        .css('width', Math.min(porcentaje, 100) + '%')
-                        .text(`${total}/${limiteEmpleados}`);
-                    
-                    if (porcentaje >= 90) {
-                        $('#barraEmpleados').removeClass('bg-primary').addClass('bg-danger');
-                    }
+                if (!response.ok) {
+                    throw new Error('Error al cargar resumen de uso');
+                }
+
+                const resumen = await response.json();
+                const empleadosRegistrados = resumen.empleadosRegistrados ?? resumen.EmpleadosRegistrados ?? 0;
+                const limiteEmpleados = resumen.limiteEmpleados ?? resumen.LimiteEmpleados ?? 0;
+                const contratistasConsultados = resumen.contratistasConsultados ?? resumen.ContratistasConsultados ?? 0;
+                const limiteContratistas = resumen.limiteContratistas ?? resumen.LimiteContratistas ?? 0;
+                const nominasProcesadas = resumen.nominasProcesadasMes ?? resumen.NominasProcesadasMes ?? 0;
+                const planInclujeNomina = resumen.planInclujeNomina ?? resumen.PlanInclujeNomina ?? false;
+                const porcentajeEmpleados = resumen.porcentajeEmpleados ?? resumen.PorcentajeEmpleados ??
+                    (limiteEmpleados > 0 ? (empleadosRegistrados / limiteEmpleados) * 100 : 0);
+                const porcentajeContratistas = resumen.porcentajeContratistas ?? resumen.PorcentajeContratistas ??
+                    (limiteContratistas > 0 ? (contratistasConsultados / limiteContratistas) * 100 : 0);
+
+                $('#barraEmpleados')
+                    .removeClass('bg-primary bg-warning bg-danger')
+                    .addClass(porcentajeEmpleados >= 90 ? 'bg-danger' : porcentajeEmpleados >= 80 ? 'bg-warning' : 'bg-primary')
+                    .css('width', Math.min(porcentajeEmpleados, 100) + '%')
+                    .text(`${empleadosRegistrados}/${limiteEmpleados}`);
+
+                $('#barraUsuarios')
+                    .removeClass('bg-info bg-warning bg-danger')
+                    .addClass(porcentajeContratistas >= 90 ? 'bg-danger' : porcentajeContratistas >= 80 ? 'bg-warning' : 'bg-info')
+                    .css('width', Math.min(porcentajeContratistas, 100) + '%')
+                    .text(`${contratistasConsultados}/${limiteContratistas}`);
+
+                if (planInclujeNomina) {
+                    $('#barraNominas')
+                        .removeClass('bg-secondary')
+                        .addClass('bg-success')
+                        .css('width', '100%')
+                        .text(`${nominasProcesadas}`);
+                } else {
+                    $('#barraNominas')
+                        .removeClass('bg-success')
+                        .addClass('bg-secondary')
+                        .css('width', '0%')
+                        .text('No incluido');
                 }
             } catch (error) {
                 console.log('Error cargando uso:', error);
@@ -495,6 +582,79 @@
 
         function mostrarErrorSuscripcion() {
             Swal.fire('Error', 'No se pudo cargar la información de tu suscripción', 'error');
+        }
+
+        // Función para cargar histórico de nómina
+        async function cargarHistorialNomina() {
+            const token = getAuthToken();
+            const userId = localStorage.getItem('userId');
+            
+            if (!token || !userId) return;
+
+            try {
+                const response = await authenticatedFetch(`/nominas/historial/${userId}?pageSize=10`);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar histórico de nómina');
+                }
+
+                const nominas = await response.json();
+                actualizarTablaRecibos(nominas);
+
+            } catch (error) {
+                console.error('Error cargando histórico de nómina:', error);
+                // Mostrar tabla vacía si hay error
+                const tbody = $('#gridRecibos tbody');
+                tbody.html('<tr><td colspan="7" class="text-center text-muted">No hay información de nóminas registradas</td></tr>');
+            }
+        }
+
+        function actualizarTablaRecibos(nominas) {
+            const tbody = $('#gridRecibos tbody');
+            tbody.empty();
+
+            if (!nominas || nominas.length === 0) {
+                tbody.html('<tr><td colspan="7" class="text-center text-muted">No hay pagos de nómina registrados</td></tr>');
+                return;
+            }
+
+            nominas.forEach(nomina => {
+                const fecha = new Date(nomina.fechaProcesamiento || nomina.fechaTransaccion).toLocaleDateString('es-DO');
+                
+                // Determinar badge de estado
+                let estadoBadge = '';
+                if (nomina.estado === 1 || nomina.estado === 'Procesado') {
+                    estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                } else if (nomina.estado === 2) {
+                    estadoBadge = '<span class="badge bg-warning">Parcial</span>';
+                } else {
+                    estadoBadge = '<span class="badge bg-danger">Error</span>';
+                }
+
+                const row = `
+                    <tr>
+                        <td>${nomina.periodo || nomina.mes}</td>
+                        <td><span class="badge bg-info">Nómina de Empleados</span></td>
+                        <td>${nomina.cantidadEmpleados || nomina.empleadosAfectados || '-'}</td>
+                        <td>RD$${(nomina.totalNomina || nomina.monto || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 })}</td>
+                        <td>${fecha}</td>
+                        <td>${estadoBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="descargarReciboNomina(${nomina.nominaId || nomina.id})">
+                                <i class="fa fa-file-pdf"></i> PDF
+                            </button>
+                            ${nomina.emailEnviado ? '<span class="badge bg-success ms-2">Enviado</span>' : ''}
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function descargarReciboNomina(nominaId) {
+            // Nota: Requiere implementación del endpoint de descarga de PDF
+            Swal.fire('Información', 'La descarga de recibos de nómina estará disponible próximamente.', 'info');
+            // window.open(`/Empleador/Nomina/DescargarRecibo/${nominaId}`, '_blank');
         }
 
         // Confirmar cancelación

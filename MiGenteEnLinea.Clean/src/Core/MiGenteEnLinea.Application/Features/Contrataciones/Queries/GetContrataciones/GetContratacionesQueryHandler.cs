@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Contrataciones.DTOs;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
+using MiGenteEnLinea.Domain.Entities.Empleados;
 
 namespace MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContrataciones;
 
@@ -102,6 +103,42 @@ public class GetContratacionesQueryHandler : IRequestHandler<GetContratacionesQu
 
         // Mapear a DTOs
         var dtos = _mapper.Map<List<ContratacionDto>>(contrataciones);
+
+        // ✅ ENRICH DTOs with contractor data (EmpleadoTemporal photo/identification)
+        if (dtos.Any())
+        {
+            var empleadoTemporalIds = dtos
+                .Where(d => d.ContratacionId.HasValue)
+                .Select(d => d.ContratacionId.Value)
+                .Distinct()
+                .ToList();
+
+            if (empleadoTemporalIds.Count > 0)
+            {
+                // Fetch EmpleadosTemporales with their contractor data
+                var empleadosTemporales = await _context.Set<EmpleadoTemporal>()
+                    .Where(et => empleadoTemporalIds.Contains(et.ContratacionId))
+                    .ToListAsync(cancellationToken);
+
+                var empleadoTemporalDict = empleadosTemporales.ToDictionary(et => et.ContratacionId);
+
+                // Enrich each DTO with contractor info
+                foreach (var dto in dtos.Where(d => d.ContratacionId.HasValue))
+                {
+                    if (empleadoTemporalDict.TryGetValue(dto.ContratacionId!.Value, out var empleadoTemporal))
+                    {
+                        dto.ContratistaIdentificacion = empleadoTemporal.Identificacion;
+                        dto.ContratistaCompleteName = empleadoTemporal.ObtenerNombreCompleto();
+                        dto.ContratistaFotoUrl = empleadoTemporal.Foto;
+
+                        _logger.LogDebug(
+                            "Enriched DTO {DetalleId} with contractor {Identificacion}",
+                            dto.DetalleId,
+                            empleadoTemporal.Identificacion);
+                    }
+                }
+            }
+        }
 
         return dtos;
     }

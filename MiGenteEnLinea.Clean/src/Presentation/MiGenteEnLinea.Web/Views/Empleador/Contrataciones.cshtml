@@ -557,7 +557,7 @@
             if (!allPendientes.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
                             <i class="fas fa-clock fa-2x text-muted mb-3 d-block"></i>
                             <span class="text-muted">No hay contrataciones pendientes</span>
                             <br><small class="text-primary">Haz clic en "Nueva Contratación" para crear una</small>
@@ -571,7 +571,18 @@
                 <tr>
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
-                        <strong>${c.descripcionCorta || 'Sin descripción'}</strong>
+                        <div class="d-flex align-items-center">
+                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                                 alt="${c.contratistaCompleteName}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40"
+                                 onerror="this.src='/images/circular1.png'">
+                            <div>
+                                <strong>${c.descripcionCorta || 'Sin descripción'}</strong>
+                                <br><small class="text-muted">${c.contratistaCompleteName || 'Contratista'}</small>
+                            </div>
+                        </div>
                     </td>
                     <td>${formatDate(c.fechaInicio)}</td>
                     <td>${formatDate(c.fechaFinal)}</td>
@@ -604,7 +615,7 @@
             if (!allActivas.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
                             <i class="fas fa-briefcase fa-2x text-muted mb-3 d-block"></i>
                             <span class="text-muted">No hay trabajos en progreso</span>
                         </td>
@@ -616,7 +627,20 @@
             tbody.innerHTML = allActivas.map(c => `
                 <tr>
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
-                    <td><strong>${c.descripcionCorta || 'Sin descripción'}</strong></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                                 alt="${c.contratistaCompleteName}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40"
+                                 onerror="this.src='/images/circular1.png'">
+                            <div>
+                                <strong>${c.descripcionCorta || 'Sin descripción'}</strong>
+                                <br><small class="text-muted">${c.contratistaCompleteName || 'Contratista'}</small>
+                            </div>
+                        </div>
+                    </td>
                     <td>${formatDate(c.fechaInicioReal || c.fechaInicio)}</td>
                     <td>${formatDate(c.fechaFinal)}</td>
                     <td class="text-end">
@@ -652,7 +676,7 @@
             if (!allCompletadas.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <i class="fas fa-check-circle fa-2x text-muted mb-3 d-block"></i>
                             <span class="text-muted">No hay trabajos completados</span>
                         </td>
@@ -664,7 +688,20 @@
             tbody.innerHTML = allCompletadas.map(c => `
                 <tr>
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
-                    <td><strong>${c.descripcionCorta || 'Sin descripción'}</strong></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                                 alt="${c.contratistaCompleteName}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40"
+                                 onerror="this.src='/images/circular1.png'">
+                            <div>
+                                <strong>${c.descripcionCorta || 'Sin descripción'}</strong>
+                                <br><small class="text-muted">${c.contratistaCompleteName || 'Contratista'}</small>
+                            </div>
+                        </div>
+                    </td>
                     <td>
                         <small>${formatDate(c.fechaInicio)} - ${formatDate(c.fechaFinalizacionReal || c.fechaFinal)}</small>
                     </td>

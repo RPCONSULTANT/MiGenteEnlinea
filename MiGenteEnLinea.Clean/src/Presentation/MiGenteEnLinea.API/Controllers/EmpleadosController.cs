@@ -39,6 +39,7 @@ using MiGenteEnLinea.Application.Features.Empleados.Queries.GetFichaTemporales;
 using MiGenteEnLinea.Application.Features.Empleados.Queries.GetTodosLosTemporales;
 using MiGenteEnLinea.Application.Features.Empleados.Queries.GetVistaContratacionTemporal;
 using MiGenteEnLinea.Application.Features.Empleados.Queries.GetReciboHeaderByPagoId;
+using MiGenteEnLinea.Application.Features.Empleados.Queries.GetResumenUsoEmpleador;
 using MiGenteEnLinea.Application.Features.Empleados.Queries.ConsultarPadron;
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
 using MiGenteEnLinea.Application.Common.Interfaces;
@@ -1344,6 +1345,28 @@ public class EmpleadosController : ControllerBase
             _logger.LogError(ex, "Error generando descargo PDF para empleado {EmpleadoId}", id);
             return StatusCode(500, new { error = "Error al generar el descargo PDF" });
         }
+    }
+
+    /// <summary>
+    /// Obtiene el resumen de uso actual del empleador.
+    /// Incluye empleados registrados, contratistas consultados y nóminas procesadas en el mes.
+    /// </summary>
+    /// <returns>Resumen de uso del empleador</returns>
+    /// <response code="200">Resumen obtenido exitosamente</response>
+    /// <response code="400">UserId inválido</response>
+    /// <response code="401">No autorizado</response>
+    [HttpGet("resumen-uso")]
+    [ProducesResponseType(typeof(ResumenUsoEmpleadorDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ResumenUsoEmpleadorDto>> GetResumenUso()
+    {
+        var userIdValue = GetUserId();
+
+        var query = new GetResumenUsoEmpleadorQuery { UserId = userIdValue };
+        var resumen = await _mediator.Send(query);
+
+        return Ok(resumen);
     }
 
     /// <summary>

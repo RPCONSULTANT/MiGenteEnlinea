@@ -470,9 +470,9 @@
                     
                     // El API devuelve un objeto SearchContratistasResult con { items, totalCount, pageIndex, pageSize }
                     // Extraer el array de contratistas del resultado
-                    const contratistas = result.items || result.contratistas || result || [];
-                    
-                    renderContratistas(contratistas);
+                    window.contratistas = result.items || result.contratistas || result || [];
+
+                    renderContratistas(window.contratistas);
                 } else {
                     throw new Error('Error al cargar contratistas');
                 }
@@ -518,7 +518,7 @@
                 const rating = c.promedioCalificacion || 0;
                 const nombre = c.nombreCompleto || `${c.nombre || ''} ${c.apellido || ''}`.trim() || 'Sin nombre';
                 const titulo = c.titulo || c.sector || 'Profesional';
-                const imageUrl = c.imagenUrl || `${API_BASE}/contratistas/${c.contratistaId}/foto`;
+                const imageUrl = getContratistaImageUrl(c);
                 
                 return `
                     <div class="col-md-3 col-sm-6 mb-3">
@@ -558,7 +558,7 @@
         // Ver perfil del contratista
         async function verPerfilContratista(contratistaId) {
             // Buscar contratista en el array cargado
-            const perfil = contratistas.find(c => c.contratistaId === contratistaId);
+            const perfil = (window.contratistas || []).find(c => c.contratistaId === contratistaId);
             if (perfil) {
                 mostrarPerfilEnModal(perfil);
             } else {
@@ -570,7 +570,7 @@
         function mostrarPerfilEnModal(perfil) {
             const nombre = perfil.nombreCompleto || `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim();
             
-            const modalImageUrl = perfil.imagenUrl || `${API_BASE}/contratistas/${perfil.contratistaId}/foto`;
+            const modalImageUrl = getContratistaImageUrl(perfil);
             const modalImage = document.getElementById('imgProfile');
             modalImage.src = modalImageUrl;
             modalImage.onerror = function() {
@@ -606,7 +606,22 @@
         }
         
         // Variable global para almacenar contratistas cargados
-        let contratistas = [];
+        function getContratistaImageUrl(contratista) {
+            if (!contratista) return '/images/circular1.png';
+
+            const rawUrl = contratista.imagenUrl || contratista.ImagenUrl || contratista.fotoUrl || contratista.FotoUrl;
+            if (rawUrl && typeof rawUrl === 'string' && rawUrl.trim().length > 0) {
+                return rawUrl.startsWith('/') ? `${API_BASE}${rawUrl}` : rawUrl;
+            }
+
+            if (contratista.contratistaId) {
+                return `${API_BASE}/contratistas/${contratista.contratistaId}/foto`;
+            }
+
+            return '/images/circular1.png';
+        }
+
+        window.contratistas = [];
     </script>
 </body>
 </html>

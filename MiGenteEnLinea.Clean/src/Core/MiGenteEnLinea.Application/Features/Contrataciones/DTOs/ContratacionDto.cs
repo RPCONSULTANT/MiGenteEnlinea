@@ -78,4 +78,22 @@ public class ContratacionDto
     /// </summary>
     [JsonPropertyName("fechaFinalizacionReal")]
     public DateTime? FechaFinalizacionReal { get; set; }
+
+    /// <summary>
+    /// Identificación del contratista (cédula/RNC)
+    /// </summary>
+    [JsonPropertyName("contratistaIdentificacion")]
+    public string? ContratistaIdentificacion { get; set; }
+
+    /// <summary>
+    /// Nombre completo del contratista
+    /// </summary>
+    [JsonPropertyName("contratistaCompleteName")]
+    public string? ContratistaCompleteName { get; set; }
+
+    /// <summary>
+    /// URL de la foto del contratista
+    /// </summary>
+    [JsonPropertyName("contratistaFotoUrl")]
+    public string? ContratistaFotoUrl { get; set; }
 }

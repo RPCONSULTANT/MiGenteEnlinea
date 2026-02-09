@@ -8,6 +8,7 @@ using MiGenteEnLinea.Application.Features.Nominas.Commands.ProcesarNominaLote;
 using MiGenteEnLinea.Application.Features.Nominas.Commands.ProcessContractPayment;
 using MiGenteEnLinea.Application.Features.Nominas.DTOs;
 using MiGenteEnLinea.Application.Features.Nominas.Queries.GetNominaResumen;
+using MiGenteEnLinea.Application.Features.Nominas.Queries.GetHistorialNominaByUserId;
 using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorByUserId;
 using System.Security.Claims;
 
@@ -273,8 +274,87 @@ public class NominasController : ControllerBase
     }
 
     /// <summary>
-    /// Descarga un PDF específico de recibo.
+    /// Obtiene el histórico paginado de nóminas procesadas de un empleador.
     /// </summary>
+    /// <param name="userId">ID del usuario (empleador). Si no se proporciona, usa el usuario autenticado.</param>
+    /// <param name="pageIndex">Número de página (default: 1)</param>
+    /// <param name="pageSize">Cantidad de registros por página (default: 10)</param>
+    /// <param name="periodo">Filtro opcional de período (ej: "2025-01")</param>
+    /// <param name="estado">Filtro opcional de estado</param>
+    /// <returns>Lista paginada de nóminas con información de períodos y montos</returns>
+    /// <response code="200">Histórico de nóminas obtenido exitosamente</response>
+    /// <response code="401">Usuario no autenticado</response>
+    [HttpGet("historial/{userId}")]
+    [ProducesResponseType(typeof(List<NominaHistorialDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<NominaHistorialDto>>> GetHistorial(
+        [FromRoute] int userId,
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? periodo = null,
+        [FromQuery] int? estado = null)
+    {
+        _logger.LogInformation(
+            "Getting payroll history - UserId: {UserId}, PageIndex: {PageIndex}, PageSize: {PageSize}",
+            userId,
+            pageIndex,
+            pageSize);
+
+        // Validar paginación
+        if (pageIndex < 1)
+            pageIndex = 1;
+        if (pageSize < 1 || pageSize > 100)
+            pageSize = 10;
+
+        var query = new GetHistorialNominaByUserIdQuery
+        {
+            UserId = userId,
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            Periodo = periodo,
+            Estado = estado
+        };
+
+        try
+        {
+            var historial = await _mediator.Send(query);
+            return Ok(historial);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User payroll history not found");
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payroll history");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                new { error = "Error al obtener histórico de nómina" });
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el histórico paginado de nóminas del usuario autenticado.
+    /// </summary>
+    [HttpGet("historial")]
+    [ProducesResponseType(typeof(List<NominaHistorialDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<NominaHistorialDto>>> GetMiHistorial(
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? periodo = null,
+        [FromQuery] int? estado = null)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { error = "Usuario no autenticado" });
+        }
+
+        return await GetHistorial(userId, pageIndex, pageSize, periodo, estado);
+    }
+
     /// <param name="reciboId">ID del recibo</param>
     /// <returns>Archivo PDF para descarga</returns>
     /// <response code="200">PDF generado exitosamente</response>
