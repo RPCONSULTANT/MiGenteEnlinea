@@ -262,6 +262,9 @@ app.UseCors("AppPolicy");
 // HTTPS Redirection (después de CORS para no bloquear preflight)
 app.UseHttpsRedirection();
 
+// Static Files - Servir archivos desde wwwroot (imágenes, documentos, etc.)
+app.UseStaticFiles();
+
 // Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();

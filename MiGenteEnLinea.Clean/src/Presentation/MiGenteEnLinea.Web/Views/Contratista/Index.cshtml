@@ -439,7 +439,7 @@
                 
                 if (response.ok) {
                     const perfil = await response.json();
-                    contratistaId = perfil.contratistaId || perfil.id;
+                    contratistaId = perfil.ContratistaId || perfil.contratistaId || perfil.id;
                     perfilActivo = perfil.activo;
                     
                     // Llenar campos del formulario
@@ -460,7 +460,11 @@
                     
                     // Imagen de perfil
                     if (perfil.imagenUrl) {
-                        $('#profileImage').attr('src', perfil.imagenUrl);
+                        // Si la URL es relativa, construir URL completa del API
+                        const imageUrl = perfil.imagenUrl.startsWith('http') 
+                            ? perfil.imagenUrl 
+                            : `${API_BASE}${perfil.imagenUrl}`;
+                        $('#profileImage').attr('src', imageUrl);
                     }
                     
                     // Mostrar/ocultar botones según estado
