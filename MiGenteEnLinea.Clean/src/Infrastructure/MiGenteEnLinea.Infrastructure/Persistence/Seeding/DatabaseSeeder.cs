@@ -12,6 +12,7 @@ public class DatabaseSeeder
 {
     private readonly MiGenteDbContext _context;
     private readonly ILogger<DatabaseSeeder> _logger;
+    private const string TestPasswordHash = "seed-hash";
 
     public DatabaseSeeder(MiGenteDbContext context, ILogger<DatabaseSeeder> logger)
     {
@@ -29,40 +30,193 @@ public class DatabaseSeeder
 
         try
         {
-            await SeedPlanesEmpleadoresAsync();
-            await SeedPlanesContratistasAsync();
-            await SeedProvinciasAsync();
-            await SeedSectoresAsync();
-            await SeedServiciosAsync();
+            await SeedCatalogsAsync();
             await SeedMissingEmpleadoresAsync();
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-            var seedTestData = string.Equals(
-                Environment.GetEnvironmentVariable("MIGENTE_SEED_TEST_DATA"),
-                "true",
-                StringComparison.OrdinalIgnoreCase);
 
-            if (seedTestData || environment.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            if (ShouldSeedTestData())
             {
-                await SeedContratistasAsync();
+                await SeedTestDataAsync();
             }
             else
             {
-                _logger.LogInformation(
-                    "Omitiendo seed de contratistas de prueba en entorno {Environment}",
-                    environment);
+                _logger.LogInformation("Omitiendo seed de datos de prueba en este entorno.");
             }
-            
-            // TODO: Re-enable once we have test empleadores with valid userIDs
-            // Calificaciones table requires valid Credenciales.userID (empleador who rates)
-            // await SeedCalificacionesAsync();
 
             _logger.LogInformation("✅ Seeding completado exitosamente");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Error durante el seeding de la base de datos");
-            throw;
         }
+    }
+
+    private static bool ShouldSeedTestData()
+    {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+        var seedTestData = string.Equals(
+            Environment.GetEnvironmentVariable("MIGENTE_SEED_TEST_DATA"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (seedTestData)
+        {
+            return true;
+        }
+
+        return environment.Equals("Development", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task SeedCatalogsAsync()
+    {
+        await SeedPlanesEmpleadoresAsync();
+        await SeedPlanesContratistasAsync();
+        await SeedProvinciasAsync();
+        await SeedSectoresAsync();
+        await SeedServiciosAsync();
+    }
+
+    private async Task SeedTestDataAsync()
+    {
+        await SeedTestCredencialesAndPerfilesAsync();
+        await SeedContratistasAsync();
+        await SeedCalificacionesAsync();
+    }
+
+    private async Task SeedTestCredencialesAndPerfilesAsync()
+    {
+        _logger.LogInformation("Insertando credenciales y perfiles de prueba...");
+
+        const string empleador1 = "00000000-0000-0000-0000-000000000101";
+        const string empleador2 = "00000000-0000-0000-0000-000000000102";
+        const string contratista1 = "00000000-0000-0000-0000-000000000201";
+        const string contratista2 = "00000000-0000-0000-0000-000000000202";
+        const string contratista3 = "00000000-0000-0000-0000-000000000203";
+        const string contratista4 = "00000000-0000-0000-0000-000000000204";
+        const string contratista5 = "00000000-0000-0000-0000-000000000205";
+        const string contratista6 = "00000000-0000-0000-0000-000000000206";
+        const string contratista7 = "00000000-0000-0000-0000-000000000207";
+        const string contratista8 = "00000000-0000-0000-0000-000000000208";
+        const string contratista9 = "00000000-0000-0000-0000-000000000209";
+        const string contratista10 = "00000000-0000-0000-0000-000000000210";
+        const string contratista11 = "00000000-0000-0000-0000-000000000211";
+        const string contratista12 = "00000000-0000-0000-0000-000000000212";
+        const string contratista13 = "00000000-0000-0000-0000-000000000213";
+        const string contratista14 = "00000000-0000-0000-0000-000000000214";
+        const string contratista15 = "00000000-0000-0000-0000-000000000215";
+
+        var seedSql = $@"
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{empleador1}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{empleador1}', 'empleador1@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{empleador2}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{empleador2}', 'empleador2@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista1}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista1}', 'contratista1@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista2}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista2}', 'contratista2@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista3}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista3}', 'contratista3@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista4}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista4}', 'contratista4@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista5}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista5}', 'contratista5@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista6}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista6}', 'contratista6@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista7}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista7}', 'contratista7@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista8}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista8}', 'contratista8@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista9}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista9}', 'contratista9@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista10}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista10}', 'contratista10@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista11}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista11}', 'contratista11@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista12}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista12}', 'contratista12@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista13}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista13}', 'contratista13@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista14}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista14}', 'contratista14@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Credenciales WHERE userID = '{contratista15}')
+                INSERT INTO Credenciales (userID, email, password, activo, created_at)
+                VALUES ('{contratista15}', 'contratista15@example.com', '{TestPasswordHash}', 1, GETUTCDATE());
+
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{empleador1}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{empleador1}', 1, 'Empleador', 'Uno', 'empleador1@example.com');
+
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{empleador2}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{empleador2}', 1, 'Empleador', 'Dos', 'empleador2@example.com');
+
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista1}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista1}', 2, 'Juan', 'Perez', 'contratista1@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista2}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista2}', 2, 'Carlos', 'Rodriguez', 'contratista2@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista3}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista3}', 2, 'Pedro', 'Martinez', 'contratista3@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista4}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista4}', 2, 'Ana', 'Garcia', 'contratista4@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista5}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista5}', 2, 'Luis', 'Fernandez', 'contratista5@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista6}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista6}', 2, 'Miguel', 'Santos', 'contratista6@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista7}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista7}', 2, 'Roberto', 'Diaz', 'contratista7@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista8}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista8}', 2, 'Jose', 'Vargas', 'contratista8@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista9}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista9}', 2, 'Limpieza', 'Profesional', 'contratista9@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista10}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista10}', 2, 'Maria', 'Lopez', 'contratista10@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista11}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista11}', 2, 'Alberto', 'Ramirez', 'contratista11@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista12}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista12}', 2, 'Herreria', 'Artistica', 'contratista12@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista13}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista13}', 2, 'Laura', 'Jimenez', 'contratista13@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista14}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista14}', 2, 'Fernando', 'Castillo', 'contratista14@example.com');
+            IF NOT EXISTS (SELECT 1 FROM Perfiles WHERE userID = '{contratista15}')
+                INSERT INTO Perfiles (fechaCreacion, userID, Tipo, Nombre, Apellido, Email)
+                VALUES (GETUTCDATE(), '{contratista15}', 2, 'Patricia', 'Nunez', 'contratista15@example.com');
+        ";
+
+        await _context.Database.ExecuteSqlRawAsync(seedSql);
+
+        _logger.LogInformation("Credenciales y perfiles de prueba insertados.");
     }
 
     /// <summary>
@@ -465,59 +619,18 @@ public class DatabaseSeeder
 
         _logger.LogInformation("Insertando calificaciones de prueba...");
 
-        await _context.Database.ExecuteSqlRawAsync(@"
-            INSERT INTO Calificaciones (contratacionID, contratistaID, ofertanteID, calificacion, comentario, fecha)
+        const string empleador1 = "00000000-0000-0000-0000-000000000101";
+
+        await _context.Database.ExecuteSqlRawAsync($@"
+            INSERT INTO Calificaciones (userID, tipo, identificacion, nombre, puntualidad, cumplimiento, conocimientos, recomendacion, fecha)
             VALUES
-                -- Electricista (contratistaID 1) - Promedio: 4.67
-                (NULL, 1, NULL, 5, 'Excelente trabajo, muy profesional y puntual', DATEADD(DAY, -30, GETUTCDATE())),
-                (NULL, 1, NULL, 5, 'Resolvió el problema eléctrico rápidamente', DATEADD(DAY, -45, GETUTCDATE())),
-                (NULL, 1, NULL, 4, 'Buen servicio, recomendado', DATEADD(DAY, -60, GETUTCDATE())),
-                
-                -- Plomero (contratistaID 2) - Promedio: 4.33
-                (NULL, 2, NULL, 5, 'Excelente plomero, solucionó fuga compleja', DATEADD(DAY, -20, GETUTCDATE())),
-                (NULL, 2, NULL, 4, 'Buen trabajo en la instalación', DATEADD(DAY, -35, GETUTCDATE())),
-                (NULL, 2, NULL, 4, 'Servicio confiable', DATEADD(DAY, -50, GETUTCDATE())),
-                
-                -- Carpintero (contratistaID 3) - Promedio: 5.0
-                (NULL, 3, NULL, 5, 'Muebles de excelente calidad, superó expectativas', DATEADD(DAY, -15, GETUTCDATE())),
-                (NULL, 3, NULL, 5, 'Artesano excepcional, muy detallista', DATEADD(DAY, -40, GETUTCDATE())),
-                (NULL, 3, NULL, 5, 'Trabajo impecable en la cocina integral', DATEADD(DAY, -65, GETUTCDATE())),
-                
-                -- Pintora (contratistaID 4) - Promedio: 4.5
-                (NULL, 4, NULL, 5, 'Pintura perfecta, muy limpia y ordenada', DATEADD(DAY, -10, GETUTCDATE())),
-                (NULL, 4, NULL, 4, 'Buen trabajo en toda la casa', DATEADD(DAY, -25, GETUTCDATE())),
-                
-                -- Jardinero (contratistaID 5) - Promedio: 4.67
-                (NULL, 5, NULL, 5, 'Jardín espectacular, diseño hermoso', DATEADD(DAY, -18, GETUTCDATE())),
-                (NULL, 5, NULL, 5, 'Excelente mantenimiento, muy profesional', DATEADD(DAY, -32, GETUTCDATE())),
-                (NULL, 5, NULL, 4, 'Buen servicio de jardinería', DATEADD(DAY, -55, GETUTCDATE())),
-                
-                -- Técnico AC (contratistaID 6) - Promedio: 4.75
-                (NULL, 6, NULL, 5, 'Instaló AC rápido y bien', DATEADD(DAY, -12, GETUTCDATE())),
-                (NULL, 6, NULL, 5, 'Excelente servicio técnico', DATEADD(DAY, -28, GETUTCDATE())),
-                (NULL, 6, NULL, 5, 'Resolvió problema de refrigeración', DATEADD(DAY, -42, GETUTCDATE())),
-                (NULL, 6, NULL, 4, 'Buen trabajo de mantenimiento', DATEADD(DAY, -58, GETUTCDATE())),
-                
-                -- Albañil (contratistaID 7) - Promedio: 5.0
-                (NULL, 7, NULL, 5, 'Maestro constructor, trabajo perfecto', DATEADD(DAY, -22, GETUTCDATE())),
-                (NULL, 7, NULL, 5, 'Remodelación excelente', DATEADD(DAY, -48, GETUTCDATE())),
-                
-                -- Mecánico (contratistaID 8) - Promedio: 4.33
-                (NULL, 8, NULL, 5, 'Reparó mi auto perfecto', DATEADD(DAY, -8, GETUTCDATE())),
-                (NULL, 8, NULL, 4, 'Buen diagnóstico y reparación', DATEADD(DAY, -24, GETUTCDATE())),
-                (NULL, 8, NULL, 4, 'Servicio confiable', DATEADD(DAY, -38, GETUTCDATE())),
-                
-                -- Limpieza (contratistaID 9) - Promedio: 4.75
-                (NULL, 9, NULL, 5, 'Oficina impecable, muy profesionales', DATEADD(DAY, -5, GETUTCDATE())),
-                (NULL, 9, NULL, 5, 'Excelente servicio de limpieza profunda', DATEADD(DAY, -19, GETUTCDATE())),
-                (NULL, 9, NULL, 4, 'Buen trabajo en el edificio', DATEADD(DAY, -33, GETUTCDATE())),
-                (NULL, 9, NULL, 5, 'Personal muy capacitado', DATEADD(DAY, -47, GETUTCDATE())),
-                
-                -- Chef (contratistaID 10) - Promedio: 5.0
-                (NULL, 10, NULL, 5, 'Comida deliciosa en la fiesta', DATEADD(DAY, -14, GETUTCDATE())),
-                (NULL, 10, NULL, 5, 'Chef increíble, menú espectacular', DATEADD(DAY, -29, GETUTCDATE()));
+                ('{empleador1}', 'Contratista', '00112233445', 'Juan Perez', 5, 5, 4, 5, DATEADD(DAY, -30, GETUTCDATE())),
+                ('{empleador1}', 'Contratista', '00223344556', 'Carlos Rodriguez', 5, 4, 4, 4, DATEADD(DAY, -20, GETUTCDATE())),
+                ('{empleador1}', 'Contratista', '00334455667', 'Pedro Martinez', 5, 5, 5, 5, DATEADD(DAY, -15, GETUTCDATE())),
+                ('{empleador1}', 'Contratista', '00445566778', 'Ana Garcia', 5, 4, 4, 5, DATEADD(DAY, -10, GETUTCDATE())),
+                ('{empleador1}', 'Contratista', '00556677889', 'Luis Fernandez', 5, 5, 4, 5, DATEADD(DAY, -18, GETUTCDATE()));
         ");
 
-        _logger.LogInformation("✅ 30 calificaciones de prueba insertadas");
+        _logger.LogInformation("✅ 5 calificaciones de prueba insertadas");
     }
 }

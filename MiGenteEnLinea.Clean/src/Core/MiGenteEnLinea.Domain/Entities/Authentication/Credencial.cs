@@ -28,7 +28,7 @@ public sealed class Credencial : AggregateRoot
     /// <summary>
     /// Email del usuario (normalizado a lowercase)
     /// </summary>
-    private string _email;
+    private string _email = string.Empty;
     public Email Email
     {
         get => Email.CreateUnsafe(_email);

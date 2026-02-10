@@ -17,11 +17,11 @@ public sealed class GetContratistaFotoByIdQueryHandler : IRequestHandler<GetCont
 
     public async Task<byte[]?> Handle(GetContratistaFotoByIdQuery request, CancellationToken cancellationToken)
     {
-        var foto = await _contratistaRepository.GetByIdProjectedAsync(
+        var foto = await _contratistaRepository.GetByIdProjectedAsync<byte[]>(
             request.ContratistaId,
             c => c.Foto,
             cancellationToken);
 
-        return foto;
+        return foto != null && foto.Length > 0 ? foto : null;
     }
 }

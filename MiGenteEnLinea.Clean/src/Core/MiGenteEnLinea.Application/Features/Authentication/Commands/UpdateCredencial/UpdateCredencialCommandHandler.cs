@@ -112,7 +112,8 @@ public sealed class UpdateCredencialCommandHandler : IRequestHandler<UpdateCrede
         // Actualizar password (solo si se provee)
         if (passwordCambiado)
         {
-            var passwordHasheado = _passwordHasher.HashPassword(request.Password);
+            var passwordPlain = request.Password!;
+            var passwordHasheado = _passwordHasher.HashPassword(passwordPlain);
             credencial.ActualizarPasswordHash(passwordHasheado);
         }
 
@@ -137,7 +138,8 @@ public sealed class UpdateCredencialCommandHandler : IRequestHandler<UpdateCrede
             // Sincronizar password con Identity (si cambió)
             if (passwordCambiado)
             {
-                var passwordSynced = await _identityService.ChangePasswordByIdAsync(request.UserId, request.Password);
+                var passwordPlain = request.Password!;
+                var passwordSynced = await _identityService.ChangePasswordByIdAsync(request.UserId, passwordPlain);
                 if (!passwordSynced)
                 {
                     _logger.LogWarning(

@@ -50,7 +50,10 @@ public class AnularReciboCommandHandler : IRequestHandler<AnularReciboCommand, U
         // ⚠️ MEJORA vs Legacy:
         // Legacy: db.Empleador_Recibos_Header.Remove(header) - hard delete
         // Clean: recibo.Anular() - soft delete con Estado=3
-        recibo.Anular(request.MotivoAnulacion);
+        var motivo = string.IsNullOrWhiteSpace(request.MotivoAnulacion)
+            ? "Anulado por el sistema"
+            : request.MotivoAnulacion;
+        recibo.Anular(motivo);
 
         // PASO 4: Guardar cambios
         await _context.SaveChangesAsync(cancellationToken);

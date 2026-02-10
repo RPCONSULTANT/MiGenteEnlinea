@@ -20,11 +20,11 @@ public class LocalFileStorageService : IFileStorageService
         IWebHostEnvironment environment,
         ILogger<LocalFileStorageService> logger)
     {
-        _environment = environment;
-        _logger = logger;
+        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
         // Calcular la ruta base: usar WebRootPath o un fallback si es null
-        _basePath = string.IsNullOrEmpty(_environment?.WebRootPath)
+        _basePath = string.IsNullOrEmpty(_environment.WebRootPath)
             ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
             : _environment.WebRootPath;
         
