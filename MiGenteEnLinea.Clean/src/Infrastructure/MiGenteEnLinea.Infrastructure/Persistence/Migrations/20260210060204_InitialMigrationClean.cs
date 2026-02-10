@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class InitialMigrationClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -138,6 +138,27 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Deducciones_TSS", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Empleador_Recibos_Detalle",
+                columns: table => new
+                {
+                    detalleID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    pagoID = table.Column<int>(type: "int", nullable: false),
+                    Concepto = table.Column<string>(type: "varchar(90)", unicode: false, maxLength: 90, nullable: false),
+                    Monto = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    tipo_concepto = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    orden = table.Column<int>(type: "int", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    updated_by = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Empleador_Recibos_Detalle", x => x.detalleID);
                 });
 
             migrationBuilder.CreateTable(
@@ -728,6 +749,35 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Suscripciones",
+                columns: table => new
+                {
+                    suscripcionID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    userID = table.Column<string>(type: "varchar(250)", maxLength: 250, nullable: false),
+                    planID = table.Column<int>(type: "int", nullable: false),
+                    vencimiento = table.Column<DateTime>(type: "datetime", nullable: false),
+                    fechaInicio = table.Column<DateTime>(type: "datetime", nullable: false),
+                    cancelada = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    fechaCancelacion = table.Column<DateTime>(type: "datetime", nullable: true),
+                    razonCancelacion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Suscripciones", x => x.suscripcionID);
+                    table.ForeignKey(
+                        name: "FK_Suscripciones_Credenciales",
+                        column: x => x.userID,
+                        principalTable: "Credenciales",
+                        principalColumn: "userID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Empleador_Recibos_Header",
                 columns: table => new
                 {
@@ -861,41 +911,6 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Suscripciones",
-                columns: table => new
-                {
-                    suscripcionID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    userID = table.Column<string>(type: "varchar(250)", maxLength: 250, nullable: false),
-                    planID = table.Column<int>(type: "int", nullable: false),
-                    vencimiento = table.Column<DateTime>(type: "datetime", nullable: false),
-                    fechaInicio = table.Column<DateTime>(type: "datetime", nullable: false),
-                    cancelada = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    fechaCancelacion = table.Column<DateTime>(type: "datetime", nullable: true),
-                    razonCancelacion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Suscripciones", x => x.suscripcionID);
-                    table.ForeignKey(
-                        name: "FK_Suscripciones_Credenciales",
-                        column: x => x.userID,
-                        principalTable: "Credenciales",
-                        principalColumn: "userID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Suscripciones_Planes_empleadores",
-                        column: x => x.planID,
-                        principalTable: "Planes_empleadores",
-                        principalColumn: "planID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Contratistas_Fotos",
                 columns: table => new
                 {
@@ -952,33 +967,6 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                         column: x => x.contratistaID,
                         principalTable: "Contratistas",
                         principalColumn: "contratistaID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Empleador_Recibos_Detalle",
-                columns: table => new
-                {
-                    detalleID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    pagoID = table.Column<int>(type: "int", nullable: false),
-                    Concepto = table.Column<string>(type: "varchar(90)", unicode: false, maxLength: 90, nullable: false),
-                    Monto = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    tipo_concepto = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
-                    orden = table.Column<int>(type: "int", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    created_by = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
-                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    updated_by = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Empleador_Recibos_Detalle", x => x.detalleID);
-                    table.ForeignKey(
-                        name: "FK_Empleador_Recibos_Detalle_Empleador_Recibos_Header_pagoID",
-                        column: x => x.pagoID,
-                        principalTable: "Empleador_Recibos_Header",
-                        principalColumn: "pagoID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -1696,6 +1684,9 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 name: "Empleador_Recibos_Detalle_Contrataciones");
 
             migrationBuilder.DropTable(
+                name: "Empleador_Recibos_Header");
+
+            migrationBuilder.DropTable(
                 name: "Empleados_Notas");
 
             migrationBuilder.DropTable(
@@ -1718,6 +1709,9 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "Planes_Contratistas");
+
+            migrationBuilder.DropTable(
+                name: "Planes_empleadores");
 
             migrationBuilder.DropTable(
                 name: "Provincias");
@@ -1747,10 +1741,10 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 name: "Contratistas");
 
             migrationBuilder.DropTable(
-                name: "Empleador_Recibos_Header");
+                name: "Empleador_Recibos_Header_Contrataciones");
 
             migrationBuilder.DropTable(
-                name: "Empleador_Recibos_Header_Contrataciones");
+                name: "Empleados");
 
             migrationBuilder.DropTable(
                 name: "Perfiles");
@@ -1759,13 +1753,7 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Planes_empleadores");
-
-            migrationBuilder.DropTable(
                 name: "Credenciales");
-
-            migrationBuilder.DropTable(
-                name: "Empleados");
 
             migrationBuilder.DropTable(
                 name: "Empleados_Temporales");

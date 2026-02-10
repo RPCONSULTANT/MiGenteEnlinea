@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MiGenteDbContext))]
-    [Migration("20260201205804_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260210060204_InitialMigrationClean")]
+    partial class InitialMigrationClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3783,15 +3783,6 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
                         .HasConstraintName("FK_Ofertantes_Credenciales");
                 });
 
-            modelBuilder.Entity("MiGenteEnLinea.Domain.Entities.Nominas.ReciboDetalle", b =>
-                {
-                    b.HasOne("MiGenteEnLinea.Domain.Entities.Nominas.ReciboHeader", null)
-                        .WithMany()
-                        .HasForeignKey("PagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("MiGenteEnLinea.Domain.Entities.Nominas.ReciboHeader", b =>
                 {
                     b.HasOne("MiGenteEnLinea.Domain.Entities.Empleados.Empleado", null)
@@ -3831,12 +3822,6 @@ namespace MiGenteEnLinea.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MiGenteEnLinea.Domain.Entities.Suscripciones.Suscripcion", b =>
                 {
-                    b.HasOne("MiGenteEnLinea.Domain.Entities.Suscripciones.PlanEmpleador", null)
-                        .WithMany()
-                        .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_Suscripciones_Planes_empleadores");
-
                     b.HasOne("MiGenteEnLinea.Domain.Entities.Authentication.Credencial", null)
                         .WithMany()
                         .HasForeignKey("UserId")

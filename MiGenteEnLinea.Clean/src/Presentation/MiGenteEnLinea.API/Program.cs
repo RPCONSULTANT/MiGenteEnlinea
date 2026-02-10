@@ -5,6 +5,7 @@ using MiGenteEnLinea.API.Configuration;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -296,6 +297,11 @@ using (var scope = app.Services.CreateScope())
         if (await dbContext.Database.CanConnectAsync())
         {
             logger.LogInformation("✅ Conexión a base de datos exitosa");
+            
+            // Aplicar migraciones pendientes (crea todas las tablas si no existen)
+            logger.LogInformation("🔄 Aplicando migraciones de base de datos...");
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("✅ Migraciones aplicadas exitosamente");
             
             // Ejecutar seeding si las tablas están vacías
             var seeder = new MiGenteEnLinea.Infrastructure.Persistence.Seeding.DatabaseSeeder(

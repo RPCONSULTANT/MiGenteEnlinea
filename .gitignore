@@ -28,6 +28,7 @@ bld/
 # Visual Studio cache/options
 .vs/
 .vscode/settings.json
+.vscode/sftp*.json
 *.suo
 *.user
 *.userosscache
