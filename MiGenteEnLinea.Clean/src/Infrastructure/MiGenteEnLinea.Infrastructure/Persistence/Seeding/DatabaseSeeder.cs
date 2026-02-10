@@ -35,7 +35,22 @@ public class DatabaseSeeder
             await SeedSectoresAsync();
             await SeedServiciosAsync();
             await SeedMissingEmpleadoresAsync();
-            await SeedContratistasAsync();
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            var seedTestData = string.Equals(
+                Environment.GetEnvironmentVariable("MIGENTE_SEED_TEST_DATA"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (seedTestData || environment.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            {
+                await SeedContratistasAsync();
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Omitiendo seed de contratistas de prueba en entorno {Environment}",
+                    environment);
+            }
             
             // TODO: Re-enable once we have test empleadores with valid userIDs
             // Calificaciones table requires valid Credenciales.userID (empleador who rates)
@@ -332,90 +347,107 @@ public class DatabaseSeeder
 
         _logger.LogInformation("Insertando contratistas de prueba...");
 
-        await _context.Database.ExecuteSqlRawAsync(@"
+        var userIds = await _context.Perfiles
+            .Where(p => p.Tipo == 2)
+            .OrderBy(p => p.UserId)
+            .Select(p => p.UserId)
+            .Take(15)
+            .ToListAsync();
+
+        if (userIds.Count < 15)
+        {
+            _logger.LogWarning(
+                "No hay suficientes perfiles tipo contratista para seedear (requeridos 15, encontrados {Count}).",
+                userIds.Count);
+            return;
+        }
+
+        var seedSql = $@"
             SET IDENTITY_INSERT Contratistas ON;
             
             INSERT INTO Contratistas (contratistaID, userID, fechaIngreso, titulo, tipo, identificacion,
                 nombre, apellido, sector, experiencia, presentacion, telefono1, whatsapp1, email,
                 activo, provincia, nivelNacional, imagenUrl)
             VALUES
-                (1, NULL, GETUTCDATE(), 'Electricista Certificado', 1, '00112233445',
+                (1, {userIds[0]}, GETUTCDATE(), 'Electricista Certificado', 1, '00112233445',
                  'Juan', 'Pérez', 'Electricidad', 10,
                  'Electricista con 10 años de experiencia en instalaciones residenciales y comerciales. Certificado por la ONAMET. Trabajos garantizados.',
                  '809-555-0001', 1, 'juan.perez@example.com', 1, 'Distrito Nacional', 0, NULL),
                 
-                (2, NULL, GETUTCDATE(), 'Plomero Profesional', 1, '00223344556',
+                (2, {userIds[1]}, GETUTCDATE(), 'Plomero Profesional', 1, '00223344556',
                  'Carlos', 'Rodríguez', 'Plomería', 8,
                  'Especialista en reparaciones e instalaciones. Atención a emergencias 24/7. Más de 8 años de experiencia.',
                  '809-555-0002', 1, 'carlos.rodriguez@example.com', 1, 'Santiago', 0, NULL),
                 
-                (3, NULL, GETUTCDATE(), 'Carpintero Maestro', 1, '00334455667',
+                (3, {userIds[2]}, GETUTCDATE(), 'Carpintero Maestro', 1, '00334455667',
                  'Pedro', 'Martínez', 'Carpintería', 15,
                  'Carpintero especializado en muebles a medida y trabajos de ebanistería. Diseños personalizados. 15 años en el mercado.',
                  '809-555-0003', 0, 'pedro.martinez@example.com', 1, 'La Vega', 0, NULL),
                 
-                (4, NULL, GETUTCDATE(), 'Pintora Profesional', 1, '00445566778',
+                (4, {userIds[3]}, GETUTCDATE(), 'Pintora Profesional', 1, '00445566778',
                  'Ana', 'García', 'Pintura', 5,
                  'Pintora con experiencia en pintura residencial y comercial. Trabajos de calidad garantizados.',
                  '809-555-0004', 1, 'ana.garcia@example.com', 1, 'Santo Domingo Este', 0, NULL),
                 
-                (5, NULL, GETUTCDATE(), 'Jardinero y Paisajista', 1, '00556677889',
+                (5, {userIds[4]}, GETUTCDATE(), 'Jardinero y Paisajista', 1, '00556677889',
                  'Luis', 'Fernández', 'Jardinería', 7,
                  'Especialista en diseño de jardines y mantenimiento de áreas verdes. Servicio profesional.',
                  '809-555-0005', 1, 'luis.fernandez@example.com', 1, 'Puerto Plata', 0, NULL),
                 
-                (6, NULL, GETUTCDATE(), 'Técnico en Aire Acondicionado', 1, '00667788990',
+                (6, {userIds[5]}, GETUTCDATE(), 'Técnico en Aire Acondicionado', 1, '00667788990',
                  'Miguel', 'Santos', 'Aire Acondicionado', 12,
                  'Instalación, mantenimiento y reparación de sistemas de AC. Atención rápida y confiable.',
                  '809-555-0006', 1, 'miguel.santos@example.com', 1, 'Distrito Nacional', 1, NULL),
                 
-                (7, NULL, GETUTCDATE(), 'Albañil Experimentado', 1, '00778899001',
+                (7, {userIds[6]}, GETUTCDATE(), 'Albañil Experimentado', 1, '00778899001',
                  'Roberto', 'Díaz', 'Albañilería', 20,
                  'Maestro albañil con 20 años de experiencia. Construcciones, remodelaciones y reparaciones.',
                  '809-555-0007', 0, 'roberto.diaz@example.com', 1, 'Santiago', 0, NULL),
                 
-                (8, NULL, GETUTCDATE(), 'Mecánico Automotriz', 1, '00889900112',
+                (8, {userIds[7]}, GETUTCDATE(), 'Mecánico Automotriz', 1, '00889900112',
                  'José', 'Vargas', 'Mecánica Automotriz', 14,
                  'Mecánico especializado en todo tipo de vehículos. Diagnóstico computarizado.',
                  '809-555-0008', 1, 'jose.vargas@example.com', 1, 'Santo Domingo Norte', 0, NULL),
                 
-                (9, NULL, GETUTCDATE(), 'Limpieza Profesional SRL', 2, '131234567',
+                (9, {userIds[8]}, GETUTCDATE(), 'Limpieza Profesional SRL', 2, '131234567',
                  'Limpieza', 'Profesional SRL', 'Limpieza Comercial', 6,
                  'Empresa dedicada a limpieza de oficinas, edificios y locales comerciales. Personal capacitado.',
                  '809-555-0009', 1, 'info@limpiezapro.com', 1, 'Distrito Nacional', 1, NULL),
                 
-                (10, NULL, GETUTCDATE(), 'Chef a Domicilio', 1, '00990011223',
+                (10, {userIds[9]}, GETUTCDATE(), 'Chef a Domicilio', 1, '00990011223',
                  'María', 'López', 'Cocina/Chef', 9,
                  'Chef profesional con experiencia en cocina internacional. Eventos, fiestas y comidas diarias.',
                  '809-555-0010', 1, 'maria.lopez@example.com', 1, 'La Romana', 0, NULL),
                 
-                (11, NULL, GETUTCDATE(), 'Diseñador Web Freelance', 1, '00101122334',
+                (11, {userIds[10]}, GETUTCDATE(), 'Diseñador Web Freelance', 1, '00101122334',
                  'Alberto', 'Ramírez', 'Desarrollo Web', 7,
                  'Desarrollador web especializado en sitios modernos y responsivos. WordPress, React, diseño UX/UI.',
                  '809-555-0011', 1, 'alberto.ramirez@example.com', 1, 'Distrito Nacional', 1, NULL),
                 
-                (12, NULL, GETUTCDATE(), 'Herrería Artística', 2, '131345678',
+                (12, {userIds[11]}, GETUTCDATE(), 'Herrería Artística', 2, '131345678',
                  'Herrería', 'Artística', 'Herrería', 18,
                  'Especialistas en rejas, portones, verjas y estructuras metálicas. Diseños personalizados.',
                  '809-555-0012', 0, 'info@herreriartistica.com', 1, 'Santiago', 0, NULL),
                 
-                (13, NULL, GETUTCDATE(), 'Estilista Profesional', 1, '00112233446',
+                (13, {userIds[12]}, GETUTCDATE(), 'Estilista Profesional', 1, '00112233446',
                  'Laura', 'Jiménez', 'Peluquería', 11,
                  'Estilista con más de 10 años de experiencia. Cortes, coloración, tratamientos capilares.',
                  '809-555-0013', 1, 'laura.jimenez@example.com', 1, 'Puerto Plata', 0, NULL),
                 
-                (14, NULL, GETUTCDATE(), 'Asesoría Legal', 1, '00223344557',
+                (14, {userIds[13]}, GETUTCDATE(), 'Asesoría Legal', 1, '00223344557',
                  'Dr. Fernando', 'Castillo', 'Asesoría Legal', 16,
                  'Abogado especializado en derecho civil, laboral y comercial. Consultas y representación legal.',
                  '809-555-0014', 0, 'fernando.castillo@example.com', 1, 'Distrito Nacional', 1, NULL),
                 
-                (15, NULL, GETUTCDATE(), 'Contador Público', 1, '00334455668',
+                (15, {userIds[14]}, GETUTCDATE(), 'Contador Público', 1, '00334455668',
                  'Lcda. Patricia', 'Núñez', 'Asesoría Contable', 13,
                  'Contadora certificada. Servicios de contabilidad, declaraciones de impuestos y auditoría.',
                  '809-555-0015', 1, 'patricia.nunez@example.com', 1, 'Santiago', 1, NULL);
             
             SET IDENTITY_INSERT Contratistas OFF;
-        ");
+        ";
+
+        await _context.Database.ExecuteSqlRawAsync(seedSql);
 
         _logger.LogInformation("✅ 15 contratistas de prueba insertados");
     }
