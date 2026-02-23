@@ -144,11 +144,11 @@
                 <form id="formCheckout">
                     <div class="mb-3">
                         <label class="form-label">Nombre del Titular</label>
-                        <input type="text" class="form-control" id="txtNombreTitular" placeholder="Nombre como aparece en la tarjeta" required>
+                        <input type="text" class="form-control" id="txtNombreTitular" autocomplete="cc-name" placeholder="Nombre como aparece en la tarjeta" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Número de Tarjeta</label>
-                        <input type="text" class="form-control" id="txtNumeroTarjeta" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                        <input type="text" class="form-control" id="txtNumeroTarjeta" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="19" required>
                     </div>
                     <div class="row mb-3">
                         <div class="col">
@@ -157,7 +157,7 @@
                         </div>
                         <div class="col">
                             <label class="form-label">CVV</label>
-                            <input type="text" class="form-control" id="txtCVV" placeholder="123" maxlength="4" required>
+                            <input type="password" class="form-control" id="txtCVV" autocomplete="cc-csc" placeholder="123" maxlength="4" required>
                         </div>
                     </div>
                     <small class="text-danger">NOTA: Los datos suministrados no serán almacenados en Mi Gente en Línea...</small>
@@ -298,22 +298,29 @@
                 };
 
                 // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
-                const response = await authenticatedFetch('/pagos/procesar', {
+                const procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR || '/pagos/procesar';
+                const response = await authenticatedFetch(procesarPagoPath, {
                     method: 'POST',
                     body: JSON.stringify(pagoData)
                 });
 
                 $('#loadingOverlay').hide();
 
+                const payload = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = payload || {};
                     if (errorData.tipo === 'pago_rechazado') {
                         throw new Error(errorData.message || 'El pago fue rechazado por la entidad bancaria');
                     }
-                    throw new Error(errorData.message || 'Error al procesar el pago');
+                    throw new Error(window.getApiErrorMessage
+                        ? window.getApiErrorMessage(errorData, 'Error al procesar el pago')
+                        : (errorData.message || 'Error al procesar el pago'));
                 }
 
-                const result = await response.json();
+                const result = payload || {};
 
                 Swal.fire({
                     title: '¡Pago Exitoso!',
@@ -341,3 +348,4 @@
         }
     </script>
 }
+

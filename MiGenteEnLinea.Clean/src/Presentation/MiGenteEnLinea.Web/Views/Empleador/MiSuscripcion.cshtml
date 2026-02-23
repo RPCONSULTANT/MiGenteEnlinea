@@ -388,7 +388,7 @@
                     throw new Error('Error al cargar suscripción');
                 }
 
-                const suscripcion = await response.json();
+                const suscripcion = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 suscripcionActual = suscripcion;
                 actualizarUISuscripcion(suscripcion);
 
@@ -451,13 +451,13 @@
 
         async function cargarUsoActual() {
             try {
-                const response = await authenticatedFetch('/empleados/resumen-uso');
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADOS?.RESUMEN_USO || '/empleados/resumen-uso');
 
                 if (!response.ok) {
                     throw new Error('Error al cargar resumen de uso');
                 }
 
-                const resumen = await response.json();
+                const resumen = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 const empleadosRegistrados = resumen.empleadosRegistrados ?? resumen.EmpleadosRegistrados ?? 0;
                 const limiteEmpleados = resumen.limiteEmpleados ?? resumen.LimiteEmpleados ?? 0;
                 const contratistasConsultados = resumen.contratistasConsultados ?? resumen.ContratistasConsultados ?? 0;
@@ -512,7 +512,7 @@
                     throw new Error('Error al cargar historial');
                 }
 
-                const ventas = await response.json();
+                const ventas = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 actualizarTablaHistorial(ventas);
 
             } catch (error) {
@@ -598,7 +598,7 @@
                     throw new Error('Error al cargar histórico de nómina');
                 }
 
-                const nominas = await response.json();
+                const nominas = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 actualizarTablaRecibos(nominas);
 
             } catch (error) {
@@ -740,3 +740,5 @@
         }
     </script>
 }
+
+

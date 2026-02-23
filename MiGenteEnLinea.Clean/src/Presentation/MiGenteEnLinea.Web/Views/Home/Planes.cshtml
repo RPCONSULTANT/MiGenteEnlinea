@@ -106,9 +106,6 @@
 
 @section Scripts {
     <script>
-        // API Base URL - usa global API_BASE del custom.js
-        const API_BASE_URL = API_BASE;
-        
         // Color schemes for plans
         const colorSchemes = {
             empleadores: ['secondary', 'primary', 'success', 'info', 'warning'],
@@ -140,17 +137,27 @@
             
             try {
                 // Load both tipos of plans in parallel
-                const [empleadoresResponse, contratistasResponse] = await Promise.all([
-                    fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`),
-                    fetch(`${API_BASE_URL}/suscripciones/planes/contratistas`)
+                const [empleadoresResult, contratistasResult] = await Promise.all([
+                    window.requestApi(
+                        window.API_ENDPOINTS?.SUSCRIPCIONES?.PLANES_EMPLEADORES || '/suscripciones/planes/empleadores',
+                        {},
+                        { auth: false }
+                    ),
+                    window.requestApi(
+                        window.API_ENDPOINTS?.SUSCRIPCIONES?.PLANES_CONTRATISTAS || '/suscripciones/planes/contratistas',
+                        {},
+                        { auth: false }
+                    )
                 ]);
-                
-                if (!empleadoresResponse.ok || !contratistasResponse.ok) {
-                    throw new Error('Error al cargar los planes');
+
+                if (!empleadoresResult.response.ok || !contratistasResult.response.ok) {
+                    const err1 = window.getApiErrorMessage?.(empleadoresResult.payload, 'Error al cargar planes de empleadores');
+                    const err2 = window.getApiErrorMessage?.(contratistasResult.payload, 'Error al cargar planes de contratistas');
+                    throw new Error(`${err1}. ${err2}`);
                 }
-                
-                const planesEmpleadores = await empleadoresResponse.json();
-                const planesContratistas = await contratistasResponse.json();
+
+                const planesEmpleadores = Array.isArray(empleadoresResult.payload) ? empleadoresResult.payload : [];
+                const planesContratistas = Array.isArray(contratistasResult.payload) ? contratistasResult.payload : [];
                 
                 renderPlanesEmpleadores(planesEmpleadores);
                 renderPlanesContratistas(planesContratistas);

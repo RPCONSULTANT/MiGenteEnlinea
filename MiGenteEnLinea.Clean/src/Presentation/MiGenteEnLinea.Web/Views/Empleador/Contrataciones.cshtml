@@ -447,7 +447,7 @@
 
 @section Scripts {
     <script>
-        const API_BASE_URL = API_BASE;
+        // API URL base is resolved by Custom.js helpers.
         
         // Variables globales para datos
         let allPendientes = [];
@@ -479,10 +479,11 @@
             
             try {
                 // Cargar todas las contrataciones
-                const response = await authenticatedFetch('/contrataciones?pageSize=100');
+                const listPath = window.API_ENDPOINTS?.CONTRATACIONES?.LIST || '/contrataciones?pageSize=100';
+                const response = await authenticatedFetch(listPath);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     // API returns array directly, not paginated object
                     const items = Array.isArray(data) ? data : (data.items || data || []);
                     
@@ -900,13 +901,14 @@
                 document.getElementById('btnGuardarContratacion').disabled = true;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
                 
-                const response = await authenticatedFetch('/contrataciones', {
+                const createPath = window.API_ENDPOINTS?.CONTRATACIONES?.CREATE || '/contrataciones';
+                const response = await authenticatedFetch(createPath, {
                     method: 'POST',
                     body: JSON.stringify(command)
                 });
                 
                 if (response.ok) {
-                    const detalleId = await response.json();
+                    const detalleId = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     
                     // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById('modalNuevaContratacion')).hide();
@@ -922,7 +924,7 @@
                     // Recargar datos
                     loadContrataciones();
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo crear la contratación', 'error');
                 }
             } catch (error) {
@@ -962,10 +964,13 @@
             if (!token) return;
             
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}`);
+                const detallePath = window.API_ENDPOINTS?.CONTRATACIONES?.DETALLE
+                    ? window.API_ENDPOINTS.CONTRATACIONES.DETALLE(detalleId)
+                    : `/contrataciones/${detalleId}`;
+                const response = await authenticatedFetch(detallePath);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     
                     document.getElementById('detalleId').textContent = detalleId;
                     document.getElementById('detalleBody').innerHTML = `
@@ -1007,7 +1012,10 @@
             
             const token = getAuthToken();
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}/start`, {
+                const startPath = window.API_ENDPOINTS?.CONTRATACIONES?.START
+                    ? window.API_ENDPOINTS.CONTRATACIONES.START(detalleId)
+                    : `/contrataciones/${detalleId}/start`;
+                const response = await authenticatedFetch(startPath, {
                     method: 'PUT'
                 });
                 
@@ -1015,7 +1023,7 @@
                     Swal.fire('¡Iniciado!', 'El trabajo ha sido iniciado', 'success');
                     loadContrataciones();
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo iniciar', 'error');
                 }
             } catch (error) {
@@ -1038,7 +1046,10 @@
             
             const token = getAuthToken();
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}/complete`, {
+                const completePath = window.API_ENDPOINTS?.CONTRATACIONES?.COMPLETE
+                    ? window.API_ENDPOINTS.CONTRATACIONES.COMPLETE(detalleId)
+                    : `/contrataciones/${detalleId}/complete`;
+                const response = await authenticatedFetch(completePath, {
                     method: 'PUT'
                 });
                 
@@ -1046,7 +1057,7 @@
                     await Swal.fire('¡Completado!', 'El trabajo ha sido marcado como completado', 'success');
                     loadContrataciones();
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo completar', 'error');
                 }
             } catch (error) {
@@ -1076,7 +1087,10 @@
             
             const token = getAuthToken();
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}/cancel`, {
+                const cancelPath = window.API_ENDPOINTS?.CONTRATACIONES?.CANCEL
+                    ? window.API_ENDPOINTS.CONTRATACIONES.CANCEL(detalleId)
+                    : `/contrataciones/${detalleId}/cancel`;
+                const response = await authenticatedFetch(cancelPath, {
                     method: 'PUT',
                     body: JSON.stringify({ detalleId: detalleId, motivo: result.value })
                 });
@@ -1085,7 +1099,7 @@
                     Swal.fire('Cancelada', 'La contratación ha sido cancelada', 'success');
                     loadContrataciones();
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo cancelar', 'error');
                 }
             } catch (error) {
@@ -1292,17 +1306,16 @@
                 formData.append('file', fileInput.files[0]);
                 
                 const token = getTokenFromStorage();
-                const apiUrl = `http://localhost:5015/api/contratistas/${token.userId}/foto`;
-                
-                const response = await fetch(apiUrl, {
+                const fotoPath = window.API_ENDPOINTS?.CONTRATISTAS?.FOTO_UPLOAD
+                    ? window.API_ENDPOINTS.CONTRATISTAS.FOTO_UPLOAD(token.userId)
+                    : `/contratistas/${token.userId}/foto`;
+                const response = await authenticatedFetch(fotoPath, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token.accessToken}`
-                    },
                     body: formData
                 });
-                
-                const data = await response.json();
+                const data = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 
                 if (response.ok) {
                     Swal.fire({
@@ -1325,7 +1338,9 @@
                 } else {
                     Swal.fire({
                         title: 'Error',
-                        text: data.error || 'No se pudo cargar la foto',
+                        text: window.getApiErrorMessage
+                            ? window.getApiErrorMessage(data, 'No se pudo cargar la foto')
+                            : (data?.error || 'No se pudo cargar la foto'),
                         icon: 'error',
                         confirmButtonText: 'Aceptar'
                     });
@@ -1345,17 +1360,14 @@
         }
         
         function getTokenFromStorage() {
-            const token = localStorage.getItem('jwtToken');
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
             if (!token) throw new Error('No hay token de autenticación');
             
-            // Decodificar token para obtener userId
-            const parts = token.split('.');
-            if (parts.length !== 3) throw new Error('Token inválido');
-            
-            const payload = JSON.parse(atob(parts[1]));
+            const userId = localStorage.getItem('userId');
+            if (!userId) throw new Error('No hay userId de autenticación');
             return {
                 accessToken: token,
-                userId: payload.nameid || payload.sub
+                userId: userId
             };
         }
     </script>
@@ -1421,4 +1433,6 @@
         </div>
     </div>
 </div>
+
+
 

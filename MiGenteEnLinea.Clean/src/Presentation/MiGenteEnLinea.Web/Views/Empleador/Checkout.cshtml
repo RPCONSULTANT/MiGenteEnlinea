@@ -70,7 +70,7 @@
                         <div class="mb-3">
                             <label for="numeroTarjeta" class="form-label">Número de Tarjeta</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="numeroTarjeta" required maxlength="19" placeholder="0000 0000 0000 0000">
+                                <input type="text" class="form-control" id="numeroTarjeta" autocomplete="cc-number" required maxlength="19" placeholder="0000 0000 0000 0000">
                                 <span class="input-group-text" id="tipoTarjeta">
                                     <i class="fa fa-credit-card"></i>
                                 </span>
@@ -104,7 +104,7 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="cvv" class="form-label">CVV</label>
-                                    <input type="password" class="form-control" id="cvv" required maxlength="4" placeholder="***">
+                                    <input type="password" class="form-control" id="cvv" autocomplete="cc-csc" required maxlength="4" placeholder="***">
                                     <small class="text-muted">3 o 4 dígitos</small>
                                 </div>
                             </div>
@@ -286,13 +286,16 @@
         async function cargarInfoPlan() {
             try {
                 // Cargar planes desde API
-                const response = await fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`);
+                const planesPath = window.API_ENDPOINTS?.SUSCRIPCIONES?.PLANES_EMPLEADORES || '/suscripciones/planes/empleadores';
+                const response = await fetch(window.buildApiUrl(planesPath));
                 
                 if (!response.ok) {
                     throw new Error('Error al cargar planes');
                 }
                 
-                const planes = await response.json();
+                const planes = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 planData = planes.find(p => p.id == planId);
                 
                 if (!planData) {
@@ -381,12 +384,14 @@
                 };
                 
                 // Llamar API para procesar pago con Cardnet
-                const response = await authenticatedFetch('/pagos/procesar', {
+                const procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR || '/pagos/procesar';
+                const response = await authenticatedFetch(procesarPagoPath, {
                     method: 'POST',
                     body: JSON.stringify(pagoData)
                 });
-                
-                const result = await response.json();
+                const result = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 
                 $('#loadingOverlay').hide();
                 
@@ -410,7 +415,9 @@
                     Swal.fire('Sesión Expirada', 'Por favor inicie sesión nuevamente.', 'warning')
                         .then(() => window.location.href = '/Auth/Login');
                 } else {
-                    const errorMsg = result.message || result.title || 'Error al procesar la suscripción';
+                    const errorMsg = window.getApiErrorMessage
+                        ? window.getApiErrorMessage(result, 'Error al procesar la suscripción')
+                        : (result?.message || result?.title || 'Error al procesar la suscripción');
                     Swal.fire('Error', errorMsg, 'error');
                 }
                 
@@ -471,3 +478,4 @@
         }
     </script>
 }
+

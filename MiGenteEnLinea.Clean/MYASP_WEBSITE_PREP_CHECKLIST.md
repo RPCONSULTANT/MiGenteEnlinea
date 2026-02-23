@@ -69,7 +69,13 @@ Important:
 2. Web: `src/Presentation/MiGenteEnLinea.Web/appsettings.Production.json`
 - `AllowedHosts` should be `"*"`
 - `ApiConfiguration.BaseUrl` must be the real API domain (not localhost), for example:
-  - `https://api.migenteenlinea.com/api`
+  - `https://apimigente.migenteenlinea.do/api`
+
+## 5.1) HTTPS redirect note
+
+- Do not add IIS `<rewrite>` rules inside app `web.config` unless hosting confirms URL Rewrite module support.
+- Keep app `web.config` minimal.
+- Enforce HTTP->HTTPS redirect from myASP domain/bindings configuration.
 
 ## 6) Database release-first flow
 

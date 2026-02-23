@@ -21,7 +21,7 @@ public class ContratistasApiService
     {
         try
         {
-            return await _apiService.GetAsync<ContratistaDto>($"/contratistas/{userId}", cancellationToken);
+            return await _apiService.GetAsync<ContratistaDto>($"/contratistas/by-user/{userId}", cancellationToken);
         }
         catch (Exception ex)
         {
@@ -69,7 +69,14 @@ public class ContratistasApiService
     {
         try
         {
-            return await _apiService.GetAsync<List<ServicioDto>>($"/contratistas/{userId}/servicios", cancellationToken);
+            var contratista = await GetContratistaByUserIdAsync(userId, cancellationToken);
+            if (contratista == null || contratista.Id <= 0)
+            {
+                _logger.LogWarning("No contratista record found for user {UserId} when loading services", userId);
+                return new List<ServicioDto>();
+            }
+
+            return await _apiService.GetAsync<List<ServicioDto>>($"/contratistas/{contratista.Id}/servicios", cancellationToken);
         }
         catch (Exception ex)
         {

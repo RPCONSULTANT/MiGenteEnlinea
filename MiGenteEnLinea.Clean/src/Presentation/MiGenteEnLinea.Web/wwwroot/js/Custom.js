@@ -8,14 +8,79 @@
  * URL base del API
  * Prioridad:
  * 1. window.API_BASE (inyectado desde servidor - producción)
- * 2. localhost:5015 (desarrollo)
- * 3. /api (fallback relativo)
+ * 2. Mapeo por hostname (producción)
+ * 3. localhost:5015 (desarrollo)
+ * 4. /api (fallback relativo)
  */
-const API_BASE =
+const API_BASE_BY_HOST = {
+  "plattaformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "platformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "www.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+};
+
+const resolvedMappedBase = API_BASE_BY_HOST[window.location.hostname] || null;
+
+const API_BASE_RAW =
   window.API_BASE ||
+  resolvedMappedBase ||
   (window.location.hostname === "localhost"
     ? "http://localhost:5015/api"
     : "/api");
+
+const API_BASE = API_BASE_RAW.replace(/\/+$/, "");
+
+function buildApiUrl(path) {
+  if (!path) return API_BASE;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${String(path).replace(/^\/+/, "")}`;
+}
+
+if (!window.API_BASE && window.location.hostname !== "localhost") {
+  console.warn(
+    `[API CONFIG] window.API_BASE no fue inyectado; host='${window.location.hostname}', usando fallback '${API_BASE}'. Verifique el layout activo.`,
+  );
+}
+
+if (window.location.hostname !== "localhost" && !/\/api$/i.test(API_BASE)) {
+  console.warn(
+    `[API CONFIG] API_BASE final '${API_BASE}' no termina en '/api'. Revise configuración de entorno/layout.`,
+  );
+}
+
+async function readApiResponse(response) {
+  const contentType = (response.headers.get("content-type") || "").toLowerCase();
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  if (contentType.includes("application/json")) {
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.warn("[API PARSE] JSON inválido recibido:", error);
+      return { raw: text };
+    }
+  }
+
+  return {
+    message: text,
+    raw: text,
+  };
+}
+
+function getApiErrorMessage(payload, fallbackMessage) {
+  if (!payload) return fallbackMessage;
+
+  if (payload.errors && typeof payload.errors === "object") {
+    const first = Object.values(payload.errors).flat()[0];
+    if (first) return first;
+  }
+
+  return payload.message || payload.title || payload.raw || fallbackMessage;
+}
 
 /**
  * Realiza un fetch autenticado con manejo automático de errores 401
@@ -24,9 +89,9 @@ const API_BASE =
  * @returns {Promise<Response>} - Promesa con la respuesta del fetch
  * 
  * Uso ejemplo:
- * const response = await authenticatedFetch('/empleados?soloActivos=true');
+ * const { response, payload } = await requestApi('/empleados?soloActivos=true');
  * if (response.ok) {
- *   const data = await response.json();
+ *   console.log(payload);
  * }
  */
 async function authenticatedFetch(url, options = {}) {
@@ -40,7 +105,7 @@ async function authenticatedFetch(url, options = {}) {
   }
   
   // Ensure URL is absolute (add API_BASE if relative)
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  const fullUrl = buildApiUrl(url);
   
   // Detectar si el body es FormData (no agregar Content-Type para que browser lo maneje)
   const isFormData = options.body instanceof FormData;
@@ -78,6 +143,20 @@ async function authenticatedFetch(url, options = {}) {
   }
   
   return response;
+}
+
+async function requestApi(path, options = {}, config = {}) {
+  const useAuth = config.auth !== false;
+  const requestFn = useAuth ? authenticatedFetch : fetch;
+  const url = useAuth ? path : buildApiUrl(path);
+  const response = await requestFn(url, useAuth ? options : {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+    },
+  });
+  const payload = await readApiResponse(response);
+  return { response, payload };
 }
 
 /**
@@ -123,8 +202,17 @@ async function loadProvincias(
   defaultOption = "-- Seleccione Provincia --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/provincias`);
-    const provincias = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.PROVINCIAS || "/catalogos/provincias",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar las provincias"));
+    }
+
+    const provincias = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -160,8 +248,17 @@ async function loadSectores(
   defaultOption = "-- Seleccione Sector --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/sectores`);
-    const sectores = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.SECTORES || "/catalogos/sectores",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar los sectores"));
+    }
+
+    const sectores = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -197,8 +294,17 @@ async function loadServicios(
   defaultOption = "-- Seleccione Servicio --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/servicios`);
-    const servicios = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.SERVICIOS || "/catalogos/servicios",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar los servicios"));
+    }
+
+    const servicios = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -265,3 +371,20 @@ window.loadServicios = loadServicios;
 window.formatCurrency = formatCurrency;
 window.formatDate = formatDate;
 window.API_BASE = API_BASE;
+window.buildApiUrl = buildApiUrl;
+window.readApiResponse = readApiResponse;
+window.getApiErrorMessage = getApiErrorMessage;
+window.requestApi = requestApi;
+
+// Accessibility hardening for modal focus transitions.
+document.addEventListener("hide.bs.modal", () => {
+  if (document.activeElement && typeof document.activeElement.blur === "function") {
+    document.activeElement.blur();
+  }
+});
+
+document.addEventListener("hidden.bs.modal", () => {
+  if (document.body && typeof document.body.focus === "function") {
+    document.body.focus();
+  }
+});

@@ -8,14 +8,72 @@
  * URL base del API
  * Prioridad:
  * 1. window.API_BASE (inyectado desde servidor - producción)
- * 2. localhost:5015 (desarrollo)
- * 3. /api (fallback relativo)
+ * 2. Mapeo por hostname (producción)
+ * 3. localhost:5015 (desarrollo)
+ * 4. /api (fallback relativo)
  */
-const API_BASE =
+const API_BASE_BY_HOST = {
+  "plattaformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "www.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+};
+
+const resolvedMappedBase = API_BASE_BY_HOST[window.location.hostname] || null;
+
+const API_BASE_RAW =
   window.API_BASE ||
+  resolvedMappedBase ||
   (window.location.hostname === "localhost"
     ? "http://localhost:5015/api"
     : "/api");
+
+const API_BASE = API_BASE_RAW.replace(/\/+$/, "");
+
+function buildApiUrl(path) {
+  if (!path) return API_BASE;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${String(path).replace(/^\/+/, "")}`;
+}
+
+if (!window.API_BASE && window.location.hostname !== "localhost") {
+  console.warn(
+    `[API CONFIG] window.API_BASE no fue inyectado; usando fallback '${API_BASE}'. Verifique el layout activo.`,
+  );
+}
+
+async function readApiResponse(response) {
+  const contentType = (response.headers.get("content-type") || "").toLowerCase();
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  if (contentType.includes("application/json")) {
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.warn("[API PARSE] JSON inválido recibido:", error);
+      return { raw: text };
+    }
+  }
+
+  return {
+    message: text,
+    raw: text,
+  };
+}
+
+function getApiErrorMessage(payload, fallbackMessage) {
+  if (!payload) return fallbackMessage;
+
+  if (payload.errors && typeof payload.errors === "object") {
+    const first = Object.values(payload.errors).flat()[0];
+    if (first) return first;
+  }
+
+  return payload.message || payload.title || payload.raw || fallbackMessage;
+}
 
 /**
  * Realiza un fetch autenticado con manejo automático de errores 401
@@ -40,7 +98,7 @@ async function authenticatedFetch(url, options = {}) {
   }
   
   // Ensure URL is absolute (add API_BASE if relative)
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  const fullUrl = buildApiUrl(url);
   
   // Detectar si el body es FormData (no agregar Content-Type para que browser lo maneje)
   const isFormData = options.body instanceof FormData;
@@ -123,7 +181,7 @@ async function loadProvincias(
   defaultOption = "-- Seleccione Provincia --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/provincias`);
+    const response = await fetch(buildApiUrl("/catalogos/provincias"));
     const provincias = await response.json();
 
     const select = document.getElementById(selectId);
@@ -160,7 +218,7 @@ async function loadSectores(
   defaultOption = "-- Seleccione Sector --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/sectores`);
+    const response = await fetch(buildApiUrl("/catalogos/sectores"));
     const sectores = await response.json();
 
     const select = document.getElementById(selectId);
@@ -197,7 +255,7 @@ async function loadServicios(
   defaultOption = "-- Seleccione Servicio --",
 ) {
   try {
-    const response = await fetch(`${API_BASE}/catalogos/servicios`);
+    const response = await fetch(buildApiUrl("/catalogos/servicios"));
     const servicios = await response.json();
 
     const select = document.getElementById(selectId);
@@ -265,3 +323,6 @@ window.loadServicios = loadServicios;
 window.formatCurrency = formatCurrency;
 window.formatDate = formatDate;
 window.API_BASE = API_BASE;
+window.buildApiUrl = buildApiUrl;
+window.readApiResponse = readApiResponse;
+window.getApiErrorMessage = getApiErrorMessage;

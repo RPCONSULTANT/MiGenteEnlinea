@@ -260,6 +260,9 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty; // Swagger en raiz: https://api-dominio/
 });
 
+// Routing debe ejecutarse antes de CORS para que el middleware resuelva endpoint metadata correctamente.
+app.UseRouting();
+
 // CORS - DEBE IR ANTES DE HttpsRedirection para permitir preflight requests
 app.UseCors("AppPolicy");
 

@@ -1,6 +1,9 @@
 param(
-    [string]$ApiBaseUrl = "https://api.migenteenlinea.com",
-    [string]$WebBaseUrl = "https://www.migenteenlinea.com",
+    [string]$ApiBaseUrl = "http://api2.migenteenlinea.do",
+    [string]$WebBaseUrl = "http://plattaformv2.migenteenlinea.do",
+    [string]$CorsOrigin = "http://plattaformv2.migenteenlinea.do",
+    [string]$TestUserId = "",
+    [string]$BearerToken = "",
     [switch]$SkipApi,
     [switch]$SkipWeb
 )
@@ -42,6 +45,7 @@ Write-Host "========================================" -ForegroundColor $ColorInf
 Write-Host ""
 Write-Host "API: $ApiBaseUrl" -ForegroundColor Gray
 Write-Host "Web: $WebBaseUrl" -ForegroundColor Gray
+Write-Host "CORS Origin: $CorsOrigin" -ForegroundColor Gray
 Write-Host ""
 
 if (-not $SkipApi) {
@@ -60,6 +64,80 @@ if (-not $SkipApi) {
             throw "Expected HTTP 200, got $($response.StatusCode)."
         }
     }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "CORS preflight OPTIONS /api/auth/register returns Access-Control-Allow-Origin" -Action {
+        $headers = @{
+            "Origin" = $CorsOrigin
+            "Access-Control-Request-Method" = "POST"
+            "Access-Control-Request-Headers" = "content-type"
+        }
+
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/register" -Method Options -Headers $headers -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200 -and $response.StatusCode -ne 204) {
+            throw "Expected HTTP 200 or 204, got $($response.StatusCode)."
+        }
+
+        $allowOrigin = $response.Headers["Access-Control-Allow-Origin"]
+        if ([string]::IsNullOrWhiteSpace($allowOrigin)) {
+            throw "Missing Access-Control-Allow-Origin header in preflight response."
+        }
+
+        if ($allowOrigin -ne "*" -and $allowOrigin -ne $CorsOrigin) {
+            throw "Unexpected Access-Control-Allow-Origin value '$allowOrigin'."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "CORS preflight OPTIONS /api/pagos/procesar returns Access-Control-Allow-Origin" -Action {
+        $headers = @{
+            "Origin" = $CorsOrigin
+            "Access-Control-Request-Method" = "POST"
+            "Access-Control-Request-Headers" = "authorization,content-type"
+        }
+
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/pagos/procesar" -Method Options -Headers $headers -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200 -and $response.StatusCode -ne 204) {
+            throw "Expected HTTP 200 or 204, got $($response.StatusCode)."
+        }
+
+        $allowOrigin = $response.Headers["Access-Control-Allow-Origin"]
+        if ([string]::IsNullOrWhiteSpace($allowOrigin)) {
+            throw "Missing Access-Control-Allow-Origin header in preflight response."
+        }
+
+        if ($allowOrigin -ne "*" -and $allowOrigin -ne $CorsOrigin) {
+            throw "Unexpected Access-Control-Allow-Origin value '$allowOrigin'."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "Public plans endpoint /api/suscripciones/planes/empleadores returns 200" -Action {
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/suscripciones/planes/empleadores" -Method Get -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (-not [string]::IsNullOrWhiteSpace($TestUserId) -and -not [string]::IsNullOrWhiteSpace($BearerToken)) {
+        if (Run-Test -Name "Authorized endpoint /api/suscripciones/activa/{userId} returns 200/404" -Action {
+            $headers = @{
+                "Authorization" = "Bearer $BearerToken"
+            }
+
+            try {
+                $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/suscripciones/activa/$TestUserId" -Method Get -Headers $headers -TimeoutSec 30 -UseBasicParsing
+                if ($response.StatusCode -ne 200) {
+                    throw "Expected HTTP 200, got $($response.StatusCode)."
+                }
+            }
+            catch {
+                if ($_.Exception.Response -and $_.Exception.Response.StatusCode.value__ -eq 404) {
+                    return
+                }
+                throw
+            }
+        }) { $passed++ } else { $failed++ }
+    } else {
+        Write-Host " - Authorized suscripcion check skipped (provide -TestUserId and -BearerToken)." -ForegroundColor $ColorWarning
+    }
 
     if (Run-Test -Name "API root returns a valid response" -Action {
         $response = Invoke-WebRequest -Uri "$ApiBaseUrl/" -Method Get -TimeoutSec 30 -UseBasicParsing

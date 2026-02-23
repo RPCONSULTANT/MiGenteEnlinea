@@ -21,7 +21,7 @@ public class SuscripcionesApiService
     {
         try
         {
-            return await _apiService.GetAsync<SuscripcionDto>($"/suscripciones/{userId}/activa", cancellationToken);
+            return await _apiService.GetAsync<SuscripcionDto>($"/suscripciones/activa/{userId}", cancellationToken);
         }
         catch (Exception ex)
         {
@@ -37,7 +37,7 @@ public class SuscripcionesApiService
     {
         try
         {
-            return await _apiService.GetAsync<List<SuscripcionDto>>($"/suscripciones/{userId}/historial", cancellationToken);
+            return await _apiService.GetAsync<List<SuscripcionDto>>($"/suscripciones/ventas/{userId}", cancellationToken);
         }
         catch (Exception ex)
         {
@@ -70,7 +70,12 @@ public class SuscripcionesApiService
     {
         try
         {
-            return await _apiService.GetAsync<List<PlanDto>>($"/suscripciones/planes?tipo={tipoPlan}", cancellationToken);
+            var endpoint = tipoPlan?.ToLowerInvariant() switch
+            {
+                "contratista" or "contratistas" => "/suscripciones/planes/contratistas",
+                _ => "/suscripciones/planes/empleadores"
+            };
+            return await _apiService.GetAsync<List<PlanDto>>(endpoint, cancellationToken);
         }
         catch (Exception ex)
         {

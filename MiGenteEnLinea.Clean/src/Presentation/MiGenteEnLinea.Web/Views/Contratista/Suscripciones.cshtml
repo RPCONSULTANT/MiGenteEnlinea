@@ -117,10 +117,14 @@
             }
             
             try {
-                const response = await authenticatedFetch(`/suscripciones/usuario/${userId}`);
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.SUSCRIPCIONES?.ACTIVA
+                    ? window.API_ENDPOINTS.SUSCRIPCIONES.ACTIVA(userId)
+                    : `/suscripciones/activa/${userId}`);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse
+                        ? await window.readApiResponse(response)
+                        : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     
                     $('#txtPlanActual').val(data.planNombre || 'Sin plan activo');
                     $('#txtFechaInicio').val(data.fechaInicio ? new Date(data.fechaInicio).toLocaleDateString('es-DO') : '-');
@@ -146,10 +150,14 @@
             if (!userId) return;
             
             try {
-                const response = await authenticatedFetch(`/suscripciones/ventas/usuario/${userId}`);
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.SUSCRIPCIONES?.VENTAS
+                    ? window.API_ENDPOINTS.SUSCRIPCIONES.VENTAS(userId)
+                    : `/suscripciones/ventas/${userId}`);
                 
                 if (response.ok) {
-                    const ventas = await response.json();
+                    const ventas = window.readApiResponse
+                        ? await window.readApiResponse(response)
+                        : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     renderHistoricoPagos(ventas);
                 }
             } catch (error) {
@@ -229,8 +237,12 @@
                     });
                     loadSuscripcion(); // Recargar datos
                 } else {
-                    const error = await response.json();
-                    Swal.fire('Error', error.message || 'No se pudo cancelar la suscripción', 'error');
+                    const error = window.readApiResponse
+                        ? await window.readApiResponse(response)
+                        : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    Swal.fire('Error', window.getApiErrorMessage
+                        ? window.getApiErrorMessage(error, 'No se pudo cancelar la suscripción')
+                        : (error?.message || 'No se pudo cancelar la suscripción'), 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -239,3 +251,4 @@
         }
     </script>
 }
+

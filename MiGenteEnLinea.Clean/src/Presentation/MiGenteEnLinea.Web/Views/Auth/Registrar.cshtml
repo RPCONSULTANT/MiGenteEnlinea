@@ -192,7 +192,8 @@
                     host: window.location.origin  // Host para el link de activación
                 };
                 
-                const response = await fetch(`${API_BASE}/auth/register`, {
+                const registerPath = window.API_ENDPOINTS?.AUTH?.REGISTER || '/auth/register';
+                const response = await fetch(window.buildApiUrl(registerPath), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -200,7 +201,9 @@
                     body: JSON.stringify(payload)
                 });
                 
-                const data = await response.json();
+                const data = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : null;
                 
                 if (response.ok || response.status === 201) {
                     // Success - show message and redirect to login
@@ -216,16 +219,9 @@
                     
                 } else if (response.status === 400) {
                     // Validation error
-                    let errorMsg = 'Error de validación';
-                    if (data.errors) {
-                        // Get first error message
-                        const errors = Object.values(data.errors).flat();
-                        errorMsg = errors[0] || errorMsg;
-                    } else if (data.message) {
-                        errorMsg = data.message;
-                    } else if (data.title) {
-                        errorMsg = data.title;
-                    }
+                    const errorMsg = window.getApiErrorMessage
+                        ? window.getApiErrorMessage(data, 'Error de validación')
+                        : 'Error de validación';
                     showAlert('registerAlert', errorMsg, 'danger');
                     
                 } else if (response.status === 409) {
@@ -233,7 +229,9 @@
                     showAlert('registerAlert', 'El correo electrónico o nombre de usuario ya está registrado', 'warning');
                     
                 } else {
-                    const errorMsg = data.message || data.title || 'Error al registrar la cuenta';
+                    const errorMsg = window.getApiErrorMessage
+                        ? window.getApiErrorMessage(data, 'Error al registrar la cuenta')
+                        : 'Error al registrar la cuenta';
                     showAlert('registerAlert', errorMsg, 'danger');
                 }
                 

@@ -230,7 +230,7 @@
                         throw new Error('No se pudo cargar el perfil');
                     }
 
-                    const perfil = await response.json();
+                    const perfil = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
 
                     $('#txtNombre').val(perfil.nombre || '');
                     $('#txtApellido').val(perfil.apellido || '');
@@ -345,3 +345,4 @@
         });
     </script>
 }
+

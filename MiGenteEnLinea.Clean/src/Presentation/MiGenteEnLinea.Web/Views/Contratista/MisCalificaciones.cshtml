@@ -112,7 +112,7 @@
                 const response = await authenticatedFetch(`/calificaciones/contratista/${cedula}?pageSize=50`);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     renderCalificaciones(data.items || []);
                 } else {
                     console.error('Error al cargar calificaciones:', response.status);
@@ -159,3 +159,4 @@
         }
     </script>
 }
+

@@ -261,12 +261,12 @@
                             <input type="hidden" id="planId" value="">
                             <div class="mb-3">
                                 <label class="form-label">Nombre en la Tarjeta *</label>
-                                <input type="text" class="form-control" id="nombreTarjeta" required placeholder="Tal como aparece en la tarjeta">
+                                <input type="text" class="form-control" id="nombreTarjeta" autocomplete="cc-name" required placeholder="Tal como aparece en la tarjeta">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Número de Tarjeta *</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="numeroTarjeta" required maxlength="19" placeholder="0000 0000 0000 0000">
+                                    <input type="text" class="form-control" id="numeroTarjeta" autocomplete="cc-number" required maxlength="19" placeholder="0000 0000 0000 0000">
                                     <span class="input-group-text"><i class="fa fa-credit-card"></i></span>
                                 </div>
                             </div>
@@ -280,7 +280,7 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">CVV *</label>
-                                        <input type="password" class="form-control" id="cvv" required maxlength="4" placeholder="***">
+                                        <input type="password" class="form-control" id="cvv" autocomplete="cc-csc" required maxlength="4" placeholder="***">
                                     </div>
                                 </div>
                             </div>
@@ -369,7 +369,8 @@
             // Los planes son públicos, no requieren token
 
             try {
-                const response = await fetch(`${API_BASE_URL}/suscripciones/planes/empleadores`, {
+                const planesPath = window.API_ENDPOINTS?.SUSCRIPCIONES?.PLANES_EMPLEADORES || '/suscripciones/planes/empleadores';
+                const response = await fetch(window.buildApiUrl(planesPath), {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -377,7 +378,9 @@
                 });
 
                 if (response.ok) {
-                    const planes = await response.json();
+                    const planes = window.readApiResponse
+                        ? await window.readApiResponse(response)
+                        : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     console.log('Planes cargados desde backend:', planes);
                     // Los planes se pueden actualizar dinámicamente si es necesario
                 }
@@ -453,21 +456,28 @@
                 };
 
                 // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
-                const response = await authenticatedFetch('/pagos/procesar', {
+                const procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR || '/pagos/procesar';
+                const response = await authenticatedFetch(procesarPagoPath, {
                     method: 'POST',
                     body: JSON.stringify(pagoData)
                 });
 
+                const payload = window.readApiResponse
+                    ? await window.readApiResponse(response)
+                    : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = payload || {};
                     // Verificar si es pago rechazado
                     if (errorData.tipo === 'pago_rechazado') {
                         throw new Error(errorData.message || 'El pago fue rechazado por la entidad bancaria');
                     }
-                    throw new Error(errorData.message || 'Error al procesar el pago');
+                    throw new Error(window.getApiErrorMessage
+                        ? window.getApiErrorMessage(errorData, 'Error al procesar el pago')
+                        : (errorData.message || 'Error al procesar el pago'));
                 }
 
-                const result = await response.json();
+                const result = payload || {};
 
                 $('#modalCheckout').modal('hide');
                 Swal.fire({
@@ -497,3 +507,4 @@
         }
     </script>
 }
+

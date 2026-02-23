@@ -501,7 +501,7 @@
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
                 
-                const empleado = await response.json();
+                const empleado = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 currentEmpleado = empleado;
                 
                 displayEmpleado(empleado);
@@ -623,7 +623,7 @@
                 const response = await authenticatedFetch(`/empleados/${empleadoId}/recibos?pageSize=50`);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     const recibos = data.recibos || data.items || data || [];
                     displayRecibos(recibos);
                 }
@@ -767,7 +767,7 @@
                         loadEmpleado();
                     });
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.message || error.title || 'Error al guardar', 'error');
                 }
             } catch (error) {
@@ -842,7 +842,7 @@
                             icon: 'success'
                         }).then(() => loadEmpleado());
                     } else {
-                        const error = await response.json();
+                        const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                         Swal.fire('Error', error.message || 'Error al dar de baja', 'error');
                     }
                 } catch (error) {
@@ -964,7 +964,7 @@
                 });
                 
                 if (response.ok || response.status === 201) {
-                    const result = await response.json();
+                    const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire({
                         title: '¡Pago Procesado!',
                         text: `Recibo #${result.pagoId || result} generado exitosamente`,
@@ -974,7 +974,7 @@
                         loadEmpleado();
                     });
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     console.error('Error procesando pago:', error);
                     
                     // Mostrar mensaje de error detallado
@@ -1035,7 +1035,9 @@
             try {
                 // Obtener el perfil del empleador para determinar el tipo de contrato
                 const userId = localStorage.getItem('userId');
-                const perfilResponse = await authenticatedFetch(`/empleadores/perfil/${userId}`);
+                const perfilResponse = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADORES?.BY_USER
+                    ? window.API_ENDPOINTS.EMPLEADORES.BY_USER(userId)
+                    : `/empleadores/by-user/${userId}`);
                 
                 if (!perfilResponse.ok) {
                     throw new Error('No se pudo obtener el perfil del empleador');
@@ -1180,7 +1182,9 @@
             try {
                 // Obtener el perfil del empleador para determinar el tipo
                 const userId = localStorage.getItem('userId');
-                const perfilResponse = await authenticatedFetch(`/empleadores/perfil/${userId}`);
+                const perfilResponse = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADORES?.BY_USER
+                    ? window.API_ENDPOINTS.EMPLEADORES.BY_USER(userId)
+                    : `/empleadores/by-user/${userId}`);
                 
                 if (!perfilResponse.ok) {
                     throw new Error('No se pudo obtener el perfil del empleador');
@@ -1301,3 +1305,4 @@
         }
     </script>
 }
+

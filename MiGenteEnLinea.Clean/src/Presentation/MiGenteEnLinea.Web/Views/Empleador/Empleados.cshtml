@@ -665,10 +665,12 @@
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Validando...';
             
             try {
-                const response = await authenticatedFetch(`/empleados/consultar-padron/${cedula}`);
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADOS?.PADRON
+                    ? window.API_ENDPOINTS.EMPLEADOS.PADRON(cedula)
+                    : `/empleados/padron/${cedula}`);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     // Auto-fill fields if API returns data
                     if (data.nombre) document.getElementById('nombre').value = data.nombre;
                     if (data.apellido) document.getElementById('apellido').value = data.apellido;
@@ -784,7 +786,7 @@
                     body: JSON.stringify(empleado)
                 });
                 
-                const data = await response.json();
+                const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 
                 if (response.ok) {
                     Swal.fire({
@@ -886,10 +888,10 @@
             
             try {
                 // Load active employees (usando soloActivos como parámetro correcto)
-                const response = await authenticatedFetch('/empleados?soloActivos=true&pageSize=100');
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADOS?.LIST_ACTIVOS || '/empleados?soloActivos=true&pageSize=100');
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     console.log('API Response (raw):', data);
                     console.log('data.items:', data.items);
                     console.log('data type:', typeof data, 'isArray:', Array.isArray(data));
@@ -914,7 +916,7 @@
                 }
                 
                 // Load inactive employees
-                const responseInactive = await authenticatedFetch('/empleados?soloActivos=false&pageSize=100');
+                const responseInactive = await authenticatedFetch(${window.API_ENDPOINTS?.EMPLEADOS?.LIST || '/empleados'}?soloActivos=false&pageSize=100);
                 
                 if (responseInactive.ok) {
                     const dataInactive = await responseInactive.json();
@@ -1056,7 +1058,7 @@
                         });
                         loadEmpleados();
                     } else {
-                        const data = await response.json();
+                        const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                         Swal.fire({
                             title: 'Error',
                             text: data.message || 'No se pudo completar la operación',
@@ -1105,7 +1107,7 @@
                         });
                         loadEmpleados();
                     } else {
-                        const data = await response.json();
+                        const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                         Swal.fire({
                             title: 'Error',
                             text: data.message || 'No se pudo completar la operación',
@@ -1248,3 +1250,5 @@
         });
     </script>
 }
+
+

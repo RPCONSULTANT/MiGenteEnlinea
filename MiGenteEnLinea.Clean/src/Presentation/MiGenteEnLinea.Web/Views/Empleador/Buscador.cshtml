@@ -470,7 +470,7 @@
                 const response = await authenticatedFetch(url);
                 
                 if (response.ok) {
-                    const result = await response.json();
+                    const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     console.log('Search result:', result);
                     
                     // El API devuelve un objeto SearchContratistasResult con { items, totalCount, pageIndex, pageSize }
@@ -627,7 +627,7 @@
                 const response = await authenticatedFetch(`/contratistas/${contratistaId}/servicios`);
                 
                 if (response.ok) {
-                    const servicios = await response.json();
+                    const servicios = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     renderizarTablaServicios(servicios);
                 } else {
                     throw new Error('Error al cargar servicios');
@@ -696,3 +696,4 @@
     </script>
 </body>
 </html>
+

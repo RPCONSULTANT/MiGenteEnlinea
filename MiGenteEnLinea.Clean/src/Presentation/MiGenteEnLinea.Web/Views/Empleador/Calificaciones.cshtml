@@ -309,8 +309,11 @@
                 return;
             }
             
-            authenticatedFetch('/calificaciones/por-empleador/' + userId)
-                .then(response => response.json())
+            const calificacionesPath = window.API_ENDPOINTS?.CALIFICACIONES?.POR_EMPLEADOR
+                ? window.API_ENDPOINTS.CALIFICACIONES.POR_EMPLEADOR(userId)
+                : '/calificaciones/por-empleador/' + userId;
+            authenticatedFetch(calificacionesPath)
+                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
                 .then(data => {
                     renderizarTablaCalificaciones(data);
                 })
@@ -354,8 +357,9 @@
         
         function cargarPerfilesCalificables() {
             // ✅ Cargar contrataciones completadas sin calificar
-            authenticatedFetch('/contrataciones?soloNoCalificadas=true&pageSize=100')
-                .then(response => response.json())
+            const noCalificadasPath = window.API_ENDPOINTS?.CONTRATACIONES?.NO_CALIFICADAS || '/contrataciones?soloNoCalificadas=true&pageSize=100';
+            authenticatedFetch(noCalificadasPath)
+                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
                 .then(data => {
                     if (data && data.length > 0) {
                         // Mapear contrataciones a formato de perfiles
@@ -484,14 +488,15 @@
             };
             
             // ✅ Enviar calificación al API
-            authenticatedFetch('/calificaciones/calificar-perfil', {
+            const calificarPath = window.API_ENDPOINTS?.CALIFICACIONES?.CALIFICAR_PERFIL || '/calificaciones/calificar-perfil';
+            authenticatedFetch(calificarPath, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(datos)
             })
-                .then(response => response.json())
+                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
                 .then(response => {
                     onSuccess(response);
                 })
@@ -652,3 +657,4 @@
         }
     </script>
 }
+

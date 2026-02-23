@@ -394,7 +394,6 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const API_BASE_URL = API_BASE;
         let empleadosList = [];
         let pagosAProcesar = [];
         let currentPage = 1;
@@ -439,10 +438,13 @@
         // ============================================
         async function loadEmpleados() {
             try {
-                const response = await authenticatedFetch('/empleados?pageSize=500&activos=true');
+                const empleadosPath = window.API_ENDPOINTS?.EMPLEADOS?.LIST
+                    ? `${window.API_ENDPOINTS.EMPLEADOS.LIST}?pageSize=500&soloActivos=true`
+                    : '/empleados?pageSize=500&soloActivos=true';
+                const response = await authenticatedFetch(empleadosPath);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     empleadosList = data.empleados || data.items || data || [];
                     
                     // Populate dropdowns
@@ -486,7 +488,7 @@
                 const response = await authenticatedFetch(`/nominas/resumen?periodo=${periodo}`);
                 
                 if (response.ok) {
-                    const resumen = await response.json();
+                    const resumen = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     document.getElementById('statPagadoMes').textContent = `RD$ ${(resumen.totalPagadoMes || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                     document.getElementById('statTotalBruto').textContent = `RD$ ${(resumen.totalBrutoNomina || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
                     document.getElementById('statPendiente').textContent = `RD$ ${(resumen.totalPendiente || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
@@ -815,7 +817,7 @@
                 });
                 
                 if (response.ok) {
-                    const result = await response.json();
+                    const result = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire({
                         title: '¡Nómina Procesada!',
                         html: `<p>Se procesaron <strong>${result.procesados || selectedIds.length}</strong> pagos exitosamente</p>`,
@@ -825,7 +827,7 @@
                         loadResumen();
                     });
                 } else {
-                    const error = await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.message || 'Error al procesar la nómina', 'error');
                 }
             } catch (error) {
@@ -844,7 +846,7 @@
             const fechaHasta = document.getElementById('fechaHasta').value;
             const empleadoId = document.getElementById('filtroEmpleado').value;
             
-            let url = `${API_BASE_URL}/nominas/historial?page=${page}&pageSize=${pageSize}`;
+            let url = `${window.API_ENDPOINTS?.NOMINAS?.HISTORIAL || '/nominas/historial'}?page=${page}&pageSize=${pageSize}`;
             if (fechaDesde) url += `&fechaDesde=${fechaDesde}`;
             if (fechaHasta) url += `&fechaHasta=${fechaHasta}`;
             if (empleadoId) url += `&empleadoId=${empleadoId}`;
@@ -853,7 +855,7 @@
                 const response = await authenticatedFetch(url);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     displayHistorico(data.items || data.recibos || data || []);
                 }
             } catch (error) {
@@ -953,3 +955,5 @@
         }
     </script>
 }
+
+

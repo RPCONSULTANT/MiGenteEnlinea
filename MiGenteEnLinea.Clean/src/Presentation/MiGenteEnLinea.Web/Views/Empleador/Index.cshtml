@@ -194,7 +194,7 @@
 
             try {
                 // Load empleados count
-                const empleadosResponse = await authenticatedFetch('/empleados');
+                const empleadosResponse = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADOS?.LIST || '/empleados');
                 if (empleadosResponse.ok) {
                     const empleadosData = await empleadosResponse.json();
                     // API devuelve PaginatedList con .items, o array directo
@@ -259,3 +259,4 @@
         document.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
 }
+

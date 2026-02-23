@@ -64,7 +64,7 @@ public class EmpleadoresApiService
     {
         try
         {
-            return await _apiService.GetAsync<EmpleadorDto>($"/empleadores/{userId}", cancellationToken);
+            return await _apiService.GetAsync<EmpleadorDto>($"/empleadores/by-user/{userId}", cancellationToken);
         }
         catch (Exception ex)
         {

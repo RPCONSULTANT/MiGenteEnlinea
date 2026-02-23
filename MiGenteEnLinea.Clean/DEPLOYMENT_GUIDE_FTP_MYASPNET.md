@@ -7,6 +7,8 @@ This is the canonical deployment guide for myASP.
 - API website and Web website are deployed separately.
 - API remote path: `/MigenteApi/api`
 - Web remote path: `/MigenteApi/web`
+- Keep app `web.config` minimal (no IIS `<rewrite>` block in app config).
+- HTTP->HTTPS redirect is handled at myASP hosting/bindings level.
 - Preferred hosting model:
   - API: `inprocess`
   - Web: `inprocess`
@@ -89,7 +91,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy-db.ps1 -Configuration 
 2. Web `appsettings.Production.json`:
 - `AllowedHosts` = `"*"`
 - `ApiConfiguration.BaseUrl` points to real API domain, example:
-  - `https://api.migenteenlinea.com/api`
+  - `https://apimigente.migenteenlinea.do/api`
 
 ## 5) Runtime validation (required)
 
