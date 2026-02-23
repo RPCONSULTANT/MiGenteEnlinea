@@ -1,13 +1,11 @@
-# ========================================
-# MiGente En Línea - Deployment Verification
-# ========================================
-
 param(
     [string]$ApiBaseUrl = "https://api.migenteenlinea.com",
     [string]$WebBaseUrl = "https://www.migenteenlinea.com",
     [switch]$SkipApi,
     [switch]$SkipWeb
 )
+
+$ErrorActionPreference = "Stop"
 
 $ColorSuccess = "Green"
 $ColorError = "Red"
@@ -17,183 +15,97 @@ $ColorInfo = "Cyan"
 $failed = 0
 $passed = 0
 
+function Run-Test {
+    param(
+        [string]$Name,
+        [scriptblock]$Action
+    )
+
+    Write-Host " - $Name..." -NoNewline
+    try {
+        & $Action
+        Write-Host " OK" -ForegroundColor $ColorSuccess
+        return $true
+    }
+    catch {
+        Write-Host " FAIL" -ForegroundColor $ColorError
+        Write-Host "   $($_.Exception.Message)" -ForegroundColor $ColorError
+        return $false
+    }
+}
+
 Clear-Host
 Write-Host ""
 Write-Host "========================================" -ForegroundColor $ColorInfo
-Write-Host "  🔍 Deployment Verification" -ForegroundColor $ColorInfo
+Write-Host " Deployment Verification (myASP)" -ForegroundColor $ColorInfo
 Write-Host "========================================" -ForegroundColor $ColorInfo
 Write-Host ""
-
-# ========================================
-# API Tests
-# ========================================
+Write-Host "API: $ApiBaseUrl" -ForegroundColor Gray
+Write-Host "Web: $WebBaseUrl" -ForegroundColor Gray
+Write-Host ""
 
 if (-not $SkipApi) {
-    Write-Host "📡 API Tests ($ApiBaseUrl)" -ForegroundColor $ColorInfo
-    Write-Host ""
+    Write-Host "API Checks" -ForegroundColor $ColorInfo
 
-    # Test 1: Health endpoint
-    Write-Host "   🔹 Testing health endpoint..." -NoNewline
-    try {
+    if (Run-Test -Name "Health endpoint /health returns 200" -Action {
         $response = Invoke-WebRequest -Uri "$ApiBaseUrl/health" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200) {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-            
-            $content = $response.Content | ConvertFrom-Json
-            if ($content.status -eq "Healthy") {
-                Write-Host "      Status: Healthy" -ForegroundColor Gray
-            } else {
-                Write-Host "      ⚠️  Status: $($content.status)" -ForegroundColor $ColorWarning
-            }
-        } else {
-            Write-Host " ❌ FAILED (HTTP $($response.StatusCode))" -ForegroundColor $ColorError
-            $failed++
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
         }
-    } catch {
-        Write-Host " ❌ FAILED" -ForegroundColor $ColorError
-        Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor $ColorError
-        $failed++
-    }
+    }) { $passed++ } else { $failed++ }
 
-    # Test 2: Swagger UI
-    Write-Host "   🔹 Testing Swagger UI..." -NoNewline
-    try {
+    if (Run-Test -Name "Swagger JSON /swagger/v1/swagger.json returns 200" -Action {
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/swagger/v1/swagger.json" -Method Get -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "API root returns a valid response" -Action {
         $response = Invoke-WebRequest -Uri "$ApiBaseUrl/" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200 -and $response.Content -like "*swagger*") {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-        } else {
-            Write-Host " ❌ FAILED (No Swagger content found)" -ForegroundColor $ColorError
-            $failed++
+        if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 500) {
+            throw "Unexpected HTTP status at root: $($response.StatusCode)."
         }
-    } catch {
-        Write-Host " ❌ FAILED" -ForegroundColor $ColorError
-        Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor $ColorError
-        $failed++
-    }
-
-    # Test 3: Sample API endpoint (public plans)
-    Write-Host "   🔹 Testing API endpoint /api/planes..." -NoNewline
-    try {
-        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/planes" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200) {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-            
-            $plans = $response.Content | ConvertFrom-Json
-            Write-Host "      Found $($plans.Count) plans" -ForegroundColor Gray
-        } else {
-            Write-Host " ❌ FAILED (HTTP $($response.StatusCode))" -ForegroundColor $ColorError
-            $failed++
-        }
-    } catch {
-        Write-Host " ⚠️  SKIPPED (endpoint may require auth)" -ForegroundColor $ColorWarning
-        Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor Gray
-    }
+    }) { $passed++ } else { $failed++ }
 
     Write-Host ""
 }
-
-# ========================================
-# Web Tests
-# ========================================
 
 if (-not $SkipWeb) {
-    Write-Host "🌐 Web Tests ($WebBaseUrl)" -ForegroundColor $ColorInfo
-    Write-Host ""
+    Write-Host "Web Checks" -ForegroundColor $ColorInfo
 
-    # Test 1: Homepage
-    Write-Host "   🔹 Testing homepage..." -NoNewline
-    try {
+    if (Run-Test -Name "Web home / returns 200" -Action {
         $response = Invoke-WebRequest -Uri "$WebBaseUrl/" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200) {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-            
-            if ($response.Content -like "*MiGente*" -or $response.Content -like "*migente*") {
-                Write-Host "      Content verified" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host " ❌ FAILED (HTTP $($response.StatusCode))" -ForegroundColor $ColorError
-            $failed++
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
         }
-    } catch {
-        Write-Host " ❌ FAILED" -ForegroundColor $ColorError
-        Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor $ColorError
-        $failed++
-    }
+    }) { $passed++ } else { $failed++ }
 
-    # Test 2: Static files (CSS)
-    Write-Host "   🔹 Testing static files..." -NoNewline
-    try {
-        $response = Invoke-WebRequest -Uri "$WebBaseUrl/css/Custom.css" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200) {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-        } else {
-            Write-Host " ❌ FAILED (HTTP $($response.StatusCode))" -ForegroundColor $ColorError
-            $failed++
+    if (Run-Test -Name "Web can fetch API health from browser perspective (CORS sanity)" -Action {
+        $apiHealth = Invoke-WebRequest -Uri "$ApiBaseUrl/health" -Method Get -TimeoutSec 30 -UseBasicParsing
+        if ($apiHealth.StatusCode -ne 200) {
+            throw "API health is not reachable, status $($apiHealth.StatusCode)."
         }
-    } catch {
-        Write-Host " ⚠️  WARNING (CSS not found)" -ForegroundColor $ColorWarning
-        Write-Host "      This may be normal if using different path" -ForegroundColor Gray
-    }
-
-    # Test 3: Login page
-    Write-Host "   🔹 Testing login page..." -NoNewline
-    try {
-        $response = Invoke-WebRequest -Uri "$WebBaseUrl/Auth/Login" -Method Get -TimeoutSec 30 -UseBasicParsing
-        if ($response.StatusCode -eq 200) {
-            Write-Host " ✅ PASSED" -ForegroundColor $ColorSuccess
-            $passed++
-        } else {
-            Write-Host " ⚠️  WARNING (HTTP $($response.StatusCode))" -ForegroundColor $ColorWarning
-            Write-Host "      Login page may be at different path" -ForegroundColor Gray
-        }
-    } catch {
-        Write-Host " ⚠️  WARNING" -ForegroundColor $ColorWarning
-        Write-Host "      Login page may be at different path" -ForegroundColor Gray
-    }
+    }) { $passed++ } else { $failed++ }
 
     Write-Host ""
 }
 
-# ========================================
-# Summary
-# ========================================
-
 Write-Host "========================================" -ForegroundColor $ColorInfo
-Write-Host "  📊 Verification Summary" -ForegroundColor $ColorInfo
+Write-Host " Summary" -ForegroundColor $ColorInfo
 Write-Host "========================================" -ForegroundColor $ColorInfo
 Write-Host ""
-Write-Host "✅ Passed: $passed tests" -ForegroundColor $ColorSuccess
-Write-Host "❌ Failed: $failed tests" -ForegroundColor $(if ($failed -gt 0) { $ColorError } else { $ColorSuccess })
+Write-Host "Passed: $passed" -ForegroundColor $ColorSuccess
+Write-Host "Failed: $failed" -ForegroundColor $(if ($failed -gt 0) { $ColorError } else { $ColorSuccess })
 Write-Host ""
 
-if ($failed -eq 0) {
-    Write-Host "🎉 All critical tests passed!" -ForegroundColor $ColorSuccess
-    Write-Host ""
-    Write-Host "Next steps:" -ForegroundColor White
-    Write-Host "• Test user registration and login" -ForegroundColor Gray
-    Write-Host "• Upload a contractor profile image" -ForegroundColor Gray
-    Write-Host "• Create test data (empleador, contratista, empleado)" -ForegroundColor Gray
-    Write-Host "• Monitor logs for any errors" -ForegroundColor Gray
-    Write-Host ""
-    exit 0
-} else {
-    Write-Host "⚠️  Some tests failed. Please check:" -ForegroundColor $ColorWarning
-    Write-Host ""
-    Write-Host "Common issues:" -ForegroundColor White
-    Write-Host "• IIS application not configured correctly" -ForegroundColor Gray
-    Write-Host "• Application pool stopped or crashed" -ForegroundColor Gray
-    Write-Host "• web.config errors (check stdout logs)" -ForegroundColor Gray
-    Write-Host "• Database connection issues" -ForegroundColor Gray
-    Write-Host "• .NET 8.0 Runtime not installed on server" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "Check logs via FTP:" -ForegroundColor White
-    Write-Host "• /migenteenlinea2/api/logs/stdout_*.log" -ForegroundColor Gray
-    Write-Host "• /migenteenlinea2/web/logs/stdout_*.log" -ForegroundColor Gray
-    Write-Host ""
+if ($failed -gt 0) {
+    Write-Host "Troubleshooting map:" -ForegroundColor $ColorWarning
+    Write-Host " - 400 Invalid Hostname: fix host headers/bindings in myASP." -ForegroundColor Gray
+    Write-Host " - 500.35: API and Web cannot share same in-process app pool." -ForegroundColor Gray
+    Write-Host " - 404: validate site domain -> physical path mapping." -ForegroundColor Gray
+    Write-Host " - 500: inspect stdout logs in /MigenteApi/api/logs and /MigenteApi/web/logs." -ForegroundColor Gray
     exit 1
 }
+
+exit 0

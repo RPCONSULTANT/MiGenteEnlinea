@@ -24,6 +24,7 @@ using MiGenteEnLinea.Infrastructure.Persistence.Repositories.Empleadores;
 using MiGenteEnLinea.Infrastructure.Persistence.Repositories.Empleados;
 using MiGenteEnLinea.Infrastructure.Persistence.Repositories.Pagos;
 using MiGenteEnLinea.Infrastructure.Persistence.Repositories.Suscripciones;
+using MiGenteEnLinea.Infrastructure.Persistence.Seeding;
 using MiGenteEnLinea.Infrastructure.Services;
 using MiGenteEnLinea.Infrastructure.Services.Documents;
 using Polly;
@@ -296,6 +297,11 @@ public static class DependencyInjection
         // ✅ Servicio de almacenamiento de archivos (local wwwroot)
         // Maneja guardado, lectura y eliminación de archivos (fotos, documentos, etc.)
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // Seeders de inicializacion de base de datos
+        services.AddScoped<CatalogDatabaseSeeder>();
+        services.AddScoped<DemoDatabaseSeeder>();
+        services.AddScoped<DatabaseSeeder>();
 
         return services;
     }

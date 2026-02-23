@@ -2,6 +2,7 @@ using MiGenteEnLinea.Infrastructure;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Application;
 using MiGenteEnLinea.API.Configuration;
+using MiGenteEnLinea.Infrastructure.Persistence.Seeding;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -184,6 +185,8 @@ builder.Services.AddAuthorization();
 // ========================================
 builder.Services.Configure<CorsOptions>(
     builder.Configuration.GetSection(CorsOptions.SectionName));
+builder.Services.Configure<DatabaseInitializationOptions>(
+    builder.Configuration.GetSection(DatabaseInitializationOptions.SectionName));
 
 var corsOptions = builder.Configuration
     .GetSection(CorsOptions.SectionName)
@@ -228,6 +231,9 @@ builder.Services.AddCors(options =>
 // BUILD APP
 // ========================================
 var app = builder.Build();
+var dbInitOptions = builder.Configuration
+    .GetSection(DatabaseInitializationOptions.SectionName)
+    .Get<DatabaseInitializationOptions>() ?? DatabaseInitializationOptions.CreateDefaults(app.Environment.EnvironmentName);
 
 // ========================================
 // MIDDLEWARE PIPELINE
@@ -246,16 +252,13 @@ if (app.Environment.IsDevelopment())
     // Swagger antes del error handler para que esté disponible
 }
 
-// Swagger (solo en desarrollo)
-if (app.Environment.IsDevelopment())
+// Swagger habilitado para diagnostico y validacion en ambientes desplegados.
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "MiGente API v1");
-        options.RoutePrefix = string.Empty; // Swagger en raíz: https://localhost:5001/
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "MiGente API v1");
+    options.RoutePrefix = string.Empty; // Swagger en raiz: https://api-dominio/
+});
 
 // CORS - DEBE IR ANTES DE HttpsRedirection para permitir preflight requests
 app.UseCors("AppPolicy");
@@ -281,45 +284,7 @@ app.MapGet("/health", () => Results.Ok(new
     Environment = app.Environment.EnvironmentName
 }));
 
-// ========================================
-// INICIALIZAR BASE DE DATOS Y SEEDING
-// ========================================
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    
-    try
-    {
-        var dbContext = services.GetRequiredService<MiGenteDbContext>();
-        
-        // Verificar conexión a base de datos
-        if (await dbContext.Database.CanConnectAsync())
-        {
-            logger.LogInformation("✅ Conexión a base de datos exitosa");
-            
-            // Aplicar migraciones pendientes (crea todas las tablas si no existen)
-            logger.LogInformation("🔄 Aplicando migraciones de base de datos...");
-            await dbContext.Database.MigrateAsync();
-            logger.LogInformation("✅ Migraciones aplicadas exitosamente");
-            
-            // Ejecutar seeding si las tablas están vacías
-            var seeder = new MiGenteEnLinea.Infrastructure.Persistence.Seeding.DatabaseSeeder(
-                dbContext, 
-                services.GetRequiredService<ILogger<MiGenteEnLinea.Infrastructure.Persistence.Seeding.DatabaseSeeder>>());
-            
-            await seeder.SeedAsync();
-        }
-        else
-        {
-            logger.LogWarning("⚠️ No se pudo conectar a la base de datos");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "❌ Error durante la inicialización de la base de datos");
-    }
-}
+await InitializeDatabaseAsync(app, dbInitOptions);
 
 // ========================================
 // RUN APP
@@ -337,6 +302,55 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+}
+
+static async Task InitializeDatabaseAsync(WebApplication app, DatabaseInitializationOptions options)
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    if (!options.ApplyMigrationsOnStartup && !options.RunCatalogSeedOnStartup && !options.RunDemoSeedOnStartup)
+    {
+        logger.LogInformation("Inicializacion de BD deshabilitada por configuracion.");
+        return;
+    }
+
+    try
+    {
+        var dbContext = services.GetRequiredService<MiGenteDbContext>();
+
+        if (options.ApplyMigrationsOnStartup)
+        {
+            logger.LogInformation("Aplicando migraciones de base de datos...");
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Migraciones aplicadas.");
+        }
+        else if (!await dbContext.Database.CanConnectAsync())
+        {
+            throw new InvalidOperationException("No se pudo conectar a la base de datos y ApplyMigrationsOnStartup=false.");
+        }
+
+        if (options.RunCatalogSeedOnStartup || options.RunDemoSeedOnStartup)
+        {
+            var seeder = services.GetRequiredService<DatabaseSeeder>();
+            await seeder.SeedAsync(options.RunDemoSeedOnStartup);
+
+            if (!options.RunCatalogSeedOnStartup && options.RunDemoSeedOnStartup)
+            {
+                logger.LogWarning("RunDemoSeedOnStartup=true implica catalogos + demo via DatabaseSeeder.");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error durante la inicializacion de base de datos.");
+
+        if (options.FailFastOnInitializationError)
+        {
+            throw;
+        }
+    }
 }
 
 // Make Program class accessible to integration tests
