@@ -14,6 +14,7 @@
  */
 const API_BASE_BY_HOST = {
   "plattaformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "platformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
   "www.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
   "migenteenlinea.do": "http://api2.migenteenlinea.do/api",
 };
@@ -37,7 +38,13 @@ function buildApiUrl(path) {
 
 if (!window.API_BASE && window.location.hostname !== "localhost") {
   console.warn(
-    `[API CONFIG] window.API_BASE no fue inyectado; usando fallback '${API_BASE}'. Verifique el layout activo.`,
+    `[API CONFIG] window.API_BASE no fue inyectado; host='${window.location.hostname}', usando fallback '${API_BASE}'. Verifique el layout activo.`,
+  );
+}
+
+if (window.location.hostname !== "localhost" && !/\/api$/i.test(API_BASE)) {
+  console.warn(
+    `[API CONFIG] API_BASE final '${API_BASE}' no termina en '/api'. Revise configuración de entorno/layout.`,
   );
 }
 
@@ -82,9 +89,9 @@ function getApiErrorMessage(payload, fallbackMessage) {
  * @returns {Promise<Response>} - Promesa con la respuesta del fetch
  * 
  * Uso ejemplo:
- * const response = await authenticatedFetch('/empleados?soloActivos=true');
+ * const { response, payload } = await requestApi('/empleados?soloActivos=true');
  * if (response.ok) {
- *   const data = await response.json();
+ *   console.log(payload);
  * }
  */
 async function authenticatedFetch(url, options = {}) {
@@ -138,6 +145,20 @@ async function authenticatedFetch(url, options = {}) {
   return response;
 }
 
+async function requestApi(path, options = {}, config = {}) {
+  const useAuth = config.auth !== false;
+  const requestFn = useAuth ? authenticatedFetch : fetch;
+  const url = useAuth ? path : buildApiUrl(path);
+  const response = await requestFn(url, useAuth ? options : {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+    },
+  });
+  const payload = await readApiResponse(response);
+  return { response, payload };
+}
+
 /**
  * Renderiza estrellas de calificación basado en un rating numérico
  * @param {number} rating - Calificaci\u00f3n de 0 a 5
@@ -181,8 +202,17 @@ async function loadProvincias(
   defaultOption = "-- Seleccione Provincia --",
 ) {
   try {
-    const response = await fetch(buildApiUrl("/catalogos/provincias"));
-    const provincias = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.PROVINCIAS || "/catalogos/provincias",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar las provincias"));
+    }
+
+    const provincias = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -218,8 +248,17 @@ async function loadSectores(
   defaultOption = "-- Seleccione Sector --",
 ) {
   try {
-    const response = await fetch(buildApiUrl("/catalogos/sectores"));
-    const sectores = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.SECTORES || "/catalogos/sectores",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar los sectores"));
+    }
+
+    const sectores = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -255,8 +294,17 @@ async function loadServicios(
   defaultOption = "-- Seleccione Servicio --",
 ) {
   try {
-    const response = await fetch(buildApiUrl("/catalogos/servicios"));
-    const servicios = await response.json();
+    const { response, payload } = await requestApi(
+      window.API_ENDPOINTS?.CATALOGOS?.SERVICIOS || "/catalogos/servicios",
+      {},
+      { auth: false },
+    );
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar los servicios"));
+    }
+
+    const servicios = Array.isArray(payload) ? payload : [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -326,3 +374,17 @@ window.API_BASE = API_BASE;
 window.buildApiUrl = buildApiUrl;
 window.readApiResponse = readApiResponse;
 window.getApiErrorMessage = getApiErrorMessage;
+window.requestApi = requestApi;
+
+// Accessibility hardening for modal focus transitions.
+document.addEventListener("hide.bs.modal", () => {
+  if (document.activeElement && typeof document.activeElement.blur === "function") {
+    document.activeElement.blur();
+  }
+});
+
+document.addEventListener("hidden.bs.modal", () => {
+  if (document.body && typeof document.body.focus === "function") {
+    document.body.focus();
+  }
+});
