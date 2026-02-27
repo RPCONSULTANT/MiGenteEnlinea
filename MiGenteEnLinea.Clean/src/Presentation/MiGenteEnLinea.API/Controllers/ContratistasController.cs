@@ -113,14 +113,25 @@ public class ContratistasController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetContratistaFotoById(int contratistaId)
     {
-        var foto = await _mediator.Send(new GetContratistaFotoByIdQuery(contratistaId));
+        var contratista = await _mediator.Send(new GetContratistaByIdQuery(contratistaId));
 
-        if (foto == null || foto.Length == 0)
+        if (contratista is not null && !string.IsNullOrWhiteSpace(contratista.ImagenUrl))
         {
-            return NotFound(new { error = "Foto no encontrada" });
+            var stream = await _fileStorageService.GetFileAsync(contratista.ImagenUrl, HttpContext.RequestAborted);
+            if (stream is not null)
+            {
+                return File(stream, ResolveImageContentType(contratista.ImagenUrl));
+            }
         }
 
-        return File(foto, "image/jpeg");
+        // Compatibilidad temporal con payload legacy byte[] en BD.
+        var legacyFoto = await _mediator.Send(new GetContratistaFotoByIdQuery(contratistaId));
+        if (legacyFoto is { Length: > 0 })
+        {
+            return File(legacyFoto, "image/jpeg");
+        }
+
+        return NotFound(new { error = "Foto no encontrada" });
     }
 
     /// <summary>
@@ -389,6 +400,7 @@ public class ContratistasController : ControllerBase
                     fileStream,
                     file.FileName,
                     "contratistas-fotos",
+                    file.ContentType,
                     HttpContext.RequestAborted);
             }
 
@@ -416,6 +428,7 @@ public class ContratistasController : ControllerBase
             {
                 success = true,
                 message = "Foto actualizada exitosamente",
+                imageUrl = fotoUrl,
                 fotoUrl = fotoUrl,
                 fileName = file.FileName,
                 size = file.Length
@@ -437,6 +450,18 @@ public class ContratistasController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError,
                 new { error = "Error al procesar la carga de foto" });
         }
+    }
+
+    private static string ResolveImageContentType(string filePath)
+    {
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+        return ext switch
+        {
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
     }
 
     /// <summary>

@@ -209,6 +209,20 @@ if ($RunDbInit) {
 }
 
 # ========================================
+# STEP 1.7: ARTIFACT INTEGRITY CHECK
+# ========================================
+Write-Host " STEP 1.7: Validating artifact integrity..." -ForegroundColor $ColorInfo
+Write-Host ""
+& ".\scripts\validate-artifacts-integrity.ps1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host " Artifact integrity validation failed." -ForegroundColor $ColorError
+    exit 1
+}
+Write-Host ""
+Write-Host " Artifact integrity check passed." -ForegroundColor $ColorSuccess
+Write-Host ""
+
+# ========================================
 # STEP 2: FTP UPLOAD
 # ========================================
 
@@ -303,12 +317,14 @@ mkdir $RemoteRoot/api/wwwroot/uploads/contratistas-fotos
 cd $RemoteRoot/api
 option batch abort
 
-# Upload all files (excluding logs folder content)
-put -filemask="|logs/;logs/*" *
+# Upload all files (excluding runtime folders logs/uploads content)
+put -filemask="|logs/;logs/*;wwwroot/uploads/;wwwroot/uploads/*" *
 
 # Ensure logs folder exists by uploading a placeholder
 option batch continue
 cd logs
+cd ../wwwroot/uploads
+pwd
 option batch abort
 
 "@

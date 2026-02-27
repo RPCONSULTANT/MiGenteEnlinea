@@ -3,10 +3,13 @@ using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Application;
 using MiGenteEnLinea.API.Configuration;
 using MiGenteEnLinea.Infrastructure.Persistence.Seeding;
+using MiGenteEnLinea.Infrastructure.Options;
+using MiGenteEnLinea.API.Services;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -187,6 +190,9 @@ builder.Services.Configure<CorsOptions>(
     builder.Configuration.GetSection(CorsOptions.SectionName));
 builder.Services.Configure<DatabaseInitializationOptions>(
     builder.Configuration.GetSection(DatabaseInitializationOptions.SectionName));
+builder.Services.Configure<DatabaseSeedingSecurityOptions>(
+    builder.Configuration.GetSection(DatabaseSeedingSecurityOptions.SectionName));
+builder.Services.AddScoped<IDatabaseInitializationService, DatabaseInitializationService>();
 
 var corsOptions = builder.Configuration
     .GetSection(CorsOptions.SectionName)
@@ -258,6 +264,14 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "MiGente API v1");
     options.RoutePrefix = string.Empty; // Swagger en raiz: https://api-dominio/
+});
+
+var fileStorageSettings = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
+var maxUploadBytes = Math.Max(1, fileStorageSettings.MaxFileSizeMB) * 1024L * 1024L;
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadBytes;
+    options.MultipartHeadersLengthLimit = 64 * 1024;
 });
 
 // Routing debe ejecutarse antes de CORS para que el middleware resuelva endpoint metadata correctamente.

@@ -12,9 +12,10 @@ public interface IFileStorageService
     /// <param name="file">El archivo a guardar (stream)</param>
     /// <param name="fileName">Nombre original del archivo</param>
     /// <param name="folder">Carpeta de destino (ej: "contratistas-fotos")</param>
+    /// <param name="contentType">Content-Type reportado del archivo (opcional)</param>
     /// <param name="cancellationToken">Token de cancelación</param>
     /// <returns>Ruta relativa al servidor (ej: "/uploads/contratistas-fotos/abc123.jpg")</returns>
-    Task<string> SaveFileAsync(Stream file, string fileName, string folder, CancellationToken cancellationToken = default);
+    Task<string> SaveFileAsync(Stream file, string fileName, string folder, string? contentType = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Recupera un archivo del servidor como stream

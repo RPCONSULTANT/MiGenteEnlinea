@@ -21,21 +21,48 @@ public class DatabaseSeeder
         _logger = logger;
     }
 
-    public async Task SeedAsync(bool includeDemoData)
+    public async Task<SeedExecutionReport> SeedAsync(bool includeDemoData)
     {
-        _logger.LogInformation("Iniciando seeding de base de datos. DemoData={IncludeDemoData}", includeDemoData);
+        _logger.LogInformation("db.seed.run.start type=full includeDemo={IncludeDemoData}", includeDemoData);
 
-        await _catalogSeeder.SeedAsync();
+        var startedAt = DateTime.UtcNow;
+        var blocks = new List<SeedBlockResult>();
+        var errors = new List<string>();
 
-        if (includeDemoData)
+        try
         {
-            await _demoSeeder.SeedAsync();
+            var catalogReport = await _catalogSeeder.SeedAsync();
+            blocks.AddRange(catalogReport.Blocks);
+
+            if (includeDemoData)
+            {
+                await _demoSeeder.SeedAsync();
+                blocks.Add(new SeedBlockResult { BlockName = "DemoData", Inserted = 1 });
+            }
+            else
+            {
+                blocks.Add(new SeedBlockResult { BlockName = "DemoData", Skipped = 1 });
+                _logger.LogInformation("Omitiendo seed de datos demo.");
+            }
+
+            _logger.LogInformation("db.seed.run.finish type=full success=true");
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogInformation("Omitiendo seed de datos demo.");
+            errors.Add(ex.Message);
+            _logger.LogError(ex, "db.seed.run.finish type=full success=false");
+            throw;
         }
 
-        _logger.LogInformation("Seeding completado exitosamente.");
+        return new SeedExecutionReport
+        {
+            StartedAtUtc = startedAt,
+            CompletedAtUtc = DateTime.UtcNow,
+            Success = errors.Count == 0,
+            Blocks = blocks,
+            Errors = errors
+        };
     }
+
+    public Task<SeedExecutionReport> RepairPlansAsync() => _catalogSeeder.RepairPlansAsync();
 }

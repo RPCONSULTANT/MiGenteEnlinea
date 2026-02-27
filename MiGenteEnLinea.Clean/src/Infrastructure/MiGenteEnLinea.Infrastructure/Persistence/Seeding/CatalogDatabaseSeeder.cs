@@ -18,83 +18,181 @@ public class CatalogDatabaseSeeder
         _logger = logger;
     }
 
-    public async Task SeedAsync()
+    public async Task<SeedExecutionReport> SeedAsync()
     {
-        _logger.LogInformation("Iniciando seed de catalogos...");
+        var startedAt = DateTime.UtcNow;
+        var blocks = new List<SeedBlockResult>();
+        var errors = new List<string>();
+
+        _logger.LogInformation("db.seed.run.start type=catalog");
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
-
         try
         {
-            await RunBlockAsync("PlanesEmpleadores", SeedPlanesEmpleadoresAsync);
-            await RunBlockAsync("PlanesContratistas", SeedPlanesContratistasAsync);
-            await RunBlockAsync("Provincias", SeedProvinciasAsync);
-            await RunBlockAsync("Sectores", SeedSectoresAsync);
-            await RunBlockAsync("Servicios", SeedServiciosAsync);
-            await RunBlockAsync("MissingEmpleadores", SeedMissingEmpleadoresAsync);
+            blocks.Add(await RunBlockAsync("PlanesEmpleadores", SeedPlanesEmpleadoresAsync));
+            blocks.Add(await RunBlockAsync("PlanesContratistas", SeedPlanesContratistasAsync));
+            blocks.Add(await RunBlockAsync("RepairPlanesActivos", RepairPlanesActivosAsync));
+            blocks.Add(await RunBlockAsync("Provincias", SeedProvinciasAsync));
+            blocks.Add(await RunBlockAsync("Sectores", SeedSectoresAsync));
+            blocks.Add(await RunBlockAsync("Servicios", SeedServiciosAsync));
+            blocks.Add(await RunBlockAsync("MissingEmpleadores", SeedMissingEmpleadoresAsync));
 
             await transaction.CommitAsync();
-            _logger.LogInformation("Seed de catalogos completado.");
+            _logger.LogInformation("db.seed.run.finish type=catalog success=true");
         }
-        catch
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+            errors.Add(ex.Message);
+            _logger.LogError(ex, "db.seed.run.finish type=catalog success=false");
             throw;
         }
-    }
 
-    private async Task RunBlockAsync(string blockName, Func<Task> action)
-    {
-        _logger.LogInformation("Seed block {Block} iniciado", blockName);
-        await action();
-        _logger.LogInformation("Seed block {Block} completado", blockName);
-    }
-
-    private async Task SeedPlanesEmpleadoresAsync()
-    {
-        if (await _context.PlanesEmpleadores.AnyAsync())
+        return new SeedExecutionReport
         {
-            return;
+            StartedAtUtc = startedAt,
+            CompletedAtUtc = DateTime.UtcNow,
+            Success = errors.Count == 0,
+            Blocks = blocks,
+            Errors = errors
+        };
+    }
+
+    public async Task<SeedExecutionReport> RepairPlansAsync()
+    {
+        var startedAt = DateTime.UtcNow;
+        var blocks = new List<SeedBlockResult>();
+        var errors = new List<string>();
+
+        _logger.LogInformation("db.seed.run.start type=repair-plans");
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            blocks.Add(await RunBlockAsync("RepairPlanesActivos", RepairPlanesActivosAsync));
+            await transaction.CommitAsync();
+            _logger.LogInformation("db.seed.run.finish type=repair-plans success=true");
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            errors.Add(ex.Message);
+            _logger.LogError(ex, "db.seed.run.finish type=repair-plans success=false");
+            throw;
         }
 
-        await _context.Database.ExecuteSqlRawAsync(@"
-            SET IDENTITY_INSERT Planes_empleadores ON;
-
-            INSERT INTO Planes_empleadores (planID, nombre, precio, empleados, historico, nomina)
-            VALUES
-                (1, 'Mi Gente, Soy Yo', 495.00, 1, 12, 0),
-                (2, 'Mi Gente en Familia', 1695.00, 5, 12, 0),
-                (3, 'Mi Gente Somos Todos', 3750.00, 15, 12, 1);
-
-            SET IDENTITY_INSERT Planes_empleadores OFF;
-        ");
-    }
-
-    private async Task SeedPlanesContratistasAsync()
-    {
-        if (await _context.PlanesContratistas.AnyAsync())
+        return new SeedExecutionReport
         {
-            return;
-        }
-
-        await _context.Database.ExecuteSqlRawAsync(@"
-            SET IDENTITY_INSERT Planes_Contratistas ON;
-
-            INSERT INTO Planes_Contratistas (planID, nombrePlan, precio)
-            VALUES (4, 'Plan Ofertantes', 499.00);
-
-            SET IDENTITY_INSERT Planes_Contratistas OFF;
-        ");
+            StartedAtUtc = startedAt,
+            CompletedAtUtc = DateTime.UtcNow,
+            Success = errors.Count == 0,
+            Blocks = blocks,
+            Errors = errors
+        };
     }
 
-    private async Task SeedProvinciasAsync()
+    private async Task<SeedBlockResult> RunBlockAsync(string blockName, Func<Task<SeedBlockResult>> action)
+    {
+        _logger.LogInformation("db.seed.block.start block={Block}", blockName);
+        var result = await action();
+        _logger.LogInformation(
+            "db.seed.block.success block={Block} inserted={Inserted} updated={Updated} skipped={Skipped}",
+            blockName, result.Inserted, result.Updated, result.Skipped);
+        return result;
+    }
+
+    private async Task<SeedBlockResult> SeedPlanesEmpleadoresAsync()
+    {
+        var existing = await _context.PlanesEmpleadores.CountAsync();
+
+        await _context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM Planes_empleadores WHERE planID = 1)
+            BEGIN
+                SET IDENTITY_INSERT Planes_empleadores ON;
+                INSERT INTO Planes_empleadores (planID, nombre, precio, empleados, historico, nomina, activo)
+                VALUES (1, 'Mi Gente, Soy Yo', 495.00, 1, 12, 0, 1);
+                SET IDENTITY_INSERT Planes_empleadores OFF;
+            END;
+
+            IF NOT EXISTS (SELECT 1 FROM Planes_empleadores WHERE planID = 2)
+            BEGIN
+                SET IDENTITY_INSERT Planes_empleadores ON;
+                INSERT INTO Planes_empleadores (planID, nombre, precio, empleados, historico, nomina, activo)
+                VALUES (2, 'Mi Gente en Familia', 1695.00, 5, 12, 0, 1);
+                SET IDENTITY_INSERT Planes_empleadores OFF;
+            END;
+
+            IF NOT EXISTS (SELECT 1 FROM Planes_empleadores WHERE planID = 3)
+            BEGIN
+                SET IDENTITY_INSERT Planes_empleadores ON;
+                INSERT INTO Planes_empleadores (planID, nombre, precio, empleados, historico, nomina, activo)
+                VALUES (3, 'Mi Gente Somos Todos', 3750.00, 15, 12, 1, 1);
+                SET IDENTITY_INSERT Planes_empleadores OFF;
+            END;
+        ");
+
+        var after = await _context.PlanesEmpleadores.CountAsync();
+        return new SeedBlockResult
+        {
+            BlockName = "PlanesEmpleadores",
+            Inserted = Math.Max(0, after - existing),
+            Skipped = existing > 0 ? 1 : 0
+        };
+    }
+
+    private async Task<SeedBlockResult> SeedPlanesContratistasAsync()
+    {
+        var existing = await _context.PlanesContratistas.CountAsync();
+
+        await _context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM Planes_Contratistas WHERE planID = 4)
+            BEGIN
+                SET IDENTITY_INSERT Planes_Contratistas ON;
+                INSERT INTO Planes_Contratistas (planID, nombrePlan, precio, activo)
+                VALUES (4, 'Plan Ofertantes', 499.00, 1);
+                SET IDENTITY_INSERT Planes_Contratistas OFF;
+            END;
+        ");
+
+        var after = await _context.PlanesContratistas.CountAsync();
+        return new SeedBlockResult
+        {
+            BlockName = "PlanesContratistas",
+            Inserted = Math.Max(0, after - existing),
+            Skipped = existing > 0 ? 1 : 0
+        };
+    }
+
+    private async Task<SeedBlockResult> RepairPlanesActivosAsync()
+    {
+        var updatedEmpleadores = await _context.Database.ExecuteSqlRawAsync(@"
+            UPDATE Planes_empleadores
+            SET activo = 1
+            WHERE planID IN (1,2,3) AND (activo = 0 OR activo IS NULL);
+        ");
+
+        var updatedContratistas = await _context.Database.ExecuteSqlRawAsync(@"
+            UPDATE Planes_Contratistas
+            SET activo = 1
+            WHERE planID = 4 AND (activo = 0 OR activo IS NULL);
+        ");
+
+        return new SeedBlockResult
+        {
+            BlockName = "RepairPlanesActivos",
+            Updated = updatedEmpleadores + updatedContratistas,
+            Skipped = (updatedEmpleadores + updatedContratistas) == 0 ? 1 : 0
+        };
+    }
+
+    private async Task<SeedBlockResult> SeedProvinciasAsync()
     {
         if (await _context.Provincias.AnyAsync())
         {
-            return;
+            return new SeedBlockResult { BlockName = "Provincias", Skipped = 1 };
         }
 
-        await _context.Database.ExecuteSqlRawAsync(@"
+        var inserted = await _context.Database.ExecuteSqlRawAsync(@"
             SET IDENTITY_INSERT Provincias ON;
 
             INSERT INTO Provincias (provinciaID, nombre) VALUES
@@ -136,16 +234,18 @@ public class CatalogDatabaseSeeder
 
             SET IDENTITY_INSERT Provincias OFF;
         ");
+
+        return new SeedBlockResult { BlockName = "Provincias", Inserted = inserted };
     }
 
-    private async Task SeedSectoresAsync()
+    private async Task<SeedBlockResult> SeedSectoresAsync()
     {
         if (await _context.Sectores.AnyAsync())
         {
-            return;
+            return new SeedBlockResult { BlockName = "Sectores", Skipped = 1 };
         }
 
-        await _context.Database.ExecuteSqlRawAsync(@"
+        var inserted = await _context.Database.ExecuteSqlRawAsync(@"
             SET IDENTITY_INSERT Sectores ON;
 
             INSERT INTO Sectores (sectorID, sector) VALUES
@@ -193,16 +293,18 @@ public class CatalogDatabaseSeeder
 
             SET IDENTITY_INSERT Sectores OFF;
         ");
+
+        return new SeedBlockResult { BlockName = "Sectores", Inserted = inserted };
     }
 
-    private async Task SeedServiciosAsync()
+    private async Task<SeedBlockResult> SeedServiciosAsync()
     {
         if (await _context.Servicios.AnyAsync())
         {
-            return;
+            return new SeedBlockResult { BlockName = "Servicios", Skipped = 1 };
         }
 
-        await _context.Database.ExecuteSqlRawAsync(@"
+        var inserted = await _context.Database.ExecuteSqlRawAsync(@"
             SET IDENTITY_INSERT Servicios ON;
 
             INSERT INTO Servicios (servicioID, descripcion, userID) VALUES
@@ -249,16 +351,25 @@ public class CatalogDatabaseSeeder
 
             SET IDENTITY_INSERT Servicios OFF;
         ");
+
+        return new SeedBlockResult { BlockName = "Servicios", Inserted = inserted };
     }
 
-    private async Task SeedMissingEmpleadoresAsync()
+    private async Task<SeedBlockResult> SeedMissingEmpleadoresAsync()
     {
-        await _context.Database.ExecuteSqlRawAsync(@"
+        var inserted = await _context.Database.ExecuteSqlRawAsync(@"
             INSERT INTO Ofertantes (userID, fechaPublicacion, descripcion)
             SELECT p.userID, GETUTCDATE(), CONCAT('Empleador: ', p.nombre, ' ', p.apellido)
             FROM Perfiles p
             LEFT JOIN Ofertantes o ON p.userID = o.userID
             WHERE p.tipo = 1 AND o.ofertanteID IS NULL;
         ");
+
+        return new SeedBlockResult
+        {
+            BlockName = "MissingEmpleadores",
+            Inserted = inserted,
+            Skipped = inserted == 0 ? 1 : 0
+        };
     }
 }

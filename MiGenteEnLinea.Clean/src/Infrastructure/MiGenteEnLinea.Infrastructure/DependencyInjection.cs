@@ -214,6 +214,7 @@ public static class DependencyInjection
         // Padrón Service
         services.Configure<PadronSettings>(configuration.GetSection("PadronAPI"));
         services.AddScoped<IPadronService, PadronService>();
+        services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
 
         // Nómina Calculator Service (Nota: Ya está registrado en Application layer DI)
         // services.AddScoped<INominaCalculatorService, NominaCalculatorService>();

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.CreateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.UpdateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.UpdateEmpleadorFoto;
@@ -22,11 +23,16 @@ public class EmpleadoresController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<EmpleadoresController> _logger;
+    private readonly IFileStorageService _fileStorageService;
 
-    public EmpleadoresController(IMediator mediator, ILogger<EmpleadoresController> logger)
+    public EmpleadoresController(
+        IMediator mediator,
+        ILogger<EmpleadoresController> logger,
+        IFileStorageService fileStorageService)
     {
         _mediator = mediator;
         _logger = logger;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -189,17 +195,28 @@ public class EmpleadoresController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new { error = "Archivo de imagen es requerido" });
 
-        // Validar tamaño (5MB)
-        const int maxSizeBytes = 5 * 1024 * 1024;
-        if (file.Length > maxSizeBytes)
-            return BadRequest(new { error = $"El archivo excede el tamaño máximo permitido de {maxSizeBytes / (1024 * 1024)}MB" });
-
-        // Leer archivo como byte array
+        string? fotoUrl = null;
         byte[] fotoBytes;
-        using (var memoryStream = new MemoryStream())
+
+        try
         {
+            await using (var stream = file.OpenReadStream())
+            {
+                fotoUrl = await _fileStorageService.SaveFileAsync(
+                    stream,
+                    file.FileName,
+                    "empleadores-fotos",
+                    file.ContentType,
+                    HttpContext.RequestAborted);
+            }
+
+            await using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream);
             fotoBytes = memoryStream.ToArray();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
 
         var command = new UpdateEmpleadorFotoCommand(userId, fotoBytes);
@@ -207,16 +224,30 @@ public class EmpleadoresController : ControllerBase
         try
         {
             await _mediator.Send(command);
-            return Ok(new { message = "Foto actualizada exitosamente" });
+            return Ok(new
+            {
+                success = true,
+                message = "Foto actualizada exitosamente",
+                imageUrl = fotoUrl,
+                fotoUrl
+            });
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Error al actualizar foto: {Message}", ex.Message);
+            if (!string.IsNullOrWhiteSpace(fotoUrl))
+            {
+                await _fileStorageService.DeleteFileAsync(fotoUrl);
+            }
             return NotFound(new { error = ex.Message });
         }
         catch (ArgumentException ex)
         {
             _logger.LogWarning("Foto inválida: {Message}", ex.Message);
+            if (!string.IsNullOrWhiteSpace(fotoUrl))
+            {
+                await _fileStorageService.DeleteFileAsync(fotoUrl);
+            }
             return BadRequest(new { error = ex.Message });
         }
     }

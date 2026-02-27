@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Infrastructure.Options;
 
 namespace MiGenteEnLinea.Infrastructure.Services;
 
@@ -10,27 +12,55 @@ namespace MiGenteEnLinea.Infrastructure.Services;
 /// </summary>
 public class LocalFileStorageService : IFileStorageService
 {
-    private readonly IWebHostEnvironment _environment;
     private readonly ILogger<LocalFileStorageService> _logger;
     private readonly string _basePath;
-    private const int MaxFileSize = 5 * 1024 * 1024; // 5MB
-    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
+    private readonly FileStorageOptions _options;
+    private readonly HashSet<string> _allowedExtensions;
+    private readonly HashSet<string> _allowedMimeTypes;
+    private readonly HashSet<string> _allowedFolders;
+    private readonly int _maxFileSizeBytes;
 
     public LocalFileStorageService(
         IWebHostEnvironment environment,
+        IOptions<FileStorageOptions> options,
         ILogger<LocalFileStorageService> logger)
     {
-        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
-        // Calcular la ruta base: usar WebRootPath o un fallback si es null
-        _basePath = string.IsNullOrEmpty(_environment.WebRootPath)
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+
+        var configuredRoot = (_options.RootFolder ?? string.Empty).Trim();
+        var defaultRoot = string.IsNullOrWhiteSpace(environment.WebRootPath)
             ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
-            : _environment.WebRootPath;
-        
+            : environment.WebRootPath;
+
+        _basePath = string.IsNullOrWhiteSpace(configuredRoot)
+            ? Path.GetFullPath(defaultRoot)
+            : Path.GetFullPath(configuredRoot);
+
+        _allowedExtensions = (_options.AllowedExtensions ?? [])
+            .Select(x => NormalizeExtension(x))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _allowedMimeTypes = (_options.AllowedMimeTypes ?? [])
+            .Select(x => (x ?? string.Empty).Trim().ToLowerInvariant())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _allowedFolders = (_options.AllowedFolders ?? [])
+            .Select(x => x?.Trim() ?? string.Empty)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _maxFileSizeBytes = Math.Max(1, _options.MaxFileSizeMB) * 1024 * 1024;
+
+        Directory.CreateDirectory(_basePath);
+
         _logger.LogInformation(
-            "LocalFileStorageService inicializado con BasePath: {BasePath}",
-            _basePath);
+            "LocalFileStorageService inicializado. BasePath: {BasePath}, MaxFileSizeMB: {MaxFileSizeMB}, AllowedFolders: {AllowedFolders}",
+            _basePath,
+            _options.MaxFileSizeMB,
+            string.Join(", ", _allowedFolders));
     }
 
     /// <summary>
@@ -40,50 +70,50 @@ public class LocalFileStorageService : IFileStorageService
         Stream file,
         string fileName,
         string folder,
+        string? contentType = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Validar extensión
-            var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
-            if (!AllowedExtensions.Contains(fileExtension))
+            ValidateFolder(folder);
+            ValidateStreamLength(file);
+
+            var fileExtension = NormalizeExtension(Path.GetExtension(fileName));
+            if (!_allowedExtensions.Contains(fileExtension))
+                throw new InvalidOperationException($"Extensión no permitida: {fileExtension}");
+
+            if (!string.IsNullOrWhiteSpace(contentType))
             {
-                throw new InvalidOperationException(
-                    $"Extensión de archivo no permitida: {fileExtension}. " +
-                    $"Permitidas: {string.Join(", ", AllowedExtensions)}");
+                var normalizedContentType = contentType.Trim().ToLowerInvariant();
+                if (!_allowedMimeTypes.Contains(normalizedContentType))
+                    throw new InvalidOperationException($"Content-Type no permitido: {normalizedContentType}");
             }
 
-            // Validar tamaño
-            if (file.Length > MaxFileSize)
-            {
-                throw new InvalidOperationException(
-                    $"El archivo es demasiado grande. Máximo permitido: 5MB, " +
-                    $"archivo actual: {file.Length / 1024 / 1024}MB");
-            }
-
-            // Crear directorio si no existe
-            var uploadsDir = Path.Combine(_basePath, "uploads", folder);
+            var uploadsDir = GetSafeUploadsFolderPath(folder);
             Directory.CreateDirectory(uploadsDir);
 
-            // Generar nombre único
             var uniqueFileName = GenerateUniqueFileName(fileName);
             var filePath = Path.Combine(uploadsDir, uniqueFileName);
+            var fullFilePath = EnsurePathInsideRoot(filePath);
 
-            // Guardar archivo
-            using (var fileStream = System.IO.File.Create(filePath))
+            await ValidateFileSignatureAsync(file, fileExtension, cancellationToken);
+
+            await using (var fileStream = System.IO.File.Create(fullFilePath))
             {
                 file.Position = 0;
                 await file.CopyToAsync(fileStream, cancellationToken);
             }
 
-            // Devolver URL relativa
             var relativePath = Path.Combine("uploads", folder, uniqueFileName)
                 .Replace("\\", "/");
             var urlPath = $"/{relativePath}";
 
             _logger.LogInformation(
-                "Archivo guardado exitosamente. Folder: {Folder}, NombreArchivo: {FileName}, URL: {Url}",
-                folder, uniqueFileName, urlPath);
+                "file.upload.success folder={Folder} file={FileName} url={Url} size={SizeBytes}",
+                folder,
+                uniqueFileName,
+                urlPath,
+                file.Length);
 
             return urlPath;
         }
@@ -91,7 +121,7 @@ public class LocalFileStorageService : IFileStorageService
         {
             _logger.LogError(
                 ex,
-                "Error al guardar archivo. FileName: {FileName}, Folder: {Folder}",
+                "file.upload.fail file={FileName} folder={Folder}",
                 fileName, folder);
             throw;
         }
@@ -100,28 +130,30 @@ public class LocalFileStorageService : IFileStorageService
     /// <summary>
     /// Recupera un archivo desde wwwroot/uploads/ como stream
     /// </summary>
-    public async Task<Stream?> GetFileAsync(
+    public Task<Stream?> GetFileAsync(
         string filePath,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Normalizar la ruta (remover leading /)
-            var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_basePath, normalizedPath);
+            var fullPath = ResolveAndValidateRelativeFilePath(filePath);
 
             if (!System.IO.File.Exists(fullPath))
             {
-                _logger.LogWarning("Archivo no encontrado: {FilePath}", filePath);
-                return null;
+                _logger.LogWarning("file.read.not_found path={FilePath}", filePath);
+                return Task.FromResult<Stream?>(null);
             }
 
-            // Retornar stream del archivo
-            return System.IO.File.OpenRead(fullPath);
+            return Task.FromResult<Stream?>(System.IO.File.OpenRead(fullPath));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "file.read.rejected path={FilePath}", filePath);
+            return Task.FromResult<Stream?>(null);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al recuperar archivo: {FilePath}", filePath);
+            _logger.LogError(ex, "file.read.fail path={FilePath}", filePath);
             throw;
         }
     }
@@ -129,30 +161,33 @@ public class LocalFileStorageService : IFileStorageService
     /// <summary>
     /// Elimina un archivo de wwwroot/uploads/
     /// </summary>
-    public async Task<bool> DeleteFileAsync(
+    public Task<bool> DeleteFileAsync(
         string filePath,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Normalizar la ruta
-            var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_basePath, normalizedPath);
+            var fullPath = ResolveAndValidateRelativeFilePath(filePath);
 
             if (!System.IO.File.Exists(fullPath))
             {
-                _logger.LogWarning("Archivo a eliminar no encontrado: {FilePath}", filePath);
-                return false;
+                _logger.LogWarning("file.delete.not_found path={FilePath}", filePath);
+                return Task.FromResult(false);
             }
 
             System.IO.File.Delete(fullPath);
-            _logger.LogInformation("Archivo eliminado exitosamente: {FilePath}", filePath);
-            return true;
+            _logger.LogInformation("file.delete.success path={FilePath}", filePath);
+            return Task.FromResult(true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "file.delete.rejected path={FilePath}", filePath);
+            return Task.FromResult(false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al eliminar archivo: {FilePath}", filePath);
-            return false;
+            _logger.LogError(ex, "file.delete.fail path={FilePath}", filePath);
+            return Task.FromResult(false);
         }
     }
 
@@ -163,13 +198,17 @@ public class LocalFileStorageService : IFileStorageService
     {
         try
         {
-            var normalizedPath = filePath.TrimStart('/');
-            var fullPath = Path.Combine(_basePath, normalizedPath);
+            var fullPath = ResolveAndValidateRelativeFilePath(filePath);
             return System.IO.File.Exists(fullPath);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "file.exists.rejected path={FilePath}", filePath);
+            return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al verificar existencia de archivo: {FilePath}", filePath);
+            _logger.LogError(ex, "file.exists.fail path={FilePath}", filePath);
             return false;
         }
     }
@@ -181,9 +220,123 @@ public class LocalFileStorageService : IFileStorageService
     /// </summary>
     public string GenerateUniqueFileName(string originalFileName)
     {
-        var extension = Path.GetExtension(originalFileName);
+        var extension = NormalizeExtension(Path.GetExtension(originalFileName));
         var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
         var guid = Guid.NewGuid().ToString("N");
         return $"{timestamp}_{guid}{extension}";
+    }
+
+    private string GetSafeUploadsFolderPath(string folder)
+    {
+        var normalizedFolder = NormalizeFolder(folder);
+        var uploadsRoot = EnsurePathInsideRoot(Path.Combine(_basePath, "uploads"));
+        return EnsurePathInsideRoot(Path.Combine(uploadsRoot, normalizedFolder));
+    }
+
+    private string ResolveAndValidateRelativeFilePath(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new InvalidOperationException("La ruta del archivo es requerida.");
+
+        var normalizedPath = filePath.Replace('\\', '/').Trim();
+        if (normalizedPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("No se permiten URLs absolutas en operaciones de filesystem.");
+
+        normalizedPath = normalizedPath.TrimStart('/');
+        if (normalizedPath.Contains("..", StringComparison.Ordinal))
+            throw new InvalidOperationException("Ruta inválida.");
+
+        var fullPath = Path.Combine(_basePath, normalizedPath);
+        return EnsurePathInsideRoot(fullPath);
+    }
+
+    private string EnsurePathInsideRoot(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var normalizedRoot = _basePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+
+        if (!fullPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(fullPath, _basePath, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Ruta fuera del directorio permitido.");
+
+        return fullPath;
+    }
+
+    private void ValidateFolder(string folder)
+    {
+        var normalizedFolder = NormalizeFolder(folder);
+        if (_allowedFolders.Count > 0 && !_allowedFolders.Contains(normalizedFolder))
+            throw new InvalidOperationException($"Carpeta no permitida: {normalizedFolder}");
+    }
+
+    private static string NormalizeFolder(string folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder))
+            throw new InvalidOperationException("La carpeta de destino es requerida.");
+
+        var normalized = folder.Trim().Replace('\\', '/').Trim('/');
+        if (normalized.Contains("..", StringComparison.Ordinal) || normalized.Contains('/', StringComparison.Ordinal))
+            throw new InvalidOperationException("Nombre de carpeta inválido.");
+
+        return normalized;
+    }
+
+    private void ValidateStreamLength(Stream file)
+    {
+        if (!file.CanRead)
+            throw new InvalidOperationException("El stream de archivo no es legible.");
+
+        if (!file.CanSeek)
+            throw new InvalidOperationException("El stream de archivo debe soportar seek para validaciones.");
+
+        if (file.Length <= 0)
+            throw new InvalidOperationException("El archivo está vacío.");
+
+        if (file.Length > _maxFileSizeBytes)
+            throw new InvalidOperationException($"Archivo excede el tamaño máximo permitido de {_options.MaxFileSizeMB}MB.");
+    }
+
+    private async Task ValidateFileSignatureAsync(Stream file, string extension, CancellationToken cancellationToken)
+    {
+        file.Position = 0;
+        var header = new byte[16];
+        var bytesRead = await file.ReadAsync(header.AsMemory(0, header.Length), cancellationToken);
+        file.Position = 0;
+
+        if (bytesRead == 0)
+            throw new InvalidOperationException("Archivo vacío.");
+
+        if (!IsExpectedSignature(header, bytesRead, extension))
+            throw new InvalidOperationException("Firma binaria inválida para la extensión proporcionada.");
+    }
+
+    private static bool IsExpectedSignature(byte[] header, int bytesRead, string extension)
+    {
+        if (bytesRead < 4)
+            return false;
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+            ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
+            ".gif" => bytesRead >= 6 &&
+                      header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 &&
+                      header[3] == 0x38 && (header[4] == 0x37 || header[4] == 0x39) && header[5] == 0x61,
+            ".webp" => bytesRead >= 12 &&
+                       header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 &&
+                       header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50,
+            _ => false
+        };
+    }
+
+    private static string NormalizeExtension(string extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return string.Empty;
+
+        var normalized = extension.Trim().ToLowerInvariant();
+        return normalized.StartsWith('.') ? normalized : $".{normalized}";
     }
 }

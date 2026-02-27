@@ -116,6 +116,22 @@ if (-not $SkipApi) {
         }
     }) { $passed++ } else { $failed++ }
 
+    if (Run-Test -Name "Public plans endpoint /api/suscripciones/planes/empleadores is not empty" -Action {
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/suscripciones/planes/empleadores" -Method Get -TimeoutSec 30 -UseBasicParsing
+        $payload = $response.Content | ConvertFrom-Json
+        if ($null -eq $payload -or $payload.Count -eq 0) {
+            throw "Catalogo de planes empleadores vacio."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "Public plans endpoint /api/suscripciones/planes/contratistas is not empty" -Action {
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/suscripciones/planes/contratistas" -Method Get -TimeoutSec 30 -UseBasicParsing
+        $payload = $response.Content | ConvertFrom-Json
+        if ($null -eq $payload -or $payload.Count -eq 0) {
+            throw "Catalogo de planes contratistas vacio."
+        }
+    }) { $passed++ } else { $failed++ }
+
     if (-not [string]::IsNullOrWhiteSpace($TestUserId) -and -not [string]::IsNullOrWhiteSpace($BearerToken)) {
         if (Run-Test -Name "Authorized endpoint /api/suscripciones/activa/{userId} returns 200/404" -Action {
             $headers = @{
