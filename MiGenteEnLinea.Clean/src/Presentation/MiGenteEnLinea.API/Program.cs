@@ -233,6 +233,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+var fileStorageSettings = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
+var maxUploadBytes = Math.Max(1, fileStorageSettings.MaxFileSizeMB) * 1024L * 1024L;
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadBytes;
+    options.MultipartHeadersLengthLimit = 64 * 1024;
+});
+
 // ========================================
 // BUILD APP
 // ========================================
@@ -264,14 +272,6 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "MiGente API v1");
     options.RoutePrefix = string.Empty; // Swagger en raiz: https://api-dominio/
-});
-
-var fileStorageSettings = builder.Configuration.GetSection(FileStorageOptions.SectionName).Get<FileStorageOptions>() ?? new FileStorageOptions();
-var maxUploadBytes = Math.Max(1, fileStorageSettings.MaxFileSizeMB) * 1024L * 1024L;
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = maxUploadBytes;
-    options.MultipartHeadersLengthLimit = 64 * 1024;
 });
 
 // Routing debe ejecutarse antes de CORS para que el middleware resuelva endpoint metadata correctamente.

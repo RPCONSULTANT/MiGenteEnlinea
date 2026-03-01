@@ -185,7 +185,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         var emailVO = Email.CreateUnsafe(email);
         var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
-        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email, Password = password, ConfirmPassword = password };
         var activateResponse = await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
         activateResponse.IsSuccessStatusCode.Should().BeTrue($"Activate failed: {await activateResponse.Content.ReadAsStringAsync()}");
 
@@ -228,7 +228,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         var emailVO = Email.CreateUnsafe(email);
         var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
-        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email, Password = password, ConfirmPassword = password };
         await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
 
         // Login con password incorrecto
@@ -320,7 +320,9 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var activateCommand = new ActivateAccountCommand
         {
             UserId = credencial.UserId,
-            Email = email
+            Email = email,
+            Password = "Test@123",
+            ConfirmPassword = "Test@123"
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/activate", activateCommand);
@@ -337,7 +339,9 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var activateCommand = new ActivateAccountCommand
         {
             UserId = Guid.NewGuid().ToString(),
-            Email = "nonexistent@test.com"
+            Email = "nonexistent@test.com",
+            Password = "Test@123",
+            ConfirmPassword = "Test@123"
         };
 
         var response = await Client.PostAsJsonAsync("/api/auth/activate", activateCommand);
@@ -372,7 +376,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         var emailVO = Email.CreateUnsafe(email);
         var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
-        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email, Password = originalPassword, ConfirmPassword = originalPassword };
         await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
 
         // Login para obtener token
@@ -447,7 +451,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         var emailVO = Email.CreateUnsafe(email);
         var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
-        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email, Password = password, ConfirmPassword = password };
         await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
 
         // Login
@@ -515,7 +519,7 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
         var emailVO = Email.CreateUnsafe(email);
         var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
-        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email };
+        var activateCmd = new ActivateAccountCommand { UserId = credencial.UserId, Email = email, Password = password, ConfirmPassword = password };
         await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
 
         // Login

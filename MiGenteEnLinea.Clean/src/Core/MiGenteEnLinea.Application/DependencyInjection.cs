@@ -1,6 +1,8 @@
 using System.Reflection;
+using MediatR;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using MiGenteEnLinea.Application.Common.Behaviors;
 using MiGenteEnLinea.Application.Features.Dashboard.Services;
 
 namespace MiGenteEnLinea.Application;
@@ -18,17 +20,13 @@ public static class DependencyInjection
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-
-            // TODO: Agregar behaviors cuando se implementen
-            // config.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            // config.AddOpenBehavior(typeof(LoggingBehavior<,>));
-            // config.AddOpenBehavior(typeof(PerformanceBehavior<,>));
         });
 
         // ========================================
         // FLUENT VALIDATION
         // ========================================
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         // ========================================
         // AUTOMAPPER (Object Mapping)

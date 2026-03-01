@@ -1,0 +1,81 @@
+name: E2E Playwright
+
+on:
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  e2e-smoke:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:smoke
+        env:
+          E2E_WEB_BASE_URL: ${{ secrets.E2E_WEB_BASE_URL }}
+          E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
+          E2E_USER_EMPLEADOR_EMAIL: ${{ secrets.E2E_USER_EMPLEADOR_EMAIL }}
+          E2E_USER_EMPLEADOR_PASSWORD: ${{ secrets.E2E_USER_EMPLEADOR_PASSWORD }}
+          E2E_USER_CONTRATISTA_EMAIL: ${{ secrets.E2E_USER_CONTRATISTA_EMAIL }}
+          E2E_USER_CONTRATISTA_PASSWORD: ${{ secrets.E2E_USER_CONTRATISTA_PASSWORD }}
+          E2E_USER_ADMIN_EMAIL: ${{ secrets.E2E_USER_ADMIN_EMAIL }}
+          E2E_USER_ADMIN_PASSWORD: ${{ secrets.E2E_USER_ADMIN_PASSWORD }}
+          E2E_SEED_KEY: ${{ secrets.E2E_SEED_KEY }}
+          E2E_ALLOW_WRITE: "false"
+          E2E_RUN_ID: ${{ github.run_id }}
+      - run: npm run report:summary
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-smoke-artifacts
+          path: |
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/playwright-report
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/test-results
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/artifacts/e2e
+
+  e2e-full-nightly:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:full
+        env:
+          E2E_WEB_BASE_URL: ${{ secrets.E2E_WEB_BASE_URL }}
+          E2E_API_BASE_URL: ${{ secrets.E2E_API_BASE_URL }}
+          E2E_USER_EMPLEADOR_EMAIL: ${{ secrets.E2E_USER_EMPLEADOR_EMAIL }}
+          E2E_USER_EMPLEADOR_PASSWORD: ${{ secrets.E2E_USER_EMPLEADOR_PASSWORD }}
+          E2E_USER_CONTRATISTA_EMAIL: ${{ secrets.E2E_USER_CONTRATISTA_EMAIL }}
+          E2E_USER_CONTRATISTA_PASSWORD: ${{ secrets.E2E_USER_CONTRATISTA_PASSWORD }}
+          E2E_USER_ADMIN_EMAIL: ${{ secrets.E2E_USER_ADMIN_EMAIL }}
+          E2E_USER_ADMIN_PASSWORD: ${{ secrets.E2E_USER_ADMIN_PASSWORD }}
+          E2E_SEED_KEY: ${{ secrets.E2E_SEED_KEY }}
+          E2E_ALLOW_WRITE: "true"
+          E2E_RUN_ID: ${{ github.run_id }}
+      - run: npm run report:summary
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-full-artifacts
+          path: |
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/playwright-report
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/test-results
+            MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E/artifacts/e2e

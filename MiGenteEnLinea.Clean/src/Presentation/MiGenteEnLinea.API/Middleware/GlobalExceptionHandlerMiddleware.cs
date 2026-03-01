@@ -85,7 +85,7 @@ public class GlobalExceptionHandlerMiddleware
 
         var jsonOptions = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = null // PascalCase para mantener consistencia
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
         var result = JsonSerializer.Serialize(errorResponse, jsonOptions);

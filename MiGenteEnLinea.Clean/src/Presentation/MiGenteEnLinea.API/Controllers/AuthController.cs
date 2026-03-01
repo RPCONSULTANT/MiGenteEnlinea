@@ -98,6 +98,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthenticationResultDto>> Login([FromBody] LoginCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/login - Email: {Email}", command.Email);
 
         try
@@ -238,6 +243,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] ChangePasswordCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/change-password - Email: {Email}", command.Email);
 
         var result = await _mediator.Send(command);
@@ -245,7 +255,7 @@ public class AuthController : ControllerBase
         if (!result.Success)
         {
             _logger.LogWarning("Cambio de contraseña fallido: {Message}", result.Message);
-            return NotFound(result);
+            return BadRequest(result);
         }
 
         _logger.LogInformation("Contraseña actualizada exitosamente para: {Email}", command.Email);
@@ -282,6 +292,7 @@ public class AuthController : ControllerBase
     ///     }
     /// 
     /// </remarks>
+    [Authorize(Roles = "Admin")]
     [HttpPut("credenciales/{credencialId}/password")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -290,6 +301,11 @@ public class AuthController : ControllerBase
         int credencialId,
         [FromBody] ChangePasswordByIdCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         // Validar que el ID de la ruta coincida con el del comando
         if (credencialId != command.CredencialId)
         {
@@ -463,6 +479,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegisterResult>> Register([FromBody] RegisterCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/register - Email: {Email}, Tipo: {Tipo}", command.Email, command.Tipo);
 
         try
@@ -485,6 +506,11 @@ public class AuthController : ControllerBase
         {
             _logger.LogWarning("Registro fallido: {Message}", ex.Message);
             return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado en registro para email: {Email}", command.Email);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error interno al registrar usuario." });
         }
     }
 
@@ -514,6 +540,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> ActivateAccount([FromBody] ActivateAccountCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/activate - UserId: {UserId}, Email: {Email}", command.UserId, command.Email);
 
         try
@@ -532,7 +563,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al activar cuenta - UserId: {UserId}", command.UserId);
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error interno al activar la cuenta." });
         }
     }
 
@@ -1395,33 +1426,32 @@ public class AuthController : ControllerBase
     /// <param name="command">Email del usuario</param>
     /// <returns>Confirmación de envío</returns>
     /// <response code="200">Token enviado por email</response>
-    /// <response code="404">Usuario no encontrado</response>
     /// <response code="400">Email inválido</response>
+    /// <response code="500">Error interno</response>
     [HttpPost("forgot-password")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> ForgotPassword([FromBody] MiGenteEnLinea.Application.Features.Authentication.Commands.ForgotPassword.ForgotPasswordCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/forgot-password - Email: {Email}", command.Email);
 
         try
         {
-            var success = await _mediator.Send(command);
-
-            if (!success)
-            {
-                _logger.LogWarning("ForgotPassword fallido - Email no encontrado: {Email}", command.Email);
-                return NotFound(new { message = "No se encontró un usuario con ese email." });
-            }
+            await _mediator.Send(command);
 
             _logger.LogInformation("Token de recuperación enviado - Email: {Email}", command.Email);
-            return Ok(new { message = "Se ha enviado un código de recuperación a su email." });
+            return Ok(new { message = "Si el correo existe en nuestro sistema, recibirá instrucciones para restablecer su contraseña." });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al procesar forgot-password - Email: {Email}", command.Email);
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error interno al procesar la solicitud." });
         }
     }
 
@@ -1439,6 +1469,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> ResetPassword([FromBody] MiGenteEnLinea.Application.Features.Authentication.Commands.ResetPassword.ResetPasswordCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/reset-password - Email: {Email}", command.Email);
 
         try
@@ -1462,7 +1497,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al resetear contraseña - Email: {Email}", command.Email);
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error interno al resetear contraseña." });
         }
     }
 
@@ -1511,11 +1546,17 @@ public class AuthController : ControllerBase
     /// <returns>Confirmación de cambio</returns>
     /// <response code="200">Contraseña cambiada</response>
     /// <response code="404">Credencial no encontrada</response>
+    [Authorize(Roles = "Admin")]
     [HttpPost("change-password-by-id")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> ChangePasswordById([FromBody] ChangePasswordByIdCommand command)
     {
+        if (command is null)
+        {
+            return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
         _logger.LogInformation("POST /api/auth/change-password-by-id - CredencialId: {CredencialId}", command.CredencialId);
 
         try

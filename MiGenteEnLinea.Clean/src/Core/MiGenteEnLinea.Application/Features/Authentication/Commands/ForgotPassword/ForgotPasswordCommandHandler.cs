@@ -14,15 +14,18 @@ public sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswor
 {
     private readonly IApplicationDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IAuthLinksProvider _authLinksProvider;
     private readonly ILogger<ForgotPasswordCommandHandler> _logger;
 
     public ForgotPasswordCommandHandler(
         IApplicationDbContext context,
         IEmailService emailService,
+        IAuthLinksProvider authLinksProvider,
         ILogger<ForgotPasswordCommandHandler> logger)
     {
         _context = context;
         _emailService = emailService;
+        _authLinksProvider = authLinksProvider;
         _logger = logger;
     }
 
@@ -61,11 +64,11 @@ public sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswor
             resetToken.Id, credencial.UserId);
 
         // Enviar email con token
-        var resetUrl = $"https://migenteonline.com/reset-password?email={request.Email}&token={token}";
+        var resetUrl = _authLinksProvider.BuildResetPasswordUrl(request.Email, token);
         
         await _emailService.SendPasswordResetEmailAsync(
             request.Email,
-            credencial.UserId,
+            request.Email,
             resetUrl);
 
         _logger.LogInformation("ForgotPassword: Email enviado exitosamente a {Email}", request.Email);

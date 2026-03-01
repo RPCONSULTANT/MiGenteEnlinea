@@ -7,6 +7,7 @@
       REGISTER: "/auth/register",
       ACTIVATE: "/auth/activate",
       FORGOT_PASSWORD: "/auth/forgot-password",
+      RESET_PASSWORD: "/auth/reset-password",
       RESEND_ACTIVATION: "/auth/resend-activation",
     },
     PAGOS: {

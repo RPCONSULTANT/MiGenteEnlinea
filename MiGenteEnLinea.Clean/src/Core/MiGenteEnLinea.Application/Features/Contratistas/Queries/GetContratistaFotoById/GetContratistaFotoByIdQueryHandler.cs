@@ -19,7 +19,7 @@ public sealed class GetContratistaFotoByIdQueryHandler : IRequestHandler<GetCont
     {
         var foto = await _contratistaRepository.GetByIdProjectedAsync<byte[]>(
             request.ContratistaId,
-            c => c.Foto,
+            c => c.Foto!,
             cancellationToken);
 
         return foto != null && foto.Length > 0 ? foto : null;

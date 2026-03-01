@@ -15,10 +15,10 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .MaximumLength(100).WithMessage("El correo no puede exceder 100 caracteres");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("La contraseña es requerida")
             .MinimumLength(8).WithMessage("La contraseña debe tener al menos 8 caracteres")
             .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$")
-            .WithMessage("La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&#)");
+            .WithMessage("La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&#)")
+            .When(x => !string.IsNullOrWhiteSpace(x.Password));
 
         RuleFor(x => x.Nombre)
             .NotEmpty().WithMessage("El nombre es requerido")

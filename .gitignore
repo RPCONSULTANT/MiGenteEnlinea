@@ -92,6 +92,7 @@ secrets.json
 coverage/
 *.coverage
 *.coveragexml
+test-results/
 
 # ========================================
 # Database

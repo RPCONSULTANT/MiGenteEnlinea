@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ namespace MiGenteEnLinea.IntegrationTests.Infrastructure;
 /// </summary>
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private string? _testConnectionString;
     public Mock<IEmailService> EmailServiceMock { get; private set; } = new();
     public Mock<IPaymentService> PaymentServiceMock { get; private set; } = new();
     public Mock<IPadronService> PadronServiceMock { get; private set; } = new();
@@ -142,18 +144,18 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             // PASO 5: Agregar DbContext con SQL Server real + AuditableEntityInterceptor
             // ⚠️ CRÍTICO: Debe incluir .AddInterceptors() igual que producción
             // ========================================
-            var connectionString = context.Configuration.GetConnectionString("DefaultConnection")
+            var baseConnectionString = context.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found in appsettings.Testing.json");
+            var csBuilder = new SqlConnectionStringBuilder(baseConnectionString)
+            {
+                InitialCatalog = $"MiGenteTestDB_{Guid.NewGuid():N}"
+            };
+            var connectionString = csBuilder.ConnectionString;
+            _testConnectionString = connectionString;
 
             services.AddDbContext<MiGenteDbContext>((serviceProvider, options) =>
             {
-                options.UseSqlServer(connectionString, sqlOptions =>
-                {
-                    sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 3,
-                        maxRetryDelay: TimeSpan.FromSeconds(5),
-                        errorNumbersToAdd: null);
-                });
+                options.UseSqlServer(connectionString);
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
                 
@@ -170,22 +172,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             var scopedServices = scope.ServiceProvider;
             var db = scopedServices.GetRequiredService<MiGenteDbContext>();
             
-            // ✅ FIX: Crear base de datos solo si no existe (evita conflictos de concurrencia)
-            // No usar EnsureDeleted() aquí porque causa problemas con tests paralelos
-            if (!db.Database.CanConnect())
-            {
-                // Base de datos no existe, crearla con migraciones
-                db.Database.Migrate();
-            }
-            else
-            {
-                // Base de datos existe - verificar si tiene migraciones pendientes
-                var pendingMigrations = db.Database.GetPendingMigrations().ToList();
-                if (pendingMigrations.Any())
-                {
-                    db.Database.Migrate();
-                }
-            }
+            db.Database.Migrate();
         });
     }
 
@@ -197,5 +184,26 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         EmailServiceMock.Reset();
         PaymentServiceMock.Reset();
         PadronServiceMock.Reset();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !string.IsNullOrWhiteSpace(_testConnectionString))
+        {
+            try
+            {
+                var options = new DbContextOptionsBuilder<MiGenteDbContext>()
+                    .UseSqlServer(_testConnectionString)
+                    .Options;
+                using var db = new MiGenteDbContext(options);
+                db.Database.EnsureDeleted();
+            }
+            catch
+            {
+                // Ignore cleanup failures for test infrastructure disposal.
+            }
+        }
+
+        base.Dispose(disposing);
     }
 }

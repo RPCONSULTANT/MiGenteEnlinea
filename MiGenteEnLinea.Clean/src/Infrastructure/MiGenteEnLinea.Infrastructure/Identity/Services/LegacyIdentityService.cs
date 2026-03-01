@@ -151,26 +151,29 @@ public class LegacyIdentityService : IIdentityService
         };
     }
 
-    public async Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken, string ipAddress)
+    public Task<AuthenticationResultDto> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
         // TODO: Implementar refresh token cuando se migre RefreshToken entity a IUnitOfWork
         _logger.LogWarning("RefreshTokenAsync not implemented yet in LegacyIdentityService");
-        throw new NotImplementedException("Refresh token no implementado aún en sistema Legacy");
+        return Task.FromException<AuthenticationResultDto>(
+            new NotImplementedException("Refresh token no implementado aún en sistema Legacy"));
     }
 
-    public async Task RevokeTokenAsync(string refreshToken, string ipAddress, string? reason = null)
+    public Task RevokeTokenAsync(string refreshToken, string ipAddress, string? reason = null)
     {
         // TODO: Implementar revoke token cuando se migre RefreshToken entity a IUnitOfWork
         _logger.LogWarning("RevokeTokenAsync not implemented yet in LegacyIdentityService");
-        throw new NotImplementedException("Revoke token no implementado aún en sistema Legacy");
+        return Task.FromException(
+            new NotImplementedException("Revoke token no implementado aún en sistema Legacy"));
     }
 
-    public async Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
+    public Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
     {
         // Este método NO se usa - el registro se hace a través de RegisterCommandHandler
         // que tiene lógica mucho más compleja (crear Perfile, Credencial, Contratista, etc.)
         _logger.LogWarning("RegisterAsync called but not implemented - use RegisterCommand instead");
-        throw new NotImplementedException("Usar RegisterCommand en lugar de RegisterAsync");
+        return Task.FromException<string>(
+            new NotImplementedException("Usar RegisterCommand en lugar de RegisterAsync"));
     }
 
     public async Task<bool> UserExistsAsync(string email)
@@ -179,11 +182,12 @@ public class LegacyIdentityService : IIdentityService
         return credencial != null;
     }
 
-    public async Task<bool> ConfirmEmailAsync(string userId, string token)
+    public Task<bool> ConfirmEmailAsync(string userId, string token)
     {
         // TODO: Implementar confirmación de email usando tabla Credenciales
         _logger.LogWarning("ConfirmEmailAsync not implemented yet in LegacyIdentityService");
-        throw new NotImplementedException("Confirmación de email no implementada aún");
+        return Task.FromException<bool>(
+            new NotImplementedException("Confirmación de email no implementada aún"));
     }
 
     public async Task<bool> ActivateAccountAsync(string userId, string email)
@@ -249,18 +253,20 @@ public class LegacyIdentityService : IIdentityService
         return true;
     }
 
-    public async Task<string> GeneratePasswordResetTokenAsync(string email)
+    public Task<string> GeneratePasswordResetTokenAsync(string email)
     {
         // TODO: Implementar generación de token de reset
         _logger.LogWarning("GeneratePasswordResetTokenAsync not implemented yet in LegacyIdentityService");
-        throw new NotImplementedException("Reset password no implementado aún");
+        return Task.FromException<string>(
+            new NotImplementedException("Reset password no implementado aún"));
     }
 
-    public async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
+    public Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
     {
         // TODO: Implementar reset de password
         _logger.LogWarning("ResetPasswordAsync not implemented yet in LegacyIdentityService");
-        throw new NotImplementedException("Reset password no implementado aún");
+        return Task.FromException<bool>(
+            new NotImplementedException("Reset password no implementado aún"));
     }
 
     // ========================================
@@ -268,39 +274,45 @@ public class LegacyIdentityService : IIdentityService
     // Stubs - LegacyIdentityService is being deprecated in favor of IdentityService
     // ========================================
 
-    public async Task<bool> LockoutUserAsync(string userId)
+    public Task<bool> LockoutUserAsync(string userId)
     {
         _logger.LogWarning("LockoutUserAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<bool>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 
-    public async Task<bool> DeactivateUserAsync(string userId)
+    public Task<bool> DeactivateUserAsync(string userId)
     {
         _logger.LogWarning("DeactivateUserAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<bool>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 
-    public async Task<bool> ChangePasswordByIdAsync(string userId, string newPassword)
+    public Task<bool> ChangePasswordByIdAsync(string userId, string newPassword)
     {
         _logger.LogWarning("ChangePasswordByIdAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<bool>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 
-    public async Task<bool> UpdateUserEmailAsync(string userId, string newEmail)
+    public Task<bool> UpdateUserEmailAsync(string userId, string newEmail)
     {
         _logger.LogWarning("UpdateUserEmailAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<bool>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 
-    public async Task<(string Email, bool IsActive)?> GetUserByIdAsync(string userId)
+    public Task<(string Email, bool IsActive)?> GetUserByIdAsync(string userId)
     {
         _logger.LogWarning("GetUserByIdAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<(string Email, bool IsActive)?>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 
-    public async Task<bool> UpdateUserPlanAsync(string userId, int planId, DateTime vencimientoPlan)
+    public Task<bool> UpdateUserPlanAsync(string userId, int planId, DateTime vencimientoPlan)
     {
         _logger.LogWarning("UpdateUserPlanAsync called on LegacyIdentityService - use IdentityService instead");
-        throw new NotImplementedException("Use IdentityService for Identity operations");
+        return Task.FromException<bool>(
+            new NotImplementedException("Use IdentityService for Identity operations"));
     }
 }

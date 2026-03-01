@@ -109,7 +109,7 @@ public class GetContratacionesQueryHandler : IRequestHandler<GetContratacionesQu
         {
             var empleadoTemporalIds = dtos
                 .Where(d => d.ContratacionId.HasValue)
-                .Select(d => d.ContratacionId.Value)
+                .Select(d => d.ContratacionId!.Value)
                 .Distinct()
                 .ToList();
 

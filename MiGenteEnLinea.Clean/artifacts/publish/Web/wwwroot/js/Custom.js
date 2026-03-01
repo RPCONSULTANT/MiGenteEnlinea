@@ -79,7 +79,12 @@ function getApiErrorMessage(payload, fallbackMessage) {
     if (first) return first;
   }
 
-  return payload.message || payload.title || payload.raw || fallbackMessage;
+  if (payload.Errors && typeof payload.Errors === "object") {
+    const first = Object.values(payload.Errors).flat()[0];
+    if (first) return first;
+  }
+
+  return payload.message || payload.Message || payload.title || payload.raw || fallbackMessage;
 }
 
 /**

@@ -162,6 +162,44 @@ if (-not $SkipApi) {
         }
     }) { $passed++ } else { $failed++ }
 
+    if (Run-Test -Name "Auth contract: POST /api/auth/forgot-password returns 200 neutral" -Action {
+        $payload = @{ email = "notfound_auth_probe@migente.invalid" } | ConvertTo-Json
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/forgot-password" -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "Auth contract: invalid login returns 401" -Action {
+        $payload = @{ email = "notfound_auth_probe@migente.invalid"; password = "Invalid123!" } | ConvertTo-Json
+        try {
+            Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/login" -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing | Out-Null
+            throw "Expected HTTP 401 for invalid credentials, got success."
+        }
+        catch {
+            if (-not $_.Exception.Response) { throw }
+            $code = [int]$_.Exception.Response.StatusCode
+            if ($code -ne 401) {
+                throw "Expected HTTP 401, got $code."
+            }
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "Auth contract: invalid register payload returns 400" -Action {
+        $payload = @{ email = "invalid"; tipo = 1 } | ConvertTo-Json
+        try {
+            Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/register" -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing | Out-Null
+            throw "Expected HTTP 400 for invalid payload, got success."
+        }
+        catch {
+            if (-not $_.Exception.Response) { throw }
+            $code = [int]$_.Exception.Response.StatusCode
+            if ($code -ne 400) {
+                throw "Expected HTTP 400, got $code."
+            }
+        }
+    }) { $passed++ } else { $failed++ }
+
     Write-Host ""
 }
 
@@ -179,6 +217,13 @@ if (-not $SkipWeb) {
         $apiHealth = Invoke-WebRequest -Uri "$ApiBaseUrl/health" -Method Get -TimeoutSec 30 -UseBasicParsing
         if ($apiHealth.StatusCode -ne 200) {
             throw "API health is not reachable, status $($apiHealth.StatusCode)."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "Web /Auth/ResetPassword returns 200" -Action {
+        $response = Invoke-WebRequest -Uri "$WebBaseUrl/Auth/ResetPassword" -Method Get -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200) {
+            throw "Expected HTTP 200, got $($response.StatusCode)."
         }
     }) { $passed++ } else { $failed++ }
 

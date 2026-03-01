@@ -70,7 +70,9 @@ public class AuthenticationCommandsTests : IntegrationTestBase
             var activateCommand = new ActivateAccountCommand
             {
                 UserId = result.UserId!,
-                Email = email
+                Email = email,
+                Password = password,
+                ConfirmPassword = password
             };
             var activateResponse = await Client.PostAsJsonAsync("/api/auth/activate", activateCommand);
             activateResponse.EnsureSuccessStatusCode();
@@ -112,7 +114,9 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var command = new ActivateAccountCommand
         {
             UserId = userId,
-            Email = email
+            Email = email,
+            Password = "Activate123!",
+            ConfirmPassword = "Activate123!"
         };
 
         // Act
@@ -140,7 +144,9 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var command = new ActivateAccountCommand
         {
             UserId = Guid.NewGuid().ToString(),
-            Email = "nonexistent@test.com"
+            Email = "nonexistent@test.com",
+            Password = "Activate123!",
+            ConfirmPassword = "Activate123!"
         };
 
         // Act
@@ -163,7 +169,9 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var command = new ActivateAccountCommand
         {
             UserId = userId,
-            Email = email
+            Email = email,
+            Password = "Test123!",
+            ConfirmPassword = "Test123!"
         };
 
         // Act
@@ -187,7 +195,9 @@ public class AuthenticationCommandsTests : IntegrationTestBase
         var command = new ActivateAccountCommand
         {
             UserId = userId,
-            Email = "wrong@test.com" // Email diferente al registrado
+            Email = "wrong@test.com", // Email diferente al registrado
+            Password = "Test123!",
+            ConfirmPassword = "Test123!"
         };
 
         // Act

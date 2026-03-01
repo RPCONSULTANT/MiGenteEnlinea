@@ -15,15 +15,18 @@ public sealed class ResendActivationEmailCommandHandler : IRequestHandler<Resend
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
+    private readonly IAuthLinksProvider _authLinksProvider;
     private readonly ILogger<ResendActivationEmailCommandHandler> _logger;
 
     public ResendActivationEmailCommandHandler(
         IUnitOfWork unitOfWork,
         IEmailService emailService,
+        IAuthLinksProvider authLinksProvider,
         ILogger<ResendActivationEmailCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
+        _authLinksProvider = authLinksProvider;
         _logger = logger;
     }
 
@@ -99,7 +102,7 @@ public sealed class ResendActivationEmailCommandHandler : IRequestHandler<Resend
         // ================================================================================
         // Legacy línea 83: string url = host + "/Activar.aspx?userID=" + perfil.userID + "&email=" + email;
         // Clean: Mismo formato pero con sintaxis interpolada
-        var activationUrl = $"{request.Host}/Activar.aspx?userID={perfil.UserId}&email={request.Email}";
+        var activationUrl = _authLinksProvider.BuildActivationUrl(perfil.UserId, request.Email);
 
         // ================================================================================
         // PASO 4: ENVIAR EMAIL
