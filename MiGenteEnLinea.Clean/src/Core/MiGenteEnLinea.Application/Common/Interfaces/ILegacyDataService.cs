@@ -1,6 +1,3 @@
-using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateEmpleadoTemporal;
-using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateDetalleContratacion;
-using MiGenteEnLinea.Application.Features.Empleados.Commands.UpdateDetalleContratacion;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CalificarContratacion;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.ModificarCalificacion;
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
@@ -20,45 +17,10 @@ public interface ILegacyDataService
     Task<ReciboContratacionDto?> GetReciboContratacionAsync(int pagoId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Elimina un empleado temporal con todos sus recibos asociados (cascade delete)
-    /// Migrado de: EmpleadosService.eliminarEmpleadoTemporal(int contratacionID)
-    /// Orden de eliminación:
-    /// 1. Empleador_Recibos_Detalle_Contrataciones (para cada recibo)
-    /// 2. Empleador_Recibos_Header_Contrataciones (para cada recibo)
-    /// 3. EmpleadosTemporales (el empleado temporal)
-    /// </summary>
-    Task<bool> EliminarEmpleadoTemporalAsync(int contratacionId, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Obtiene pagos de contrataciones desde la vista VPagosContrataciones
     /// Migrado de: EmpleadosService.GetEmpleador_RecibosContratacionesByID(int contratacionID, int detalleID)
     /// </summary>
     Task<List<PagoContratacionDto>> GetPagosContratacionesAsync(int contratacionId, int detalleId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Crea un nuevo EmpleadoTemporal y su DetalleContrataciones asociado
-    /// Migrado de: EmpleadosService.nuevoTemporal(EmpleadosTemporales temp, DetalleContrataciones det)
-    /// Usa dos transacciones como en Legacy (2 DbContexts)
-    /// </summary>
-    Task<int> CreateEmpleadoTemporalAsync(
-        CreateEmpleadoTemporalCommand command,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Crea un nuevo DetalleContrataciones
-    /// Migrado de: EmpleadosService.nuevaContratacionTemporal(DetalleContrataciones det)
-    /// </summary>
-    Task<int> CreateDetalleContratacionAsync(
-        CreateDetalleContratacionCommand command,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Actualiza un DetalleContrataciones existente
-    /// Migrado de: EmpleadosService.actualizarContratacion(DetalleContrataciones det)
-    /// </summary>
-    Task<bool> UpdateDetalleContratacionAsync(
-        UpdateDetalleContratacionCommand command,
-        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Marca una contratación como calificada (calificado=true, asigna calificacionID)

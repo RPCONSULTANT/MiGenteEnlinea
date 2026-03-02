@@ -144,9 +144,6 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Legacy Data Service (para tablas no migradas a DDD - LOTE 6.0.3)
-        services.AddScoped<ILegacyDataService, LegacyDataService>();
-
         // LOTE 0: Only core Rich Domain Model repositories (6 total)
         // Authentication
         services.AddScoped<ICredencialRepository, CredencialRepository>();

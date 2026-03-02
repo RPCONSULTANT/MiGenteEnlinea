@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 
@@ -6,14 +7,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.CalificarContra
 
 public class CalificarContratacionCommandHandler : IRequestHandler<CalificarContratacionCommand, bool>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<CalificarContratacionCommandHandler> _logger;
 
     public CalificarContratacionCommandHandler(
-        ILegacyDataService legacyDataService,
+        IApplicationDbContext context,
         ILogger<CalificarContratacionCommandHandler> logger)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
         _logger = logger;
     }
 
@@ -24,10 +25,13 @@ public class CalificarContratacionCommandHandler : IRequestHandler<CalificarCont
             request.ContratacionId,
             request.CalificacionId);
 
-        var result = await _legacyDataService.CalificarContratacionAsync(
-            request.ContratacionId,
-            request.CalificacionId,
-            cancellationToken);
+        var rows = await _context.DetalleContrataciones
+            .Where(x => x.ContratacionId == request.ContratacionId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Calificado, true)
+                .SetProperty(x => x.CalificacionId, request.CalificacionId), cancellationToken);
+
+        var result = rows > 0;
 
         if (result)
         {

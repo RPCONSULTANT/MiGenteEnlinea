@@ -20,11 +20,11 @@ Estado inicial de migracion para erradicar `ILegacyDataService`, entidades `Gene
 | `CancelarTrabajoAsync` | `CancelarTrabajoCommandHandler` | EF tipado sobre `DbSet<DetalleContratacion>` | Migrated | Preserva semántica legacy (`estatus = 3`) |
 | `EliminarReciboContratacion*Async` | `EliminarRecibo*` handlers | EF tipado (`ExecuteDelete` + transacción) | Migrated | Header + detalle en transacción |
 | `GetReciboContratacionAsync` | recibo query handlers | Query EF sobre `EmpleadorRecibosHeaderContrataciones` | Pending | Include tipado |
-| `EliminarEmpleadoTemporalAsync` | temporal commands | `IEmpleadoTemporalRepository` + service dominio | Pending | Evitar borrado invalido |
+| `EliminarEmpleadoTemporalAsync` | `EliminarEmpleadoTemporalCommandHandler` | EF tipado (`ExecuteDelete` + transacción) | Migrated | Elimina recibos, detalle y temporal |
 | `GetPagosContratacionesAsync` | pagos/nomina queries | ReadModel EF (`VistaPagoContratacion`) | Pending | Sin SQL raw |
-| `CreateEmpleadoTemporalAsync` | `CreateEmpleadoTemporalCommandHandler` | `IEmpleadoTemporalRepository` + `IDetalleContratacionRepository` | InProgress | Hotfix aplicado; falta mover fuera de `LegacyDataService` |
-| `CreateDetalleContratacionAsync` | contrataciones commands | `IDetalleContratacionRepository` | Pending | Agregar reglas estado |
-| `UpdateDetalleContratacionAsync` | contrataciones commands | `IDetalleContratacionRepository` | Pending | |
+| `CreateEmpleadoTemporalAsync` | `CreateEmpleadoTemporalCommandHandler` | EF tipado (`DbSet<EmpleadoTemporal>` + `DbSet<DetalleContratacion>`) | Migrated | Sin SQL raw |
+| `CreateDetalleContratacionAsync` | `CreateDetalleContratacionCommandHandler` | EF tipado (`DbSet<DetalleContratacion>`) | Migrated | |
+| `UpdateDetalleContratacionAsync` | `UpdateDetalleContratacionCommandHandler` | EF tipado + `ExecuteUpdate` | Migrated | |
 | `Calificar*Async` | calificaciones handlers | `ICalificacionRepository` | Pending | |
 | `GetFichaTemporalesAsync` | ficha temporal queries | Query EF tipada | Pending | |
 | `GetTodosLosTemporalesAsync` | listado temporal queries | Query EF tipada | Pending | |

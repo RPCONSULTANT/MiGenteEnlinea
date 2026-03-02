@@ -44,4 +44,9 @@ public sealed class VistaPagoContratacion
     /// ID de la contratación temporal asociada
     /// </summary>
     public int? ContratacionId { get; init; }
+
+    /// <summary>
+    /// ID del detalle de contratación asociado
+    /// </summary>
+    public int? DetalleId { get; init; }
 }

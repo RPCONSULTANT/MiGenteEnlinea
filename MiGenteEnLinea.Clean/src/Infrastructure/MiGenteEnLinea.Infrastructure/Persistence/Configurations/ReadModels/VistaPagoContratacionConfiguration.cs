@@ -22,5 +22,6 @@ public class VistaPagoContratacionConfiguration : IEntityTypeConfiguration<Vista
         builder.Property(v => v.Expr1).HasMaxLength(18).IsUnicode(false);
         builder.Property(v => v.Monto).HasColumnType("decimal(38, 2)");
         builder.Property(v => v.ContratacionId).HasColumnName("contratacionID");
+        builder.Property(v => v.DetalleId).HasColumnName("detalleID");
     }
 }

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
@@ -12,14 +13,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Queries.GetReciboContrat
 public class GetReciboContratacionQueryHandler 
     : IRequestHandler<GetReciboContratacionQuery, ReciboContratacionDto?>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetReciboContratacionQueryHandler> _logger;
 
     public GetReciboContratacionQueryHandler(
-        ILegacyDataService legacyDataService,
+        IApplicationDbContext context,
         ILogger<GetReciboContratacionQueryHandler> logger)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
         _logger = logger;
     }
 
@@ -31,9 +32,42 @@ public class GetReciboContratacionQueryHandler
             "Obteniendo recibo de contratación: PagoId={PagoId}",
             request.PagoId);
 
-        var recibo = await _legacyDataService.GetReciboContratacionAsync(
-            request.PagoId,
-            cancellationToken);
+        var recibo = await _context.EmpleadorRecibosHeaderContrataciones
+            .AsNoTracking()
+            .Where(x => x.PagoId == request.PagoId)
+            .Select(h => new ReciboContratacionDto
+            {
+                PagoId = h.PagoId,
+                UserId = h.UserId,
+                ContratacionId = h.ContratacionId,
+                FechaRegistro = h.FechaRegistro,
+                FechaPago = h.FechaPago,
+                ConceptoPago = h.ConceptoPago,
+                Tipo = h.Tipo,
+                Detalles = _context.EmpleadorRecibosDetalleContrataciones
+                    .Where(d => d.PagoId == h.PagoId)
+                    .Select(d => new ReciboContratacionDetalleDto
+                    {
+                        DetalleId = d.DetalleId,
+                        PagoId = d.PagoId,
+                        Concepto = d.Concepto,
+                        Monto = d.Monto
+                    })
+                    .ToList(),
+                EmpleadoTemporal = h.ContratacionId.HasValue
+                    ? _context.Set<Domain.Entities.Empleados.EmpleadoTemporal>()
+                        .Where(e => e.ContratacionId == h.ContratacionId.Value)
+                        .Select(e => new EmpleadoTemporalSimpleDto
+                        {
+                            ContratacionId = e.ContratacionId,
+                            Nombre = e.Nombre,
+                            Apellido = e.Apellido,
+                            Cedula = e.Identificacion
+                        })
+                        .FirstOrDefault()
+                    : null
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (recibo == null)
         {
