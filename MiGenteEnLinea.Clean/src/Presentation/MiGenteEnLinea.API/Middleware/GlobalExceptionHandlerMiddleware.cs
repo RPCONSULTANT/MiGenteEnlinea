@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 using MiGenteEnLinea.Application.Common.Exceptions;
 
 namespace MiGenteEnLinea.API.Middleware;
@@ -38,6 +39,7 @@ public class GlobalExceptionHandlerMiddleware
 
         var errorResponse = new ErrorResponse
         {
+            CorrelationId = context.TraceIdentifier,
             TraceId = context.TraceIdentifier
         };
 
@@ -45,6 +47,7 @@ public class GlobalExceptionHandlerMiddleware
         {
             case NotFoundException notFoundEx:
                 response.StatusCode = (int)HttpStatusCode.NotFound;
+                errorResponse.Code = "not_found";
                 errorResponse.Message = notFoundEx.Message;
                 errorResponse.StatusCode = (int)HttpStatusCode.NotFound;
                 _logger.LogWarning(notFoundEx, "Resource not found: {Message}", notFoundEx.Message);
@@ -52,17 +55,24 @@ public class GlobalExceptionHandlerMiddleware
 
             case FluentValidation.ValidationException validationEx:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
+                errorResponse.Code = "validation_error";
                 errorResponse.Message = "Errores de validación";
                 errorResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 errorResponse.Errors = validationEx.Errors
                     .Select(e => new ValidationError { Property = e.PropertyName, Message = e.ErrorMessage })
                     .ToList();
+                errorResponse.Details = validationEx.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).Distinct().ToArray());
                 _logger.LogWarning(validationEx, "Validation failed: {Errors}", 
                     string.Join(", ", validationEx.Errors.Select(e => e.ErrorMessage)));
                 break;
 
             case UnauthorizedAccessException unauthorizedEx:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                errorResponse.Code = "unauthorized";
                 errorResponse.Message = "No autorizado";
                 errorResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 _logger.LogWarning(unauthorizedEx, "Unauthorized access attempt");
@@ -70,13 +80,37 @@ public class GlobalExceptionHandlerMiddleware
 
             case ArgumentException argEx:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
+                errorResponse.Code = "invalid_argument";
                 errorResponse.Message = argEx.Message;
                 errorResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 _logger.LogWarning(argEx, "Invalid argument: {Message}", argEx.Message);
                 break;
 
+            case SqlException sqlEx:
+                response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                errorResponse.Code = sqlEx.Number == 18456 ? "db_auth_failed" : "db_unavailable";
+                errorResponse.Message = sqlEx.Number == 18456
+                    ? "No se pudo autenticar con la base de datos."
+                    : "No se pudo completar la operación por un problema de base de datos.";
+                errorResponse.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                errorResponse.Details = new Dictionary<string, object?>
+                {
+                    ["sqlErrorNumber"] = sqlEx.Number,
+                    ["sqlState"] = sqlEx.State,
+                    ["sqlClass"] = sqlEx.Class
+                };
+                _logger.LogError(
+                    sqlEx,
+                    "SQL exception handled. CorrelationId={CorrelationId} SqlErrorNumber={SqlErrorNumber} SqlState={SqlState} SqlClass={SqlClass}",
+                    context.TraceIdentifier,
+                    sqlEx.Number,
+                    sqlEx.State,
+                    sqlEx.Class);
+                break;
+
             default:
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                errorResponse.Code = "internal_error";
                 errorResponse.Message = "Ha ocurrido un error interno. Por favor intente nuevamente.";
                 errorResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                 _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
@@ -96,8 +130,11 @@ public class GlobalExceptionHandlerMiddleware
 public class ErrorResponse
 {
     public int StatusCode { get; set; }
+    public string Code { get; set; } = "internal_error";
     public string Message { get; set; } = string.Empty;
+    public string? CorrelationId { get; set; }
     public string? TraceId { get; set; }
+    public object? Details { get; set; }
     public List<ValidationError>? Errors { get; set; }
 }
 

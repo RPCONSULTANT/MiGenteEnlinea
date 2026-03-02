@@ -349,6 +349,49 @@ app.MapGet("/health", () => Results.Ok(new
     Environment = app.Environment.EnvironmentName
 }));
 
+app.MapGet("/health/db", async (MiGenteDbContext dbContext, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var correlationId = httpContext.TraceIdentifier;
+    try
+    {
+        var canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
+        if (!canConnect)
+        {
+            Log.Warning("Health DB check failed. CorrelationId={CorrelationId}", correlationId);
+            return Results.Problem(
+                title: "Database health check failed",
+                detail: "No se pudo conectar a la base de datos.",
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                extensions: new Dictionary<string, object?>
+                {
+                    ["code"] = "db_unavailable",
+                    ["correlationId"] = correlationId
+                });
+        }
+
+        return Results.Ok(new
+        {
+            Status = "Healthy",
+            Dependency = "SqlServer",
+            Timestamp = DateTime.UtcNow,
+            CorrelationId = correlationId
+        });
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Health DB check exception. CorrelationId={CorrelationId}", correlationId);
+        return Results.Problem(
+            title: "Database health check exception",
+            detail: "Error verificando la conectividad de base de datos.",
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            extensions: new Dictionary<string, object?>
+            {
+                ["code"] = "db_health_exception",
+                ["correlationId"] = correlationId
+            });
+    }
+});
+
 await InitializeDatabaseAsync(app, dbInitOptions);
 
 // ========================================

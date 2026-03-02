@@ -100,6 +100,11 @@ Invoke-Step "Generate env snapshot (names only)" {
     & (Join-Path $PSScriptRoot "Get-EnvSnapshot.ps1") -Component All
 }
 
+Invoke-Step "Validate EF retry transaction guardrails" {
+    $repoRoot = Join-Path $PSScriptRoot "..\.."
+    & (Join-Path $repoRoot "scripts\validate-ef-transaction-retry.ps1") -RepoRoot $repoRoot
+}
+
 if ($EnvironmentName -eq "Production") {
     Invoke-Step "Validate runtime environment is Production" {
         $runtimeEnvironment = [string]$env:ASPNETCORE_ENVIRONMENT
