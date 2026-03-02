@@ -544,6 +544,17 @@ public class EmpleadosController : ControllerBase
                 correlationId
             });
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CREATE_TEMPORAL_FAIL CorrelationId={CorrelationId}", correlationId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                code = "internal_error",
+                message = "Ha ocurrido un error interno. Por favor intente nuevamente.",
+                details = new[] { "No se pudo completar la creación temporal." },
+                correlationId
+            });
+        }
     }
 
     /// <summary>

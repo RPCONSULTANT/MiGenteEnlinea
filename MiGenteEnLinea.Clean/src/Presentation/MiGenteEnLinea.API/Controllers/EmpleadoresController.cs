@@ -6,6 +6,7 @@ using MiGenteEnLinea.Application.Features.Empleadores.Commands.CreateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.UpdateEmpleador;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.UpdateEmpleadorFoto;
 using MiGenteEnLinea.Application.Features.Empleadores.Commands.DeleteEmpleador;
+using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorFotoById;
 using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorById;
 using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorByUserId;
 using MiGenteEnLinea.Application.Features.Empleadores.Queries.SearchEmpleadores;
@@ -86,6 +87,24 @@ public class EmpleadoresController : ControllerBase
             return NotFound(new { error = $"Empleador {empleadorId} no encontrado" });
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Obtiene la foto/logo de un empleador por ID.
+    /// </summary>
+    [HttpGet("{empleadorId:int}/foto")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetEmpleadorFotoById(int empleadorId)
+    {
+        var foto = await _mediator.Send(new GetEmpleadorFotoByIdQuery(empleadorId));
+        if (foto is null || foto.Length == 0)
+        {
+            return NotFound(new { error = "Foto no encontrada" });
+        }
+
+        return File(foto, "image/jpeg");
     }
 
     /// <summary>

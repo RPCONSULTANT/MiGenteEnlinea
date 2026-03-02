@@ -43,6 +43,12 @@
                     <h6 class="mb-0"><i class="fas fa-user me-2"></i>Colaborador</h6>
                 </div>
                 <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img id="imgTemporal" src="/images/circular1.png" alt="Foto colaborador temporal" class="rounded-circle border d-none" style="width: 96px; height: 96px; object-fit: cover;">
+                        <div id="avatarTemporal" class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 96px; height: 96px;">
+                            <span id="avatarTemporalInitials" class="fw-bold">CT</span>
+                        </div>
+                    </div>
                     <p class="mb-1"><strong>Nombre:</strong> <span id="lblNombre">-</span></p>
                     <p class="mb-1"><strong>Identificación:</strong> <span id="lblId">-</span></p>
                     <p class="mb-1"><strong>Teléfono:</strong> <span id="lblTelefono">-</span></p>
@@ -194,6 +200,71 @@
             const badge = document.getElementById('badgeEstado');
             badge.textContent = getEstadoNombre(estado);
             badge.className = `badge bg-${getEstadoBadge(estado)}`;
+
+            applyTemporalPhoto(data, detalle);
+        }
+
+        function applyTemporalPhoto(data, detalle) {
+            const image = document.getElementById('imgTemporal');
+            const avatar = document.getElementById('avatarTemporal');
+            const initials = document.getElementById('avatarTemporalInitials');
+
+            const nombre = (data.nombreComercial || `${data.nombre || ''} ${data.apellido || ''}`).trim() || 'CT';
+            initials.textContent = nombre
+                .split(/\s+/)
+                .slice(0, 2)
+                .map(p => p[0] || '')
+                .join('')
+                .toUpperCase() || 'CT';
+
+            const foto = resolveFotoTemporal(data, detalle);
+            if (!foto) {
+                image.classList.add('d-none');
+                avatar.classList.remove('d-none');
+                return;
+            }
+
+            image.src = foto;
+            image.classList.remove('d-none');
+            avatar.classList.add('d-none');
+            image.onerror = function() {
+                this.onerror = null;
+                this.src = '/images/circular1.png';
+                this.classList.add('d-none');
+                avatar.classList.remove('d-none');
+            };
+        }
+
+        function resolveFotoTemporal(data, detalle) {
+            const inline = data.fotoUrl || data.foto || data.imagenUrl || data.imagen || data.fotoBase64 || null;
+            if (inline) {
+                return normalizeImageSource(inline);
+            }
+
+            const contratistaId = Number(
+                data.contratistaId ||
+                data.contratistaID ||
+                detalle.contratistaId ||
+                detalle.contratistaID ||
+                0);
+            if (contratistaId > 0) {
+                return `${API_BASE}/contratistas/${contratistaId}/foto`;
+            }
+
+            return null;
+        }
+
+        function normalizeImageSource(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return null;
+            if (raw.startsWith('data:image')) return raw;
+            if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) return raw;
+
+            if (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length > 80) {
+                return `data:image/jpeg;base64,${raw}`;
+            }
+
+            return raw;
         }
 
         async function loadPagos() {

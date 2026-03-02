@@ -583,12 +583,8 @@
             const initials = `${(emp.nombre || 'X')[0]}${(emp.apellido || 'X')[0]}`;
             document.getElementById('avatarInitials').textContent = initials.toUpperCase();
             
-            // Photo (if available)
-            if (emp.foto) {
-                document.getElementById('fotoEmpleado').src = emp.foto;
-                document.getElementById('fotoEmpleado').classList.remove('d-none');
-                document.getElementById('avatarContainer').classList.add('d-none');
-            }
+            // Photo
+            applyEmpleadoPhoto(emp);
             
             // Remuneraciones extras
             const remuneraciones = [];
@@ -1275,6 +1271,42 @@
         // ============================================
         // UTILITIES
         // ============================================
+        function applyEmpleadoPhoto(emp) {
+            const image = document.getElementById('fotoEmpleado');
+            const avatar = document.getElementById('avatarContainer');
+            const source = resolveEmpleadoImageSource(emp);
+
+            if (!source) {
+                image.classList.add('d-none');
+                avatar.classList.remove('d-none');
+                return;
+            }
+
+            image.src = source;
+            image.classList.remove('d-none');
+            avatar.classList.add('d-none');
+            image.onerror = function () {
+                this.onerror = null;
+                this.src = '/images/circular1.png';
+                this.classList.add('d-none');
+                avatar.classList.remove('d-none');
+            };
+        }
+
+        function resolveEmpleadoImageSource(emp) {
+            const raw = emp?.foto || emp?.fotoUrl || emp?.imagenUrl || emp?.fotoBase64 || null;
+            if (!raw) return null;
+            const value = String(raw).trim();
+            if (!value) return null;
+            if (value.startsWith('data:image')) return value;
+            if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) return value;
+            if (/^[A-Za-z0-9+/=]+$/.test(value) && value.length > 80) {
+                return `data:image/jpeg;base64,${value}`;
+            }
+
+            return value;
+        }
+
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             const date = new Date(dateStr);

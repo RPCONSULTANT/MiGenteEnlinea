@@ -1256,6 +1256,70 @@
                 return [];
             }
         }
+
+        function inferContratistaTipo(contratista) {
+            const tipoRaw = Number(contratista?.tipo ?? contratista?.tipoPersona ?? contratista?.tipoContratista ?? 0);
+            if (tipoRaw === 2) return 2;
+
+            const tipoIdentificacion = Number(contratista?.tipoIdentificacion ?? 0);
+            if (tipoIdentificacion === 3) return 2;
+
+            const rnc = (contratista?.rnc || contratista?.Rnc || '').replace(/\D/g, '');
+            if (rnc.length >= 9) return 2;
+
+            return 1;
+        }
+
+        function splitNombreCompleto(fullName) {
+            const safe = String(fullName || '').trim().replace(/\s+/g, ' ');
+            if (!safe) {
+                return { nombre: 'Contratista', apellido: '-' };
+            }
+
+            const parts = safe.split(' ');
+            if (parts.length === 1) {
+                return { nombre: parts[0], apellido: '-' };
+            }
+
+            return {
+                nombre: parts.shift() || 'Contratista',
+                apellido: parts.join(' ') || '-'
+            };
+        }
+
+        function getValidationDetails(payload) {
+            const items = [];
+            const details = payload?.details;
+            if (Array.isArray(details)) {
+                details.forEach(item => {
+                    if (typeof item === 'string' && item.trim()) {
+                        items.push(item.trim());
+                        return;
+                    }
+                    if (item && typeof item === 'object') {
+                        const field = item.field || item.propertyName || item.key || '';
+                        const message = item.error || item.message || item.errorMessage || '';
+                        if (message) {
+                            items.push(field ? `${field}: ${message}` : message);
+                        }
+                    }
+                });
+            }
+
+            const errors = payload?.errors;
+            if (errors && typeof errors === 'object') {
+                Object.entries(errors).forEach(([field, messages]) => {
+                    const list = Array.isArray(messages) ? messages : [messages];
+                    list.forEach(message => {
+                        if (typeof message === 'string' && message.trim()) {
+                            items.push(`${field}: ${message.trim()}`);
+                        }
+                    });
+                });
+            }
+
+            return [...new Set(items)];
+        }
         
         async function crearContratacion() {
             const token = getAuthToken();
@@ -1323,32 +1387,44 @@
                 document.getElementById('btnGuardarContratacion').disabled = true;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
 
-                const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-                if (!userId) {
-                    throw new Error('No se pudo identificar el usuario autenticado');
-                }
-
                 const nombreContratista = (contratista.nombreCompleto || `${contratista.nombre || ''} ${contratista.apellido || ''}`.trim()).trim();
-                const [nombre, ...resto] = nombreContratista.split(' ');
-                const apellido = resto.join(' ') || '-';
+                const nombrePartes = splitNombreCompleto(nombreContratista);
                 const servicioSeleccionado = document.getElementById('servicioSelect');
                 const servicioNombre = servicioSeleccionado.options[servicioSeleccionado.selectedIndex]?.text || 'Servicio general';
+                const contratistaTipo = inferContratistaTipo(contratista);
+                const esJuridica = contratistaTipo === 2;
+                const identificacionLimpia = (contratista.identificacion || '').replace(/\D/g, '');
+                const rncLimpio = (contratista.rnc || contratista.Rnc || identificacionLimpia || '').replace(/\D/g, '');
+                const nombreComercial = (contratista.nombreComercial || contratista.nombreEmpresa || nombreContratista || '').trim();
+
+                if (esJuridica && (!nombreComercial || !rncLimpio)) {
+                    Swal.fire(
+                        'Datos incompletos',
+                        'El contratista jurídico debe tener nombre comercial y RNC para crear la contratación temporal.',
+                        'warning');
+                    return;
+                }
 
                 const temporalPayload = {
-                    userId: userId,
-                    tipo: contratista.tipo || 1,
-                    nombre: nombre || 'Contratista',
-                    apellido: apellido,
-                    identificacion: contratista.identificacion || `${contratistaId}`,
+                    tipo: contratistaTipo,
                     telefono: contratista.telefono1 || null,
                     direccion: contratista.provincia || null,
                     email: contratista.email || null,
-                    servicio: servicioNombre,
+                    servicio: servicioNombre || 'Servicio general',
                     fechaInicio: fechaInicio,
                     fechaFinal: fechaFin,
                     pago: monto,
                     estatus: 1
                 };
+
+                if (esJuridica) {
+                    temporalPayload.nombreComercial = nombreComercial;
+                    temporalPayload.rnc = rncLimpio;
+                } else {
+                    temporalPayload.nombre = nombrePartes.nombre;
+                    temporalPayload.apellido = nombrePartes.apellido;
+                    temporalPayload.identificacion = identificacionLimpia || `${contratistaId}`;
+                }
 
                 console.debug('CREATE_TEMPORAL_START', { contratistaId, servicioId, fechaInicio, fechaFin, monto });
                 const temporalResponse = await authenticatedFetch('/empleados/temporales', {
@@ -1358,9 +1434,12 @@
 
                 if (!temporalResponse.ok) {
                     const temporalError = window.readApiResponse ? await window.readApiResponse(temporalResponse) : await temporalResponse.json();
-                    throw new Error(window.getApiErrorMessage
+                    const message = window.getApiErrorMessage
                         ? window.getApiErrorMessage(temporalError, 'No se pudo crear la contratación temporal base')
-                        : (temporalError?.error || 'No se pudo crear la contratación temporal base'));
+                        : (temporalError?.error || 'No se pudo crear la contratación temporal base');
+                    const error = new Error(message);
+                    error.validationDetails = getValidationDetails(temporalError);
+                    throw error;
                 }
 
                 const temporalResult = window.readApiResponse ? await window.readApiResponse(temporalResponse) : await temporalResponse.json();
@@ -1420,7 +1499,15 @@
             } catch (error) {
                 console.error('CREATE_CONTRATACION_FAIL', error);
                 const userMessage = error?.message || 'No se pudo completar la creación de la contratación temporal';
-                Swal.fire('Error', userMessage, 'error');
+                const details = Array.isArray(error?.validationDetails) ? error.validationDetails : [];
+                const detailHtml = details.length
+                    ? `<ul class="text-start mb-0">${details.map(d => `<li>${d}</li>`).join('')}</ul>`
+                    : '';
+                Swal.fire({
+                    title: 'Error',
+                    html: detailHtml || userMessage,
+                    icon: 'error'
+                });
             } finally {
                 document.getElementById('btnGuardarContratacion').disabled = false;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-save me-1"></i>Crear Contratación';

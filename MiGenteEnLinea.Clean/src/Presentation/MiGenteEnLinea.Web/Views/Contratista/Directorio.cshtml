@@ -103,8 +103,11 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-4 text-center">
-                        <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 120px; height: 120px;">
-                            <i class="fa fa-building fa-3x"></i>
+                        <div class="mb-3">
+                            <img id="modalFotoEmpleador" src="/images/circular1.png" alt="Foto empleador" class="rounded-circle border d-none" style="width: 120px; height: 120px; object-fit: cover;">
+                            <div id="modalAvatarEmpleador" class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 120px; height: 120px;">
+                                <i class="fa fa-building fa-3x"></i>
+                            </div>
                         </div>
                         <h4 id="modalNombre">Constructora ABC, SRL</h4>
                         <p class="text-muted" id="modalSector">Construcción</p>
@@ -274,13 +277,21 @@
                 const rating = emp.promedioCalificaciones || 0;
                 const badgeStatus = emp.activo ? 'bg-success' : 'bg-secondary';
                 const statusText = emp.activo ? 'Activo' : 'Inactivo';
+                const imageUrl = getEmpleadorImageUrl(emp);
 
                 html += `
                     <div class="col-md-4 mb-4">
                         <div class="card shadow h-100">
                             <div class="card-body text-center">
-                                <div class="rounded-circle bg-${color} text-white d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
-                                    <i class="fa ${icono} fa-2x"></i>
+                                <div class="mb-3">
+                                    <img src="${imageUrl}" 
+                                         alt="Foto ${emp.nombreComercial || emp.nombreCompleto || 'empleador'}"
+                                         class="rounded-circle border"
+                                         style="width: 80px; height: 80px; object-fit: cover;"
+                                         onerror="this.onerror=null; this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');">
+                                    <div class="rounded-circle bg-${color} text-white d-none d-inline-flex justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                                        <i class="fa ${icono} fa-2x"></i>
+                                    </div>
                                 </div>
                                 <h5 class="card-title">${emp.nombreComercial || emp.nombreCompleto || 'Sin nombre'}</h5>
                                 <p class="text-muted mb-2"><i class="fa fa-map-marker-alt"></i> ${emp.provincia || 'N/A'}</p>
@@ -320,6 +331,7 @@
             $('#modalEmail').text(empleador.email || 'N/A');
             $('#modalMiembro').text(formatDate(empleador.fechaIngreso));
             $('#modalContrataciones').text(empleador.totalContrataciones || 0);
+            applyModalEmpleadorImage(empleador);
 
             // Actualizar WhatsApp link
             const whatsapp = empleador.whatsapp1 || empleador.whatsapp2;
@@ -332,6 +344,34 @@
 
             // Mostrar modal
             $('#modalEmpleador').modal('show');
+        }
+
+        function getEmpleadorImageUrl(empleador) {
+            const rawUrl = empleador.imagenUrl || empleador.fotoUrl || empleador.foto || empleador.logoUrl;
+            if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('/'))) {
+                return rawUrl;
+            }
+
+            if (empleador.tieneFoto && empleador.empleadorId) {
+                return `${API_BASE}/empleadores/${empleador.empleadorId}/foto`;
+            }
+
+            return '/images/circular1.png';
+        }
+
+        function applyModalEmpleadorImage(empleador) {
+            const image = document.getElementById('modalFotoEmpleador');
+            const avatar = document.getElementById('modalAvatarEmpleador');
+            const imageUrl = getEmpleadorImageUrl(empleador);
+
+            image.src = imageUrl;
+            image.classList.remove('d-none');
+            avatar.classList.add('d-none');
+            image.onerror = function() {
+                this.onerror = null;
+                this.classList.add('d-none');
+                avatar.classList.remove('d-none');
+            };
         }
 
         async function solicitarContacto(empleadorId) {

@@ -10,20 +10,62 @@ public class CreateEmpleadoTemporalCommandValidator : AbstractValidator<CreateEm
             .NotEmpty()
             .WithMessage("El UserId es requerido");
 
-        RuleFor(x => x.Nombre)
-            .NotEmpty()
-            .WithMessage("El nombre es requerido")
-            .MaximumLength(100);
+        RuleFor(x => x)
+            .Custom((command, context) =>
+            {
+                var tipo = command.Tipo ?? 1;
+                var esJuridica = tipo == 2;
 
-        RuleFor(x => x.Apellido)
-            .NotEmpty()
-            .WithMessage("El apellido es requerido")
-            .MaximumLength(100);
+                if (esJuridica)
+                {
+                    if (string.IsNullOrWhiteSpace(command.NombreComercial))
+                    {
+                        context.AddFailure(nameof(command.NombreComercial), "El nombre comercial es requerido para contratista jurídico");
+                    }
+                    else if (command.NombreComercial.Length > 100)
+                    {
+                        context.AddFailure(nameof(command.NombreComercial), "El nombre comercial no puede exceder 100 caracteres");
+                    }
 
-        RuleFor(x => x.Identificacion)
-            .NotEmpty()
-            .WithMessage("La identificación es requerida")
-            .MaximumLength(20);
+                    if (string.IsNullOrWhiteSpace(command.Rnc))
+                    {
+                        context.AddFailure(nameof(command.Rnc), "El RNC es requerido para contratista jurídico");
+                    }
+                    else if (command.Rnc.Length > 20)
+                    {
+                        context.AddFailure(nameof(command.Rnc), "El RNC no puede exceder 20 caracteres");
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(command.Nombre))
+                    {
+                        context.AddFailure(nameof(command.Nombre), "El nombre es requerido");
+                    }
+                    else if (command.Nombre.Length > 100)
+                    {
+                        context.AddFailure(nameof(command.Nombre), "El nombre no puede exceder 100 caracteres");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(command.Apellido))
+                    {
+                        context.AddFailure(nameof(command.Apellido), "El apellido es requerido");
+                    }
+                    else if (command.Apellido.Length > 100)
+                    {
+                        context.AddFailure(nameof(command.Apellido), "El apellido no puede exceder 100 caracteres");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(command.Identificacion))
+                    {
+                        context.AddFailure(nameof(command.Identificacion), "La identificación es requerida");
+                    }
+                    else if (command.Identificacion.Length > 20)
+                    {
+                        context.AddFailure(nameof(command.Identificacion), "La identificación no puede exceder 20 caracteres");
+                    }
+                }
+            });
 
         RuleFor(x => x.Servicio)
             .NotEmpty()
