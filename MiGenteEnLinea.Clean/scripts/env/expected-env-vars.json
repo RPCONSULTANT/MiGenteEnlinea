@@ -78,6 +78,9 @@
         { "name": "E2E_WEB_BASE_URL" },
         { "name": "E2E_API_BASE_URL" },
         { "name": "E2E_ALLOW_WRITE" },
+        { "name": "E2E_RUN_ID" },
+        { "name": "E2E_SEED_KEY" },
+        { "name": "E2E_STRICT_RUNTIME_ISSUES" },
         {
           "anyOf": [
             "E2E_USER_EMPLEADOR_EMAIL",
@@ -122,10 +125,7 @@
         }
       ],
       "requiredPrefixes": [],
-      "optional": [
-        "E2E_SEED_KEY",
-        "E2E_RUN_ID"
-      ]
+      "optional": []
     }
   }
 }
