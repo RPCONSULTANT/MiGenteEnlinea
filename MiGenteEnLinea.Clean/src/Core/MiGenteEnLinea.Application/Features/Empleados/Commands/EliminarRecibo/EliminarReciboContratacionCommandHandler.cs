@@ -22,17 +22,21 @@ public class EliminarReciboContratacionCommandHandler : IRequestHandler<Eliminar
     {
         _logger.LogWarning("Eliminando recibo de contratación: PagoId={PagoId}", request.PagoId);
 
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-        await _context.EmpleadorRecibosDetalleContrataciones
-            .Where(d => d.PagoId == request.PagoId)
-            .ExecuteDeleteAsync(cancellationToken);
+            await _context.EmpleadorRecibosDetalleContrataciones
+                .Where(d => d.PagoId == request.PagoId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await _context.EmpleadorRecibosHeaderContrataciones
-            .Where(h => h.PagoId == request.PagoId)
-            .ExecuteDeleteAsync(cancellationToken);
+            await _context.EmpleadorRecibosHeaderContrataciones
+                .Where(h => h.PagoId == request.PagoId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         _logger.LogInformation("Recibo de contratación eliminado (Header + Detalle): PagoId={PagoId}", request.PagoId);
         

@@ -22,17 +22,21 @@ public class EliminarReciboEmpleadoCommandHandler : IRequestHandler<EliminarReci
     {
         _logger.LogWarning("Eliminando recibo de empleado: PagoId={PagoId}", request.PagoId);
 
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-        await _context.RecibosDetalle
-            .Where(d => d.PagoId == request.PagoId)
-            .ExecuteDeleteAsync(cancellationToken);
+            await _context.RecibosDetalle
+                .Where(d => d.PagoId == request.PagoId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await _context.RecibosHeader
-            .Where(h => h.PagoId == request.PagoId)
-            .ExecuteDeleteAsync(cancellationToken);
+            await _context.RecibosHeader
+                .Where(h => h.PagoId == request.PagoId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-        await transaction.CommitAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         _logger.LogInformation("Recibo de empleado eliminado (Header + Detalle): PagoId={PagoId}", request.PagoId);
         

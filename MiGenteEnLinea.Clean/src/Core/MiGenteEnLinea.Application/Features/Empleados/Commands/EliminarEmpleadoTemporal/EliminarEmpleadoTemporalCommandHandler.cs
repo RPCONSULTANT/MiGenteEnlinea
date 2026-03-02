@@ -31,33 +31,37 @@ public class EliminarEmpleadoTemporalCommandHandler
             "Eliminando empleado temporal y sus recibos: ContratacionId={ContratacionId}",
             request.ContratacionId);
 
-        await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
-
-        var pagoIds = await _context.EmpleadorRecibosHeaderContrataciones
-            .Where(r => r.ContratacionId == request.ContratacionId)
-            .Select(r => r.PagoId)
-            .ToListAsync(cancellationToken);
-
-        if (pagoIds.Count > 0)
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(async () =>
         {
-            await _context.EmpleadorRecibosDetalleContrataciones
-                .Where(d => d.PagoId.HasValue && pagoIds.Contains(d.PagoId.Value))
+            await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            var pagoIds = await _context.EmpleadorRecibosHeaderContrataciones
+                .Where(r => r.ContratacionId == request.ContratacionId)
+                .Select(r => r.PagoId)
+                .ToListAsync(cancellationToken);
+
+            if (pagoIds.Count > 0)
+            {
+                await _context.EmpleadorRecibosDetalleContrataciones
+                    .Where(d => d.PagoId.HasValue && pagoIds.Contains(d.PagoId.Value))
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await _context.EmpleadorRecibosHeaderContrataciones
+                    .Where(h => pagoIds.Contains(h.PagoId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            await _context.DetalleContrataciones
+                .Where(d => d.ContratacionId == request.ContratacionId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            await _context.EmpleadorRecibosHeaderContrataciones
-                .Where(h => pagoIds.Contains(h.PagoId))
+            await _context.Set<Domain.Entities.Empleados.EmpleadoTemporal>()
+                .Where(e => e.ContratacionId == request.ContratacionId)
                 .ExecuteDeleteAsync(cancellationToken);
-        }
 
-        await _context.DetalleContrataciones
-            .Where(d => d.ContratacionId == request.ContratacionId)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        await _context.Set<Domain.Entities.Empleados.EmpleadoTemporal>()
-            .Where(e => e.ContratacionId == request.ContratacionId)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        await tx.CommitAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+        });
 
         var result = true;
 
