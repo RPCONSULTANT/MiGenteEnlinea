@@ -16,6 +16,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$ScriptRoot = $PSScriptRoot
 
 # Normalize output path to absolute path so WinSCP `lcd` never depends on caller CWD.
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
@@ -51,6 +52,21 @@ Write-Host "Web OutOfProcess Fallback: $WebOutOfProcessFallback" -ForegroundColo
 Write-Host ""
 
 # ========================================
+# STEP 0: STARTUP COMPOSITION CONTRACT
+# ========================================
+
+Write-Host " STEP 0: Validating startup composition contract..." -ForegroundColor $ColorInfo
+Write-Host ""
+$startupValidationScript = Join-Path $ScriptRoot "scripts\validate-startup-composition.ps1"
+& $startupValidationScript
+if ($LASTEXITCODE -ne 0) {
+    Write-Host " Startup composition validation failed." -ForegroundColor $ColorError
+    exit 1
+}
+Write-Host " Startup composition contract passed." -ForegroundColor $ColorSuccess
+Write-Host ""
+
+# ========================================
 # STEP 1: BUILD ARTIFACTS
 # ========================================
 
@@ -73,7 +89,7 @@ if (-not $SkipBuild) {
     # Build API
     if (-not $WebOnly) {
         Write-Host "    Publishing API..." -ForegroundColor Yellow
-        $apiProject = "src\Presentation\MiGenteEnLinea.API\MiGenteEnLinea.API.csproj"
+        $apiProject = Join-Path $ScriptRoot "src\Presentation\MiGenteEnLinea.API\MiGenteEnLinea.API.csproj"
         
         dotnet publish $apiProject `
             --configuration $Configuration `
@@ -97,7 +113,7 @@ if (-not $SkipBuild) {
     # Build Web
     if (-not $ApiOnly) {
         Write-Host "    Publishing Web..." -ForegroundColor Yellow
-        $webProject = "src\Presentation\MiGenteEnLinea.Web\MiGenteEnLinea.Web.csproj"
+        $webProject = Join-Path $ScriptRoot "src\Presentation\MiGenteEnLinea.Web\MiGenteEnLinea.Web.csproj"
         
         dotnet publish $webProject `
             --configuration $Configuration `
@@ -196,7 +212,8 @@ if ($RunDbInit) {
         $dbInitArgs += @("-ConnectionString", $DbConnectionString)
     }
 
-    & ".\scripts\deploy-db.ps1" @dbInitArgs
+    $deployDbScript = Join-Path $ScriptRoot "scripts\deploy-db.ps1"
+    & $deployDbScript @dbInitArgs
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host " Database initialization failed." -ForegroundColor $ColorError
@@ -213,7 +230,8 @@ if ($RunDbInit) {
 # ========================================
 Write-Host " STEP 1.7: Validating artifact integrity..." -ForegroundColor $ColorInfo
 Write-Host ""
-& ".\scripts\validate-artifacts-integrity.ps1"
+$integrityScript = Join-Path $ScriptRoot "scripts\validate-artifacts-integrity.ps1"
+& $integrityScript
 if ($LASTEXITCODE -ne 0) {
     Write-Host " Artifact integrity validation failed." -ForegroundColor $ColorError
     exit 1

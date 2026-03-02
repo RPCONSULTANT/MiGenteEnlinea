@@ -199,7 +199,19 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                showAlert('loginAlert', 'Error de conexión. Verifique que el servidor esté disponible.', 'danger');
+                const loginPath = window.API_ENDPOINTS?.AUTH?.LOGIN || '/auth/login';
+                const apiUrl = window.buildApiUrl ? window.buildApiUrl(loginPath) : loginPath;
+
+                if (window.isNetworkOrCorsError && window.isNetworkOrCorsError(error)) {
+                    console.error('[AUTH][LOGIN][NETWORK_OR_CORS]', {
+                        method: 'POST',
+                        url: apiUrl,
+                        error: error?.message || error
+                    });
+                    showAlert('loginAlert', 'Error de conexión con el API (CORS/red). Verifique configuración y disponibilidad.', 'danger');
+                } else {
+                    showAlert('loginAlert', 'Error de conexión. Verifique que el servidor esté disponible.', 'danger');
+                }
             } finally {
                 setLoading('login', false);
             }

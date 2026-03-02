@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$ScriptRoot = $PSScriptRoot
 
 $ColorSuccess = "Green"
 $ColorError = "Red"
@@ -48,6 +49,17 @@ Write-Host "Web: $WebBaseUrl" -ForegroundColor Gray
 Write-Host "CORS Origin: $CorsOrigin" -ForegroundColor Gray
 Write-Host ""
 
+Write-Host "Startup Composition Checks" -ForegroundColor $ColorInfo
+if (Run-Test -Name "Program.cs no registra servicios despues de builder.Build()" -Action {
+    $startupValidationScript = Join-Path $ScriptRoot "scripts\validate-startup-composition.ps1"
+    & $startupValidationScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "Startup composition contract failed."
+    }
+}) { $passed++ } else { $failed++ }
+
+Write-Host ""
+
 if (-not $SkipApi) {
     Write-Host "API Checks" -ForegroundColor $ColorInfo
 
@@ -73,6 +85,28 @@ if (-not $SkipApi) {
         }
 
         $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/register" -Method Options -Headers $headers -TimeoutSec 30 -UseBasicParsing
+        if ($response.StatusCode -ne 200 -and $response.StatusCode -ne 204) {
+            throw "Expected HTTP 200 or 204, got $($response.StatusCode)."
+        }
+
+        $allowOrigin = $response.Headers["Access-Control-Allow-Origin"]
+        if ([string]::IsNullOrWhiteSpace($allowOrigin)) {
+            throw "Missing Access-Control-Allow-Origin header in preflight response."
+        }
+
+        if ($allowOrigin -ne "*" -and $allowOrigin -ne $CorsOrigin) {
+            throw "Unexpected Access-Control-Allow-Origin value '$allowOrigin'."
+        }
+    }) { $passed++ } else { $failed++ }
+
+    if (Run-Test -Name "CORS preflight OPTIONS /api/auth/login returns Access-Control-Allow-Origin" -Action {
+        $headers = @{
+            "Origin" = $CorsOrigin
+            "Access-Control-Request-Method" = "POST"
+            "Access-Control-Request-Headers" = "content-type"
+        }
+
+        $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/login" -Method Options -Headers $headers -TimeoutSec 30 -UseBasicParsing
         if ($response.StatusCode -ne 200 -and $response.StatusCode -ne 204) {
             throw "Expected HTTP 200 or 204, got $($response.StatusCode)."
         }
@@ -173,14 +207,27 @@ if (-not $SkipApi) {
     if (Run-Test -Name "Auth contract: invalid login returns 401" -Action {
         $payload = @{ email = "notfound_auth_probe@migente.invalid"; password = "Invalid123!" } | ConvertTo-Json
         try {
-            Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/login" -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing | Out-Null
+            $headers = @{
+                "Origin" = $CorsOrigin
+            }
+
+            Invoke-WebRequest -Uri "$ApiBaseUrl/api/auth/login" -Method Post -Body $payload -ContentType "application/json" -Headers $headers -TimeoutSec 30 -UseBasicParsing | Out-Null
             throw "Expected HTTP 401 for invalid credentials, got success."
         }
         catch {
             if (-not $_.Exception.Response) { throw }
-            $code = [int]$_.Exception.Response.StatusCode
+            $webResponse = $_.Exception.Response
+            $code = [int]$webResponse.StatusCode
             if ($code -ne 401) {
                 throw "Expected HTTP 401, got $code."
+            }
+
+            $allowOrigin = $webResponse.Headers["Access-Control-Allow-Origin"]
+            if ([string]::IsNullOrWhiteSpace($allowOrigin)) {
+                throw "Missing Access-Control-Allow-Origin header in login response."
+            }
+            if ($allowOrigin -ne "*" -and $allowOrigin -ne $CorsOrigin) {
+                throw "Unexpected Access-Control-Allow-Origin value '$allowOrigin'."
             }
         }
     }) { $passed++ } else { $failed++ }

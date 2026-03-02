@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Features;
 using System.Text;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -198,6 +199,12 @@ var corsOptions = builder.Configuration
     .GetSection(CorsOptions.SectionName)
     .Get<CorsOptions>() ?? new CorsOptions();
 
+if (builder.Environment.IsProduction() && corsOptions.AllowedOrigins.Length == 0)
+{
+    throw new InvalidOperationException(
+        "CorsConfiguration.AllowedOrigins no puede estar vacio en Production. Configure origenes explicitos.");
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AppPolicy", policy =>
@@ -249,6 +256,15 @@ var dbInitOptions = builder.Configuration
     .GetSection(DatabaseInitializationOptions.SectionName)
     .Get<DatabaseInitializationOptions>() ?? DatabaseInitializationOptions.CreateDefaults(app.Environment.EnvironmentName);
 
+var programAssembly = typeof(Program).Assembly;
+var informationalVersion = programAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+    ?? programAssembly.GetName().Version?.ToString()
+    ?? "unknown";
+var deploymentCommit = Environment.GetEnvironmentVariable("BUILD_COMMIT")
+    ?? Environment.GetEnvironmentVariable("BUILD_SOURCEVERSION")
+    ?? Environment.GetEnvironmentVariable("GITHUB_SHA")
+    ?? "not-set";
+
 // ========================================
 // MIDDLEWARE PIPELINE
 // ========================================
@@ -276,6 +292,34 @@ app.UseSwaggerUI(options =>
 
 // Routing debe ejecutarse antes de CORS para que el middleware resuelva endpoint metadata correctamente.
 app.UseRouting();
+
+// Diagnostico temporal para requests CORS/preflight en ambientes desplegados.
+app.Use(async (context, next) =>
+{
+    await next();
+
+    var isCorsRequest = context.Request.Headers.ContainsKey("Origin");
+    if (!isCorsRequest)
+    {
+        return;
+    }
+
+    var method = context.Request.Method;
+    var isPreflight = HttpMethods.IsOptions(method) &&
+        context.Request.Headers.ContainsKey("Access-Control-Request-Method");
+
+    var origin = context.Request.Headers.Origin.ToString();
+    var acao = context.Response.Headers.AccessControlAllowOrigin.ToString();
+
+    Log.Information(
+        "CORS request processed. Method={Method}, Path={Path}, IsPreflight={IsPreflight}, Origin={Origin}, StatusCode={StatusCode}, ACAO={ACAO}",
+        method,
+        context.Request.Path.Value,
+        isPreflight,
+        origin,
+        context.Response.StatusCode,
+        string.IsNullOrWhiteSpace(acao) ? "<none>" : acao);
+});
 
 // CORS - DEBE IR ANTES DE HttpsRedirection para permitir preflight requests
 app.UseCors("AppPolicy");
@@ -309,6 +353,9 @@ await InitializeDatabaseAsync(app, dbInitOptions);
 try
 {
     Log.Information("Iniciando MiGente En Línea API...");
+    Log.Information("Runtime version info. AssemblyVersion={AssemblyVersion}, DeploymentCommit={DeploymentCommit}",
+        informationalVersion,
+        deploymentCommit);
     app.Run();
     Log.Information("API detenida correctamente.");
 }

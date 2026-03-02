@@ -13,13 +13,34 @@
  * 4. /api (fallback relativo)
  */
 const API_BASE_BY_HOST = {
-  "plattaformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
-  "platformv2.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
-  "www.migenteenlinea.do": "http://api2.migenteenlinea.do/api",
-  "migenteenlinea.do": "http://api2.migenteenlinea.do/api",
+  "plattaformv2.migenteenlinea.do": {
+    http: "http://api2.migenteenlinea.do/api",
+    https: "https://api2.migenteenlinea.do/api",
+  },
+  "platformv2.migenteenlinea.do": {
+    http: "http://api2.migenteenlinea.do/api",
+    https: "https://api2.migenteenlinea.do/api",
+  },
+  "www.migenteenlinea.do": {
+    http: "http://api2.migenteenlinea.do/api",
+    https: "https://api2.migenteenlinea.do/api",
+  },
+  "migenteenlinea.do": {
+    http: "http://api2.migenteenlinea.do/api",
+    https: "https://api2.migenteenlinea.do/api",
+  },
 };
 
-const resolvedMappedBase = API_BASE_BY_HOST[window.location.hostname] || null;
+function resolveMappedApiBase(hostname, protocol) {
+  const entry = API_BASE_BY_HOST[hostname];
+  if (!entry) return null;
+  if (typeof entry === "string") return entry;
+  if (protocol === "https:" && entry.https) return entry.https;
+  if (entry.http) return entry.http;
+  return entry.https || null;
+}
+
+const resolvedMappedBase = resolveMappedApiBase(window.location.hostname, window.location.protocol);
 
 const API_BASE_RAW =
   window.API_BASE ||
@@ -45,6 +66,17 @@ if (!window.API_BASE && window.location.hostname !== "localhost") {
 if (window.location.hostname !== "localhost" && !/\/api$/i.test(API_BASE)) {
   console.warn(
     `[API CONFIG] API_BASE final '${API_BASE}' no termina en '/api'. Revise configuración de entorno/layout.`,
+  );
+}
+
+function isNetworkOrCorsError(error) {
+  if (!error) return false;
+  const message = String(error.message || error).toLowerCase();
+  return (
+    message.includes("failed to fetch") ||
+    message.includes("networkerror") ||
+    message.includes("network request failed") ||
+    message.includes("load failed")
   );
 }
 
@@ -380,6 +412,7 @@ window.buildApiUrl = buildApiUrl;
 window.readApiResponse = readApiResponse;
 window.getApiErrorMessage = getApiErrorMessage;
 window.requestApi = requestApi;
+window.isNetworkOrCorsError = isNetworkOrCorsError;
 
 // Accessibility hardening for modal focus transitions.
 document.addEventListener("hide.bs.modal", () => {
