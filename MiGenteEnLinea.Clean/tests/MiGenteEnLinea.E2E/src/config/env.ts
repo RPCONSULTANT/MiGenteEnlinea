@@ -23,9 +23,16 @@ export const env = {
   webBaseUrl: getEnv("E2E_WEB_BASE_URL", "http://plattaformv2.migenteenlinea.do"),
   apiBaseUrl: getEnv("E2E_API_BASE_URL", "http://api2.migenteenlinea.do"),
   allowWrite: (process.env.E2E_ALLOW_WRITE ?? "false").toLowerCase() === "true",
+  strictRuntimeIssues: (process.env.E2E_STRICT_RUNTIME_ISSUES ?? "true").toLowerCase() === "true",
   runId: process.env.E2E_RUN_ID ?? `run_${Date.now()}`,
   seedKey: process.env.E2E_SEED_KEY
 };
+
+export function requireWriteAccess(context: string): void {
+  if (!env.allowWrite) {
+    throw new Error(`[E2E][${context}] E2E_ALLOW_WRITE debe ser true para este escenario funcional.`);
+  }
+}
 
 export function getRoleCredentials(role: Role): { email: string; password: string } {
   const map: Record<Role, { email: string; password: string }> = {

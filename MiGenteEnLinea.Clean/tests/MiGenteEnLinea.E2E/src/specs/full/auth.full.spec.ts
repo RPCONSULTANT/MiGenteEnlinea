@@ -3,10 +3,11 @@ import { getRoleCredentials } from "../../config/env";
 import { AuthPage } from "../../pages/AuthPage";
 import { apiCall } from "../../helpers/api-client";
 import { env } from "../../config/env";
+import { requireWriteAccess } from "../../config/env";
 
 test.describe("@full @auth Auth end-to-end", () => {
   test("@full @auth register legacy + activate + login + rollback", async ({ page, api, rollback }) => {
-    test.skip(!env.allowWrite, "E2E_ALLOW_WRITE=false, skipping full write scenario");
+    requireWriteAccess("auth-register-activate");
 
     const unique = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
     const email = `e2e_${unique}@example.com`;

@@ -3,7 +3,7 @@ import { getRoleCredentials } from "../../config/env";
 import { AuthPage } from "../../pages/AuthPage";
 import { NominaPage } from "../../pages/NominaPage";
 import { apiCall } from "../../helpers/api-client";
-import { env } from "../../config/env";
+import { requireWriteAccess } from "../../config/env";
 
 test.describe("@full @nomina Nomina and receipts", () => {
   test("@full @nomina nomina page renders", async ({ page }) => {
@@ -19,7 +19,7 @@ test.describe("@full @nomina Nomina and receipts", () => {
   });
 
   test("@full @nomina nomina api contract", async ({ api }) => {
-    test.skip(!env.allowWrite, "E2E_ALLOW_WRITE=false, skipping full write scenario");
+    requireWriteAccess("nomina-api-contract");
 
     const login = await apiCall(api, "/api/auth/login", {
       method: "POST",
@@ -29,13 +29,12 @@ test.describe("@full @nomina Nomina and receipts", () => {
 
     expect(login.status).toBe(200);
     const token = (login.json as any)?.accessToken;
-    const userId = (login.json as any)?.user?.userId;
 
-    const historial = await apiCall(api, `/api/nominas/historial/${userId}`, {
+    const historial = await apiCall(api, `/api/nominas/historial-unificado?pageIndex=1&pageSize=10`, {
       method: "GET",
       token
     });
 
-    expect([200, 204, 404]).toContain(historial.status);
+    expect(historial.status, `Historial unificado falló: ${historial.text}`).toBe(200);
   });
 });

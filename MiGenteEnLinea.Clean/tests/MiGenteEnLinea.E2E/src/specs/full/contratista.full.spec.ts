@@ -3,6 +3,7 @@ import { getRoleCredentials } from "../../config/env";
 import { AuthPage } from "../../pages/AuthPage";
 import { ContratistaPage } from "../../pages/ContratistaPage";
 import { apiCall } from "../../helpers/api-client";
+import { ensureDirectoryLinkData } from "../../helpers/scenario-builder";
 
 test.describe("@full @contratista Contratista module", () => {
   test("@full @contratista dashboard pages render", async ({ page }) => {
@@ -56,10 +57,11 @@ test.describe("@full @contratista Contratista module", () => {
     }
   });
 
-  test("@full @contratista can request contact from employer directory", async ({ page, runtimeIssues }) => {
+  test("@full @contratista can request contact from employer directory", async ({ page, api }) => {
     const creds = getRoleCredentials("contratista");
     const authPage = new AuthPage(page);
     const contratistaPage = new ContratistaPage(page);
+    await ensureDirectoryLinkData(api);
 
     await authPage.openLogin();
     await authPage.login(creds.email, creds.password);
@@ -67,14 +69,7 @@ test.describe("@full @contratista Contratista module", () => {
 
     const contactBtn = page.locator(".btn-solicitar-contacto").first();
     const count = await contactBtn.count();
-    if (count === 0) {
-      runtimeIssues.push({
-        type: "ui-error",
-        message: "No contact request buttons found in Contratista/Directorio",
-        url: page.url()
-      });
-      test.skip(true, "No employers available for contact flow");
-    }
+    expect(count, "No contact request buttons found in Contratista/Directorio").toBeGreaterThan(0);
 
     await contactBtn.click();
     await expect(page.getByText(/Solicitar contacto/i)).toBeVisible();

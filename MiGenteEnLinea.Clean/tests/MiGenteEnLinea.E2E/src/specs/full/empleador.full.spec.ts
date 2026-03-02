@@ -3,6 +3,7 @@ import { getRoleCredentials } from "../../config/env";
 import { AuthPage } from "../../pages/AuthPage";
 import { EmpleadorPage } from "../../pages/EmpleadorPage";
 import { apiCall } from "../../helpers/api-client";
+import { ensureDirectoryLinkData } from "../../helpers/scenario-builder";
 
 test.describe("@full @empleador Empleador module", () => {
   test("@full @empleador dashboard pages render", async ({ page }) => {
@@ -47,9 +48,10 @@ test.describe("@full @empleador Empleador module", () => {
     expect([200, 404]).toContain(profile.status);
   });
 
-  test("@full @empleador directory hire flow asks fixed or temporary", async ({ page, runtimeIssues }) => {
+  test("@full @empleador directory hire flow asks fixed or temporary", async ({ page, api }) => {
     const creds = getRoleCredentials("empleador");
     const authPage = new AuthPage(page);
+    await ensureDirectoryLinkData(api);
 
     await authPage.openLogin();
     await authPage.login(creds.email, creds.password);
@@ -57,14 +59,7 @@ test.describe("@full @empleador Empleador module", () => {
 
     const hireButton = page.locator(".btn-contratar").first();
     const count = await hireButton.count();
-    if (count === 0) {
-      runtimeIssues.push({
-        type: "ui-error",
-        message: "No contract buttons found in Empleador/Buscador",
-        url: page.url()
-      });
-      test.skip(true, "No contractors available for hire flow");
-    }
+    expect(count, "No contract buttons found in Empleador/Buscador").toBeGreaterThan(0);
 
     await hireButton.click();
     await expect(page.getByText(/Tipo de contratación/i)).toBeVisible();
@@ -74,9 +69,10 @@ test.describe("@full @empleador Empleador module", () => {
     await expect(page.locator("#modalNuevaContratacion.show")).toBeVisible();
   });
 
-  test("@full @empleador directory fixed hire opens empleados modal prefill", async ({ page, runtimeIssues }) => {
+  test("@full @empleador directory fixed hire opens empleados modal prefill", async ({ page, api }) => {
     const creds = getRoleCredentials("empleador");
     const authPage = new AuthPage(page);
+    await ensureDirectoryLinkData(api);
 
     await authPage.openLogin();
     await authPage.login(creds.email, creds.password);
@@ -84,14 +80,7 @@ test.describe("@full @empleador Empleador module", () => {
 
     const hireButton = page.locator(".btn-contratar").first();
     const count = await hireButton.count();
-    if (count === 0) {
-      runtimeIssues.push({
-        type: "ui-error",
-        message: "No contract buttons found in Empleador/Buscador for fixed flow",
-        url: page.url()
-      });
-      test.skip(true, "No contractors available for fixed hire flow");
-    }
+    expect(count, "No contract buttons found in Empleador/Buscador for fixed flow").toBeGreaterThan(0);
 
     await hireButton.click();
     await expect(page.getByText(/Tipo de contratación/i)).toBeVisible();
