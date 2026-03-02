@@ -227,6 +227,8 @@ public static class DependencyInjection
         
         // Configuración de Cardnet
         services.Configure<CardnetSettings>(configuration.GetSection("Cardnet"));
+        services.Configure<PaymentProcessingOptions>(
+            configuration.GetSection(PaymentProcessingOptions.SectionName));
 
         // HttpClient para Cardnet con retry policy y circuit breaker
         services.AddHttpClient("CardnetAPI", (serviceProvider, client) =>
@@ -288,11 +290,18 @@ public static class DependencyInjection
         // ⚠️ TODO: Reemplazar con implementaciones reales cuando estén disponibles
         // =====================================================================
         
-        // ⚠️ MODO DESARROLLO: Usando MockPaymentService para emular pagos sin Cardnet
-        // Esto permite que el sistema funcione completamente sin requerir pagos reales.
-        // Para habilitar Cardnet real, cambiar a: CardnetPaymentService
-        // ✅ NOTA: En producción actual hay un bug de Cardnet y se usa emulación
-        services.AddScoped<IPaymentService, MockPaymentService>();
+        var paymentOptions = configuration
+            .GetSection(PaymentProcessingOptions.SectionName)
+            .Get<PaymentProcessingOptions>() ?? new PaymentProcessingOptions();
+
+        if (paymentOptions.IsFakeMode())
+        {
+            services.AddScoped<IPaymentService, MockPaymentService>();
+        }
+        else
+        {
+            services.AddScoped<IPaymentService, CardnetPaymentService>();
+        }
         
         // ✅ Servicio REAL de cálculo de nómina (implementa lógica Legacy completa)
         services.AddScoped<INominaCalculatorService, NominaCalculatorService>();

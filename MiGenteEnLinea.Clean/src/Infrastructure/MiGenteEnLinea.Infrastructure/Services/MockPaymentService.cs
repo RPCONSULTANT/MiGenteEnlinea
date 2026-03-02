@@ -29,6 +29,11 @@ public class MockPaymentService : IPaymentService
 
     public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request, CancellationToken ct = default)
     {
+        _logger.LogInformation(
+            "payment.gateway.call.skipped Mode=Fake, Amount={Amount}, Reference={Reference}",
+            request.Amount,
+            request.ReferenceNumber);
+
         _logger.LogWarning(
             "Mock: Simulando procesamiento de pago. Monto: {Amount}, Referencia: {Reference}",
             request.Amount,

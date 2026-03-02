@@ -21,7 +21,7 @@ test.describe("@full @pagos @suscripciones Planes, pagos, suscripciones", () => 
     await expect(page).toHaveURL(/Empleador\/Checkout/i);
   });
 
-  test("@full @pagos preflight and process payment contract", async ({ api }) => {
+  test("@full @pagos preflight and simple checkout contract", async ({ api }) => {
     const preflight = await api.fetch("/api/pagos/procesar", {
       method: "OPTIONS",
       headers: {
@@ -50,21 +50,40 @@ test.describe("@full @pagos @suscripciones Planes, pagos, suscripciones", () => 
     const firstPlanId = (planes.json as any)?.[0]?.planId ?? (planes.json as any)?.[0]?.id;
     expect(firstPlanId).toBeTruthy();
 
-    const process = await apiCall(api, "/api/pagos/procesar", {
+    const simple = await apiCall(api, "/api/pagos/procesar-simple", {
       method: "POST",
       token,
       headers: { "Content-Type": "application/json" },
       body: {
         userId,
         planId: firstPlanId,
-        cardNumber: "4111111111111111",
-        cardHolderName: "E2E USER",
-        expMonth: "12",
-        expYear: "30",
-        cvv: "123"
+        motivo: "E2E fake simple checkout"
       }
     });
 
-    expect([200, 400, 401, 409, 422]).toContain(process.status);
+    expect([200, 409]).toContain(simple.status);
+    if (simple.status === 200) {
+      expect((simple.json as any)?.ventaId).toBeTruthy();
+    }
+
+    const invalidCard = await apiCall(api, "/api/pagos/procesar", {
+      method: "POST",
+      token,
+      headers: { "Content-Type": "application/json" },
+      body: {
+        userId,
+        planId: firstPlanId,
+        cardNumber: "1111",
+        cvv: "12",
+        expirationDate: "0120",
+        referenceNumber: "E2E-BAD-CARD",
+        invoiceNumber: "E2E-BAD-CARD"
+      }
+    });
+
+    expect(invalidCard.status).toBe(400);
+    const message = (invalidCard.json as any)?.message;
+    expect(typeof message).toBe("string");
+    expect(message.length).toBeGreaterThan(0);
   });
 });

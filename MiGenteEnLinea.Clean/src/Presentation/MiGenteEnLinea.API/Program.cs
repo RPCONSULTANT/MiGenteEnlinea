@@ -255,6 +255,9 @@ var app = builder.Build();
 var dbInitOptions = builder.Configuration
     .GetSection(DatabaseInitializationOptions.SectionName)
     .Get<DatabaseInitializationOptions>() ?? DatabaseInitializationOptions.CreateDefaults(app.Environment.EnvironmentName);
+var paymentOptions = builder.Configuration
+    .GetSection(PaymentProcessingOptions.SectionName)
+    .Get<PaymentProcessingOptions>() ?? new PaymentProcessingOptions();
 
 var programAssembly = typeof(Program).Assembly;
 var informationalVersion = programAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
@@ -356,6 +359,11 @@ try
     Log.Information("Runtime version info. AssemblyVersion={AssemblyVersion}, DeploymentCommit={DeploymentCommit}",
         informationalVersion,
         deploymentCommit);
+    Log.Information(
+        "payment.mode.selected PaymentMode={PaymentMode}, AllowSimpleCheckout={AllowSimpleCheckout}, RequireCardValidationInFakeMode={RequireCardValidationInFakeMode}",
+        paymentOptions.Mode,
+        paymentOptions.AllowSimpleCheckout,
+        paymentOptions.RequireCardValidationInFakeMode);
     app.Run();
     Log.Information("API detenida correctamente.");
 }

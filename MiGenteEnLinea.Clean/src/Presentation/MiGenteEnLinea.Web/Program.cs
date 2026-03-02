@@ -11,11 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Registrar ApiOptions desde appsettings.json
 builder.Services.Configure<ApiOptions>(
     builder.Configuration.GetSection(ApiOptions.SectionName));
+builder.Services.Configure<PaymentOptions>(
+    builder.Configuration.GetSection(PaymentOptions.SectionName));
 
 // Logging inicial de configuración
 var apiOptions = builder.Configuration
     .GetSection(ApiOptions.SectionName)
     .Get<ApiOptions>() ?? new ApiOptions();
+var paymentOptions = builder.Configuration
+    .GetSection(PaymentOptions.SectionName)
+    .Get<PaymentOptions>() ?? new PaymentOptions();
 
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -23,6 +28,7 @@ builder.Logging.AddDebug();
 Console.WriteLine($"🌐 Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"🔗 API Base URL: {apiOptions.BaseUrl}");
 Console.WriteLine($"⏱️ API Timeout: {apiOptions.TimeoutSeconds}s");
+Console.WriteLine($"💳 Payment Mode: {paymentOptions.Mode}");
 
 // ========================================
 // CONFIGURACIÓN DE HTTP CLIENT Y API SERVICES

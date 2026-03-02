@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MiGenteEnLinea.Application.Features.Pagos.Queries.GenerateIdempotencyKey;
 using MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVenta;
+using MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVentaSimple;
 using MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVentaSinPago;
 using MiGenteEnLinea.Application.Features.Suscripciones.DTOs;
 using MiGenteEnLinea.Application.Features.Suscripciones.Queries.GetVentasByUserId;
+using MiGenteEnLinea.Infrastructure.Options;
+using Microsoft.Extensions.Options;
 
 namespace MiGenteEnLinea.API.Controllers;
 
@@ -26,15 +29,18 @@ public class PagosController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
     private readonly ILogger<PagosController> _logger;
+    private readonly PaymentProcessingOptions _paymentOptions;
 
     public PagosController(
         IMediator mediator,
         IMapper mapper,
-        ILogger<PagosController> logger)
+        ILogger<PagosController> logger,
+        IOptions<PaymentProcessingOptions> paymentOptions)
     {
         _mediator = mediator;
         _mapper = mapper;
         _logger = logger;
+        _paymentOptions = paymentOptions.Value;
     }
 
     /// <summary>
@@ -214,6 +220,37 @@ public class PagosController : ControllerBase
                     tipo = "error_gateway"
                 });
         }
+    }
+
+    /// <summary>
+    /// Procesa una compra de plan en modo simple/fake sin datos de tarjeta.
+    /// </summary>
+    [HttpPost("procesar-simple")]
+    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<int>> ProcesarPagoSimple([FromBody] ProcesarVentaSimpleCommand command)
+    {
+        if (!_paymentOptions.AllowSimpleCheckout)
+        {
+            return Conflict(new
+            {
+                message = "El checkout simple está deshabilitado por configuración.",
+                tipo = "checkout_simple_deshabilitado"
+            });
+        }
+
+        _logger.LogInformation(
+            "POST /api/pagos/procesar-simple - Processing simple checkout for user {UserId}, plan {PlanId}",
+            command.UserId, command.PlanId);
+
+        var ventaId = await _mediator.Send(command);
+
+        return Ok(new
+        {
+            ventaId,
+            message = "Pago simple procesado exitosamente"
+        });
     }
 
     /// <summary>

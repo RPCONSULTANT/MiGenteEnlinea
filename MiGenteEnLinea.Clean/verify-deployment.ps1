@@ -3,6 +3,7 @@ param(
     [string]$WebBaseUrl = "http://plattaformv2.migenteenlinea.do",
     [string]$CorsOrigin = "http://plattaformv2.migenteenlinea.do",
     [string]$TestUserId = "",
+    [int]$TestPlanId = 1,
     [string]$BearerToken = "",
     [switch]$SkipApi,
     [switch]$SkipWeb
@@ -143,6 +144,21 @@ if (-not $SkipApi) {
         }
     }) { $passed++ } else { $failed++ }
 
+    if (Run-Test -Name "Auth contract: /api/pagos/procesar-simple requires auth (401)" -Action {
+        $payload = @{ userId = "anonymous"; planId = 1; motivo = "verify-anon" } | ConvertTo-Json
+        try {
+            Invoke-WebRequest -Uri "$ApiBaseUrl/api/pagos/procesar-simple" -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing | Out-Null
+            throw "Expected HTTP 401 for anonymous checkout simple, got success."
+        }
+        catch {
+            if (-not $_.Exception.Response) { throw }
+            $code = [int]$_.Exception.Response.StatusCode
+            if ($code -ne 401) {
+                throw "Expected HTTP 401, got $code."
+            }
+        }
+    }) { $passed++ } else { $failed++ }
+
     if (Run-Test -Name "Public plans endpoint /api/suscripciones/planes/empleadores returns 200" -Action {
         $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/suscripciones/planes/empleadores" -Method Get -TimeoutSec 30 -UseBasicParsing
         if ($response.StatusCode -ne 200) {
@@ -185,8 +201,68 @@ if (-not $SkipApi) {
                 throw
             }
         }) { $passed++ } else { $failed++ }
+
+        if (Run-Test -Name "Authorized endpoint /api/pagos/procesar-simple returns 200" -Action {
+            $headers = @{
+                "Authorization" = "Bearer $BearerToken"
+            }
+            $payload = @{
+                userId = $TestUserId
+                planId = $TestPlanId
+                motivo = "verify-deployment simple checkout"
+            } | ConvertTo-Json
+
+            $response = Invoke-WebRequest -Uri "$ApiBaseUrl/api/pagos/procesar-simple" -Method Post -Headers $headers -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing
+            if ($response.StatusCode -ne 200) {
+                throw "Expected HTTP 200, got $($response.StatusCode)."
+            }
+
+            $result = $response.Content | ConvertFrom-Json
+            if (-not $result.ventaId) {
+                throw "Response missing ventaId."
+            }
+        }) { $passed++ } else { $failed++ }
+
+        if (Run-Test -Name "Auth contract: invalid card payload /api/pagos/procesar returns 400 + message" -Action {
+            $headers = @{
+                "Authorization" = "Bearer $BearerToken"
+            }
+            $payload = @{
+                userId = $TestUserId
+                planId = $TestPlanId
+                cardNumber = "1111"
+                cvv = "12"
+                expirationDate = "0120"
+                referenceNumber = "VERIFY-BAD-CARD"
+                invoiceNumber = "VERIFY-BAD-CARD"
+            } | ConvertTo-Json
+
+            try {
+                Invoke-WebRequest -Uri "$ApiBaseUrl/api/pagos/procesar" -Method Post -Headers $headers -Body $payload -ContentType "application/json" -TimeoutSec 30 -UseBasicParsing | Out-Null
+                throw "Expected HTTP 400 for invalid card payload, got success."
+            }
+            catch {
+                if (-not $_.Exception.Response) { throw }
+                $webResponse = $_.Exception.Response
+                $code = [int]$webResponse.StatusCode
+                if ($code -ne 400) {
+                    throw "Expected HTTP 400, got $code."
+                }
+
+                $reader = New-Object System.IO.StreamReader($webResponse.GetResponseStream())
+                $body = $reader.ReadToEnd()
+                if ([string]::IsNullOrWhiteSpace($body)) {
+                    throw "Response body is empty."
+                }
+
+                $json = $body | ConvertFrom-Json
+                if (-not $json.message) {
+                    throw "Missing 'message' field in validation error payload."
+                }
+            }
+        }) { $passed++ } else { $failed++ }
     } else {
-        Write-Host " - Authorized suscripcion check skipped (provide -TestUserId and -BearerToken)." -ForegroundColor $ColorWarning
+        Write-Host " - Authorized checks skipped (provide -TestUserId and -BearerToken)." -ForegroundColor $ColorWarning
     }
 
     if (Run-Test -Name "API root returns a valid response" -Action {

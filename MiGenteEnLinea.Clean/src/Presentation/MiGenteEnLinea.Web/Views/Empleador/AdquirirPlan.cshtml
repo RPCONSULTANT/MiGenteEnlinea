@@ -390,6 +390,9 @@
         }
 
         async function procesarPago() {
+            const paymentMode = String(window.PAYMENT_MODE || 'fake').toLowerCase();
+            const useSimpleCheckout = paymentMode === 'fake';
+
             // Validaciones
             if (!$('#chkTerminos').is(':checked') || !$('#chkAutorizacion').is(':checked')) {
                 Swal.fire('Error', 'Debe aceptar los términos y autorizar el cargo.', 'error');
@@ -401,25 +404,27 @@
             var vencimiento = $('#vencimiento').val();
             var cvv = $('#cvv').val();
 
-            if (!nombre || !numero || !vencimiento || !cvv) {
-                Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
-                return;
-            }
+            if (!useSimpleCheckout) {
+                if (!nombre || !numero || !vencimiento || !cvv) {
+                    Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
+                    return;
+                }
 
-            if (numero.length < 15 || numero.length > 16) {
-                Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
-                return;
-            }
+                if (numero.length < 15 || numero.length > 16) {
+                    Swal.fire('Error', 'El número de tarjeta no es válido.', 'error');
+                    return;
+                }
 
-            if (cvv.length < 3) {
-                Swal.fire('Error', 'El CVV debe tener al menos 3 dígitos.', 'error');
-                return;
-            }
+                if (cvv.length < 3) {
+                    Swal.fire('Error', 'El CVV debe tener al menos 3 dígitos.', 'error');
+                    return;
+                }
 
-            // Verificar formato MM/AA
-            if (!/^\d{2}\/\d{2}$/.test(vencimiento)) {
-                Swal.fire('Error', 'El formato de vencimiento debe ser MM/AA.', 'error');
-                return;
+                // Verificar formato MM/AA
+                if (!/^\d{2}\/\d{2}$/.test(vencimiento)) {
+                    Swal.fire('Error', 'El formato de vencimiento debe ser MM/AA.', 'error');
+                    return;
+                }
             }
 
             // Mostrar procesando
@@ -440,23 +445,32 @@
             try {
                 const userId = localStorage.getItem('userId');
                 
-                // Formatear fecha de expiración a MMYY (ej: "12/25" -> "1225")
-                const expParts = vencimiento.split('/');
-                const expirationDate = expParts[0] + expParts[1];
+                let procesarPagoPath;
+                let pagoData;
 
-                // Preparar datos del pago usando ProcesarVentaCommand
-                const pagoData = {
-                    userId: userId,
-                    planId: planSeleccionado.id,
-                    cardNumber: numero,
-                    cvv: cvv,
-                    expirationDate: expirationDate, // Formato MMYY
-                    referenceNumber: 'REF-' + Date.now(),
-                    invoiceNumber: 'INV-' + Date.now()
-                };
+                if (useSimpleCheckout) {
+                    procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR_SIMPLE || '/pagos/procesar-simple';
+                    pagoData = {
+                        userId: userId,
+                        planId: planSeleccionado.id,
+                        motivo: 'Checkout simple/fake desde Empleador'
+                    };
+                } else {
+                    // Formatear fecha de expiración a MMYY (ej: "12/25" -> "1225")
+                    const expParts = vencimiento.split('/');
+                    const expirationDate = expParts[0] + expParts[1];
+                    procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR || '/pagos/procesar';
+                    pagoData = {
+                        userId: userId,
+                        planId: planSeleccionado.id,
+                        cardNumber: numero,
+                        cvv: cvv,
+                        expirationDate: expirationDate,
+                        referenceNumber: 'REF-' + Date.now(),
+                        invoiceNumber: 'INV-' + Date.now()
+                    };
+                }
 
-                // Llamar al endpoint de procesamiento de pago (usa MockPaymentService en dev)
-                const procesarPagoPath = window.API_ENDPOINTS?.PAGOS?.PROCESAR || '/pagos/procesar';
                 const response = await authenticatedFetch(procesarPagoPath, {
                     method: 'POST',
                     body: JSON.stringify(pagoData)

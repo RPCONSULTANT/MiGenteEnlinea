@@ -12,6 +12,7 @@
     },
     PAGOS: {
       PROCESAR: "/pagos/procesar",
+      PROCESAR_SIMPLE: "/pagos/procesar-simple",
       HISTORIAL: (userId) => `/pagos/historial/${userId}`,
     },
     SUSCRIPCIONES: {

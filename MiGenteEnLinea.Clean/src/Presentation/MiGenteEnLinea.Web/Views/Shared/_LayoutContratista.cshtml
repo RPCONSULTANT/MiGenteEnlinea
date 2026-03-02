@@ -1,4 +1,5 @@
 @inject IOptions<ApiOptions> ApiOptions
+@inject IOptions<PaymentOptions> PaymentOptions
 
 @* Layout para dashboard de Contratistas Basado en:
 FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
@@ -258,6 +259,7 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
       window.API_BASE = '@ApiOptions.Value.BaseUrl';
       window.STATIC_FILES_BASE = '@ApiOptions.Value.StaticFilesBaseUrl';
       window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
+      window.PAYMENT_MODE = '@PaymentOptions.Value.Mode'.toLowerCase();
     </script>
     
     <script src="~/js/api-endpoints.js"></script>
