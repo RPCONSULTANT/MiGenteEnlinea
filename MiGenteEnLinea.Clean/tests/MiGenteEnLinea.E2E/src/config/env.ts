@@ -8,6 +8,17 @@ function getEnv(name: string, fallback?: string): string {
   return value.trim();
 }
 
+function getEnvAny(names: string[]): string {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  throw new Error(`Missing required environment variable. Tried: ${names.join(", ")}`);
+}
+
 export const env = {
   webBaseUrl: getEnv("E2E_WEB_BASE_URL", "http://plattaformv2.migenteenlinea.do"),
   apiBaseUrl: getEnv("E2E_API_BASE_URL", "http://api2.migenteenlinea.do"),
@@ -19,16 +30,16 @@ export const env = {
 export function getRoleCredentials(role: Role): { email: string; password: string } {
   const map: Record<Role, { email: string; password: string }> = {
     empleador: {
-      email: getEnv("E2E_USER_EMPLEADOR_EMAIL"),
-      password: getEnv("E2E_USER_EMPLEADOR_PASSWORD")
+      email: getEnvAny(["E2E_USER_EMPLEADOR_EMAIL", "E2E_EMAIL_EMPLEADOR"]),
+      password: getEnvAny(["E2E_USER_EMPLEADOR_PASSWORD", "E2E_PASSWORD_EMPLEADOR"])
     },
     contratista: {
-      email: getEnv("E2E_USER_CONTRATISTA_EMAIL"),
-      password: getEnv("E2E_USER_CONTRATISTA_PASSWORD")
+      email: getEnvAny(["E2E_USER_CONTRATISTA_EMAIL", "E2E_EMAIL_CONTRATISTA"]),
+      password: getEnvAny(["E2E_USER_CONTRATISTA_PASSWORD", "E2E_PASSWORD_CONTRATISTA"])
     },
     admin: {
-      email: getEnv("E2E_USER_ADMIN_EMAIL"),
-      password: getEnv("E2E_USER_ADMIN_PASSWORD")
+      email: getEnvAny(["E2E_USER_ADMIN_EMAIL", "E2E_EMAIL_ADMIN"]),
+      password: getEnvAny(["E2E_USER_ADMIN_PASSWORD", "E2E_PASSWORD_ADMIN"])
     }
   };
 

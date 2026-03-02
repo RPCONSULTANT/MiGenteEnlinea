@@ -27,4 +27,9 @@ public record AcceptContratacionCommand : IRequest<Unit>
     /// ID del detalle de contratación a aceptar
     /// </summary>
     public int DetalleId { get; init; }
+
+    /// <summary>
+    /// UserId del actor autenticado que ejecuta la transición.
+    /// </summary>
+    public string UserId { get; init; } = string.Empty;
 }

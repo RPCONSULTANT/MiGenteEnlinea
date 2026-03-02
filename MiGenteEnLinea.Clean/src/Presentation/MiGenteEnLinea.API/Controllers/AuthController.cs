@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.ActivateAccount;
 using MiGenteEnLinea.Application.Features.Authentication.Commands.AddProfileInfo;
@@ -240,12 +241,26 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ChangePasswordResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ChangePasswordResult>> ChangePassword([FromBody] ChangePasswordCommand command)
     {
         if (command is null)
         {
             return BadRequest(new { message = "El cuerpo de la solicitud es requerido." });
+        }
+
+        var tokenUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+
+        if (string.IsNullOrWhiteSpace(tokenUserId) || !string.Equals(tokenUserId, command.UserId, StringComparison.Ordinal))
+        {
+            _logger.LogWarning(
+                "Cambio de contraseña prohibido por UserId mismatch. TokenUserId: {TokenUserId}, RequestUserId: {RequestUserId}",
+                tokenUserId,
+                command.UserId);
+
+            return Forbid();
         }
 
         _logger.LogInformation("POST /api/auth/change-password - Email: {Email}", command.Email);

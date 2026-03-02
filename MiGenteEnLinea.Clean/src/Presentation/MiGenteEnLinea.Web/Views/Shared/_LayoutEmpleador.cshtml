@@ -303,6 +303,18 @@ Tema: Argon Dashboard 2.0 *@
     <!-- Validación de Plan Activo -->
     <script>
         (function() {
+            const loginRedirectFlag = 'mge:redirecting:login';
+            const planRedirectFlag = 'mge:redirecting:plan';
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+
+            function redirectOnce(flagKey, url) {
+                if (sessionStorage.getItem(flagKey) === '1') {
+                    return;
+                }
+                sessionStorage.setItem(flagKey, '1');
+                window.location.replace(url);
+            }
+
             // Verificar si estamos en la página de AdquirirPlan (no bloquear esa página)
             const currentPath = window.location.pathname.toLowerCase();
             const isAdquirirPlan = currentPath.includes('adquirirplan');
@@ -310,6 +322,7 @@ Tema: Argon Dashboard 2.0 *@
             
             // Páginas permitidas sin plan activo
             if (isAdquirirPlan || isMiSuscripcion) {
+                sessionStorage.removeItem(planRedirectFlag);
                 return; // No bloquear estas páginas
             }
             
@@ -320,9 +333,16 @@ Tema: Argon Dashboard 2.0 *@
             
             // Si no hay token, redirigir a login
             if (!accessToken) {
-                window.location.href = '/Auth/Login';
+                localStorage.removeItem('planId');
+                localStorage.removeItem('vencimientoPlan');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                redirectOnce(loginRedirectFlag, `/Auth/Login?returnUrl=${returnUrl}`);
                 return;
             }
+
+            sessionStorage.removeItem(loginRedirectFlag);
             
             // Verificar si tiene plan válido
             let tienePlanActivo = false;
@@ -342,6 +362,10 @@ Tema: Argon Dashboard 2.0 *@
             // Si no tiene plan activo, redirigir a AdquirirPlan
             if (!tienePlanActivo) {
                 console.log('Usuario sin plan activo. Redirigiendo a AdquirirPlan...');
+                if (sessionStorage.getItem(planRedirectFlag) === '1') {
+                    window.location.replace('/Empleador/AdquirirPlan');
+                    return;
+                }
                 Swal.fire({
                     title: 'Plan Requerido',
                     text: 'Para acceder a las funciones de la plataforma, primero debe adquirir un plan.',
@@ -351,9 +375,12 @@ Tema: Argon Dashboard 2.0 *@
                     allowOutsideClick: false,
                     allowEscapeKey: false
                 }).then(() => {
-                    window.location.href = '/Empleador/AdquirirPlan';
+                    redirectOnce(planRedirectFlag, '/Empleador/AdquirirPlan');
                 });
+                return;
             }
+
+            sessionStorage.removeItem(planRedirectFlag);
         })();
     </script>
 

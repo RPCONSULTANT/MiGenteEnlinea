@@ -395,6 +395,13 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
 
         response.IsSuccessStatusCode.Should().BeTrue($"ChangePassword failed: {await response.Content.ReadAsStringAsync()}");
 
+        // Verificar sincronización legacy (tabla Credenciales)
+        var updatedCredencial = await freshContext.CredencialesRefactored
+            .AsNoTracking()
+            .FirstAsync(c => c.UserId == credencial.UserId);
+        BCrypt.Net.BCrypt.Verify(newPassword, updatedCredencial.PasswordHash).Should().BeTrue();
+        BCrypt.Net.BCrypt.Verify(originalPassword, updatedCredencial.PasswordHash).Should().BeFalse();
+
         // Verificar que el nuevo password funciona
         Client.DefaultRequestHeaders.Authorization = null;
         var loginWithNewPassword = new LoginCommand
@@ -423,6 +430,104 @@ public class AuthControllerIntegrationTests : IntegrationTestBase
         var response = await Client.PostAsJsonAsync("/api/auth/change-password", changePasswordCommand);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WithWrongCurrentPassword_ReturnsBadRequest()
+    {
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("chgpwd-wrong-current");
+        var originalPassword = "Original@123";
+        var newPassword = "NewPassword@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = originalPassword,
+            Nombre = "ChangePassword",
+            Apellido = "WrongCurrent",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand
+        {
+            UserId = credencial.UserId,
+            Email = email,
+            Password = originalPassword,
+            ConfirmPassword = originalPassword
+        };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+
+        // Login para obtener token
+        var token = await LoginAsync(email, originalPassword);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Intentar cambio con password actual incorrecta
+        var changePasswordCommand = new ChangePasswordCommand(
+            Email: email,
+            UserId: credencial.UserId,
+            CurrentPassword: "WrongCurrent@123",
+            NewPassword: newPassword
+        );
+
+        var response = await Client.PostAsJsonAsync("/api/auth/change-password", changePasswordCommand);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WithMismatchedUserId_ReturnsForbidden()
+    {
+        // Crear usuario propio para este test
+        var email = GenerateUniqueEmail("chgpwd-mismatch");
+        var originalPassword = "Original@123";
+        var newPassword = "NewPassword@123";
+        var registerCmd = new RegisterCommand
+        {
+            Email = email,
+            Password = originalPassword,
+            Nombre = "ChangePassword",
+            Apellido = "Mismatch",
+            Tipo = 1,
+            Host = "http://localhost:5015"
+        };
+        await Client.PostAsJsonAsync("/api/auth/register", registerCmd);
+
+        // Activar cuenta
+        using var scope = Factory.Services.CreateScope();
+        var freshContext = scope.ServiceProvider.GetRequiredService<MiGenteDbContext>();
+        var emailVO = Email.CreateUnsafe(email);
+        var credencial = await freshContext.CredencialesRefactored.FirstAsync(c => c.Email == emailVO);
+        var activateCmd = new ActivateAccountCommand
+        {
+            UserId = credencial.UserId,
+            Email = email,
+            Password = originalPassword,
+            ConfirmPassword = originalPassword
+        };
+        await Client.PostAsJsonAsync("/api/auth/activate", activateCmd);
+
+        // Login para obtener token del usuario A
+        var token = await LoginAsync(email, originalPassword);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Intentar cambiar password de "otro" userId
+        var changePasswordCommand = new ChangePasswordCommand(
+            Email: email,
+            UserId: Guid.NewGuid().ToString(),
+            CurrentPassword: originalPassword,
+            NewPassword: newPassword
+        );
+
+        var response = await Client.PostAsJsonAsync("/api/auth/change-password", changePasswordCommand);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     #endregion

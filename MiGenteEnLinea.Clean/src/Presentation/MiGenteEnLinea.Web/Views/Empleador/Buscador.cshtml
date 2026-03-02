@@ -162,7 +162,7 @@
             <button class="navbar-toggler custom-toggler" type="button" data-toggle="collapse"
                 data-target="#navbarNav" aria-controls="navbarNav"
                 aria-expanded="false" aria-label="Toggle navigation">
-                <span class="fa fa-solid fa-bars" style="color: #ffffff;"></span>
+                <span class="fas fa-bars" style="color: #ffffff;"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -545,6 +545,8 @@
                                     data-id="${c.contratistaId}"
                                     data-nome="${nombre}"
                                     data-toggle="modal" data-target="#modalPerfil">Ver Perfil</button>
+                                <button type="button" class="btn btn-primary text-uppercase ms-2 btn-contratar"
+                                    data-id="${c.contratistaId}">Contratar</button>
                             </div>
                         </div>
                     </div>
@@ -558,6 +560,27 @@
                     verPerfilContratista(contratistaId);
                 });
             });
+
+            document.querySelectorAll('.btn-contratar').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const contratistaId = parseInt(this.getAttribute('data-id'));
+                    contratarDesdeDirectorio(contratistaId);
+                });
+            });
+        }
+
+        function contratarDesdeDirectorio(contratistaId) {
+            const perfil = (window.contratistas || []).find(c => c.contratistaId === contratistaId);
+            if (!perfil) {
+                Swal.fire('Error', 'No se pudo preparar la contratación para este contratista', 'error');
+                return;
+            }
+
+            sessionStorage.setItem('mge:selectedContratistaForHire', JSON.stringify({
+                contratistaId: perfil.contratistaId,
+                nombreCompleto: perfil.nombreCompleto || `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim()
+            }));
+            window.location.href = '/Empleador/Contrataciones';
         }
         
         // Ver perfil del contratista

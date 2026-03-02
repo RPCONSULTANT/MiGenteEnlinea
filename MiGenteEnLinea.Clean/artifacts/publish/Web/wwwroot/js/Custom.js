@@ -106,17 +106,57 @@ async function readApiResponse(response) {
 function getApiErrorMessage(payload, fallbackMessage) {
   if (!payload) return fallbackMessage;
 
+  if (Array.isArray(payload.errors)) {
+    const firstError = payload.errors[0];
+    if (typeof firstError === "string" && firstError.trim()) {
+      return firstError.trim();
+    }
+    if (firstError && typeof firstError === "object") {
+      if (typeof firstError.message === "string" && firstError.message.trim()) {
+        return firstError.message.trim();
+      }
+      if (typeof firstError.errorMessage === "string" && firstError.errorMessage.trim()) {
+        return firstError.errorMessage.trim();
+      }
+    }
+  }
+
   if (payload.errors && typeof payload.errors === "object") {
-    const first = Object.values(payload.errors).flat()[0];
-    if (first) return first;
+    const values = Object.values(payload.errors).flat();
+    for (const value of values) {
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+      if (value && typeof value === "object") {
+        if (typeof value.message === "string" && value.message.trim()) {
+          return value.message.trim();
+        }
+        if (typeof value.errorMessage === "string" && value.errorMessage.trim()) {
+          return value.errorMessage.trim();
+        }
+      }
+    }
   }
 
   if (payload.Errors && typeof payload.Errors === "object") {
-    const first = Object.values(payload.Errors).flat()[0];
-    if (first) return first;
+    const values = Object.values(payload.Errors).flat();
+    for (const value of values) {
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+      if (value && typeof value === "object") {
+        if (typeof value.message === "string" && value.message.trim()) {
+          return value.message.trim();
+        }
+        if (typeof value.errorMessage === "string" && value.errorMessage.trim()) {
+          return value.errorMessage.trim();
+        }
+      }
+    }
   }
 
-  return payload.message || payload.Message || payload.title || payload.raw || fallbackMessage;
+  const rawMessage = payload.message || payload.Message || payload.title || payload.raw || fallbackMessage;
+  return typeof rawMessage === "string" ? rawMessage : fallbackMessage;
 }
 
 /**

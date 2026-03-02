@@ -846,7 +846,7 @@
             const fechaHasta = document.getElementById('fechaHasta').value;
             const empleadoId = document.getElementById('filtroEmpleado').value;
             
-            let url = `${window.API_ENDPOINTS?.NOMINAS?.HISTORIAL || '/nominas/historial'}?page=${page}&pageSize=${pageSize}`;
+            let url = `${window.API_ENDPOINTS?.NOMINAS?.HISTORIAL_UNIFICADO || '/nominas/historial-unificado'}?pageIndex=${page}&pageSize=${pageSize}`;
             if (fechaDesde) url += `&fechaDesde=${fechaDesde}`;
             if (fechaHasta) url += `&fechaHasta=${fechaHasta}`;
             if (empleadoId) url += `&empleadoId=${empleadoId}`;
@@ -856,7 +856,7 @@
                 
                 if (response.ok) {
                     const data = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
-                    displayHistorico(data.items || data.recibos || data || []);
+                    displayHistorico(data.items || data.registros || data || []);
                 }
             } catch (error) {
                 console.error('Error loading historico:', error);
@@ -880,18 +880,23 @@
             
             tbody.innerHTML = recibos.map(r => `
                 <tr>
-                    <td>${formatDate(r.fechaPago)}</td>
-                    <td>${r.empleadoNombre || r.nombre || '-'}</td>
-                    <td><span class="badge bg-info">${r.tipoConceptoNombre || 'Salario'}</span></td>
-                    <td class="text-end">RD$ ${(r.totalBruto || r.salario || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td>${formatDate(r.fechaPago || r.fechaProcesamiento)}</td>
+                    <td>${r.beneficiario || r.empleadoNombre || r.nombre || '-'}</td>
+                    <td>
+                        <span class="badge ${r.tipoRegistro === 'Temporal' ? 'bg-warning text-dark' : 'bg-info'}">
+                            ${r.tipoRegistro || 'Fijo'}
+                        </span>
+                        <div><small class="text-muted">${r.concepto || r.tipoConceptoNombre || 'Salario'}</small></div>
+                    </td>
+                    <td class="text-end">RD$ ${(r.totalBruto || r.totalNomina || r.salario || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                     <td class="text-end text-danger">RD$ ${(r.totalDeducciones || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="text-end text-success fw-bold">RD$ ${(r.totalNeto || r.monto || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="text-end text-success fw-bold">RD$ ${(r.totalNeto || r.monto || r.totalNomina || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                     <td class="text-center">
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="verRecibo(${r.pagoId || r.id})" title="Ver">
+                            <button class="btn btn-outline-primary" onclick="verRecibo(${r.pagoId || r.nominaId || r.id})" title="Ver">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-outline-danger" onclick="descargarPdf(${r.pagoId || r.id})" title="PDF">
+                            <button class="btn btn-outline-danger" onclick="descargarPdf(${r.pagoId || r.nominaId || r.id})" title="PDF">
                                 <i class="fas fa-file-pdf"></i>
                             </button>
                         </div>

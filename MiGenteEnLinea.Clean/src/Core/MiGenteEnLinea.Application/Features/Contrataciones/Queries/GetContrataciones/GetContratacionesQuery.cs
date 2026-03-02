@@ -14,6 +14,16 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContrata
 public record GetContratacionesQuery : IRequest<List<ContratacionDto>>
 {
     /// <summary>
+    /// UserId autenticado que consulta. Se inyecta en el controller.
+    /// </summary>
+    public string? UserId { get; init; }
+
+    /// <summary>
+    /// Alcance de consulta: "mine" (default) o "all" (solo admin).
+    /// </summary>
+    public string Scope { get; init; } = "mine";
+
+    /// <summary>
     /// Filtro por ID de contratación padre (opcional)
     /// </summary>
     public int? ContratacionId { get; init; }

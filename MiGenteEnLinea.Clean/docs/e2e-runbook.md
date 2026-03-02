@@ -3,6 +3,7 @@
 ## Local run
 1. `cd MiGenteEnLinea.Clean/tests/MiGenteEnLinea.E2E`
 2. Set environment variables for credentials and endpoints.
+3. Validate env vars: `../scripts/env/Validate-RequiredEnv.ps1 -Component E2E`
 3. `npm install`
 4. `npx playwright install chromium`
 5. Smoke: `npm run test:e2e:smoke`
@@ -21,3 +22,4 @@
 - For CORS failures, validate API origin allow-list and host bindings.
 - For 404 route mismatches, cross-check `docs/e2e-endpoint-matrix.md`.
 - For rollback failures, inspect API delete endpoint logs and rerun cleanup manually.
+- To store deployment evidence, run `../scripts/env/Get-EnvSnapshot.ps1 -Component E2E` (names only).

@@ -13,4 +13,5 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.StartContr
 public record StartContratacionCommand : IRequest<Unit>
 {
     public int DetalleId { get; init; }
+    public string UserId { get; init; } = string.Empty;
 }

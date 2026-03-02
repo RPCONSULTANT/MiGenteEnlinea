@@ -240,6 +240,7 @@
         let contratistaId = null;
         let userId = null; // Se obtiene del token JWT o sesión
         let perfilActivo = false;
+        let perfilInicializando = false;
         
         $(document).ready(function () {
             // Obtener userId del localStorage (asumiendo login previo)
@@ -304,6 +305,11 @@
                     Swal.fire('Error', 'Sesión expirada. Por favor inicie sesión nuevamente.', 'error');
                     return;
                 }
+
+                if (!contratistaId) {
+                    Swal.fire('Perfil en Inicialización', 'Complete y guarde su perfil antes de cargar una foto.', 'info');
+                    return;
+                }
                 
                 try {
                     // Mostrar loading
@@ -330,7 +336,7 @@
                     });
                     
                     if (response.ok) {
-                        const result = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                        const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                         Swal.fire('Éxito', 'Foto actualizada correctamente', 'success');
                         
                         // Recargar la imagen para mostrar la nueva
@@ -444,9 +450,11 @@
                 const response = await authenticatedFetch(byUserPath);
                 
                 if (response.ok) {
-                    const perfil = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const perfil = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     contratistaId = perfil.ContratistaId || perfil.contratistaId || perfil.id;
                     perfilActivo = perfil.activo;
+                    perfilInicializando = false;
+                    togglePerfilDisponibilidad(true);
                     
                     // Llenar campos del formulario
                     $('#txtTitulo').val(perfil.titulo || '');
@@ -492,6 +500,16 @@
                     
                 } else if (response.status === 404) {
                     console.log('Perfil de contratista no encontrado. Es un nuevo registro.');
+                    perfilInicializando = true;
+                    contratistaId = null;
+                    perfilActivo = false;
+                    togglePerfilDisponibilidad(false);
+                    Swal.fire({
+                        title: 'Perfil Pendiente',
+                        text: 'Adquirió su plan correctamente. Complete y guarde su información para activar su perfil.',
+                        icon: 'info',
+                        confirmButtonText: 'Entendido'
+                    });
                 } else {
                     console.error('Error al cargar perfil:', response.status);
                 }
@@ -563,6 +581,8 @@
                         icon: 'success',
                         confirmButtonText: 'OK'
                     });
+
+                    await loadPerfil();
                 } else {
                     let errorMessage = 'No se pudo guardar el perfil';
                     try {
@@ -594,7 +614,7 @@
                 const response = await authenticatedFetch(serviciosPath);
                 
                 if (response.ok) {
-                    const servicios = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const servicios = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     renderServicios(servicios);
                 }
             } catch (error) {
@@ -632,7 +652,7 @@
                 });
                 
                 if (response.ok) {
-                    const result = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     
                     // Agregar fila a la tabla
                     const row = `<tr data-id="${result.servicioId}">
@@ -655,7 +675,7 @@
                         timer: 2000
                     });
                 } else {
-                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo agregar el servicio', 'error');
                 }
             } catch (error) {
@@ -685,7 +705,7 @@
                         timer: 2000
                     });
                 } else {
-                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo eliminar el servicio', 'error');
                 }
             } catch (error) {
@@ -714,7 +734,7 @@
                         confirmButtonText: 'OK'
                     });
                 } else {
-                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo activar el perfil', 'error');
                 }
             } catch (error) {
@@ -743,7 +763,7 @@
                         confirmButtonText: 'OK'
                     });
                 } else {
-                    const error = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire('Error', error.error || 'No se pudo desactivar el perfil', 'error');
                 }
             } catch (error) {
@@ -760,6 +780,17 @@
             } else {
                 $('#btnActivar').show();
                 $('#btnDesactivar').hide();
+            }
+        }
+
+        function togglePerfilDisponibilidad(disponible) {
+            $('#fileUpload').prop('disabled', !disponible);
+            $('#btnAgregar').prop('disabled', !disponible);
+            if (!disponible) {
+                $('#btnActivar').hide();
+                $('#btnDesactivar').hide();
+            } else {
+                updateButtonState();
             }
         }
     </script>

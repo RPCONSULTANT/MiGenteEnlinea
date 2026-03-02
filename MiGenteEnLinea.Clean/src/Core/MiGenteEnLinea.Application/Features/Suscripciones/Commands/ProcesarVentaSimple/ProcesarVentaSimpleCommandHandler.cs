@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Domain.Entities.Contratistas;
 using MiGenteEnLinea.Domain.Entities.Pagos;
 using MiGenteEnLinea.Domain.Entities.Suscripciones;
 
@@ -48,6 +49,16 @@ public class ProcesarVentaSimpleCommandHandler : IRequestHandler<ProcesarVentaSi
         if (planEmpleador == null && planContratista == null)
         {
             throw new NotFoundException($"Plan con ID {request.PlanId} no encontrado o inactivo");
+        }
+
+        var credencial = await _context.Credenciales
+            .Where(c => c.UserId == request.UserId)
+            .Select(c => new { c.UserId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (credencial == null)
+        {
+            throw new NotFoundException($"No existe credencial para el usuario {request.UserId}");
         }
 
         var precio = planEmpleador?.Precio ?? planContratista!.Precio;
@@ -96,6 +107,11 @@ public class ProcesarVentaSimpleCommandHandler : IRequestHandler<ProcesarVentaSi
             request.PlanId,
             fechaVencimiento);
 
+        if (planContratista != null)
+        {
+            await EnsureContratistaProfileExistsAsync(request.UserId, cancellationToken);
+        }
+
         if (!planUpdated)
         {
             _logger.LogWarning(
@@ -114,5 +130,50 @@ public class ProcesarVentaSimpleCommandHandler : IRequestHandler<ProcesarVentaSi
         }
 
         return venta.VentaId;
+    }
+
+    private async Task EnsureContratistaProfileExistsAsync(string userId, CancellationToken cancellationToken)
+    {
+        var exists = await _context.Contratistas
+            .AnyAsync(c => c.UserId == userId, cancellationToken);
+
+        if (exists)
+        {
+            return;
+        }
+
+        var perfil = await _context.Perfiles
+            .Where(p => p.UserId == userId)
+            .Select(p => new { p.Nombre, p.Apellido, p.Email, p.Telefono1 })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var nombre = string.IsNullOrWhiteSpace(perfil?.Nombre) ? "Usuario" : perfil.Nombre.Trim();
+        var apellido = string.IsNullOrWhiteSpace(perfil?.Apellido) ? "Contratista" : perfil.Apellido.Trim();
+
+        var bootstrap = Contratista.Create(
+            userId: userId,
+            nombre: nombre,
+            apellido: apellido,
+            tipo: 1,
+            titulo: "Perfil en inicialización",
+            presentacion: "Perfil creado automáticamente tras compra de plan",
+            telefono1: perfil?.Telefono1,
+            provincia: null,
+            nivelNacional: false);
+
+        if (!string.IsNullOrWhiteSpace(perfil?.Email))
+        {
+            bootstrap.ActualizarContacto(email: MiGenteEnLinea.Domain.ValueObjects.Email.Create(perfil.Email));
+        }
+
+        bootstrap.Desactivar();
+        _context.Contratistas.Add(bootstrap);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "AutoBootstrap de perfil contratista completado. UserId={UserId}, ContratistaId={ContratistaId}",
+            userId,
+            bootstrap.Id);
     }
 }

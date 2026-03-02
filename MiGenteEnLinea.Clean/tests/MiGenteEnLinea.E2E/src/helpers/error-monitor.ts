@@ -3,7 +3,7 @@ import path from "node:path";
 import { Page, TestInfo } from "@playwright/test";
 
 export type RuntimeIssue = {
-  type: "console-error" | "page-error" | "request-failed" | "http-error";
+  type: "console-error" | "console-warn" | "page-error" | "request-failed" | "http-error";
   message: string;
   url?: string;
 };
@@ -12,6 +12,11 @@ export function attachRuntimeMonitors(page: Page, issues: RuntimeIssue[]): void 
   page.on("console", (msg) => {
     if (msg.type() === "error") {
       issues.push({ type: "console-error", message: msg.text(), url: page.url() });
+      return;
+    }
+
+    if (msg.type() === "warning") {
+      issues.push({ type: "console-warn", message: msg.text(), url: page.url() });
     }
   });
 

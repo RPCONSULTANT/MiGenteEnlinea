@@ -3,6 +3,7 @@ using MiGenteEnLinea.Web.Services;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+ValidateWebCriticalConfiguration(builder.Configuration, builder.Environment);
 
 // ========================================
 // CONFIGURACIÓN DE API
@@ -85,3 +86,50 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+static void ValidateWebCriticalConfiguration(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    var errors = new List<string>();
+    var sensitivePlaceholders = new[] { "YOUR_", "CHANGE_ME", "REPLACE_ME", "TODO", "example", "placeholder" };
+    var strictPlaceholderCheck = environment.IsStaging() || environment.IsProduction();
+
+    string? Read(string key) => configuration[key];
+
+    void Require(string key, string description)
+    {
+        var value = Read(key);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            errors.Add($"{key} requerido ({description}).");
+            return;
+        }
+
+        if (strictPlaceholderCheck && sensitivePlaceholders.Any(p => value.Contains(p, StringComparison.OrdinalIgnoreCase)))
+        {
+            errors.Add($"{key} no puede usar placeholder en {environment.EnvironmentName}.");
+        }
+    }
+
+    Require("ApiConfiguration:BaseUrl", "URL base del API");
+    Require("ApiConfiguration:StaticFilesBaseUrl", "URL base de archivos estáticos");
+
+    var timeoutRaw = Read("ApiConfiguration:TimeoutSeconds");
+    if (int.TryParse(timeoutRaw, out var timeoutSeconds) && timeoutSeconds <= 0)
+    {
+        errors.Add("ApiConfiguration:TimeoutSeconds debe ser mayor que 0.");
+    }
+
+    var paymentMode = Read("PaymentConfiguration:Mode");
+    if (!string.IsNullOrWhiteSpace(paymentMode) &&
+        !string.Equals(paymentMode, "fake", StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(paymentMode, "real", StringComparison.OrdinalIgnoreCase))
+    {
+        errors.Add("PaymentConfiguration:Mode debe ser 'fake' o 'real'.");
+    }
+
+    if (errors.Count > 0)
+    {
+        throw new InvalidOperationException(
+            "Configuración crítica incompleta o insegura en Web:\n - " + string.Join("\n - ", errors));
+    }
+}

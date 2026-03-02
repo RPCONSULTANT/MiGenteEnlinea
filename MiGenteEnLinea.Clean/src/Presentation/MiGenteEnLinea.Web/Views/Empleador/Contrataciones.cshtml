@@ -59,11 +59,11 @@
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="text-sm mb-0 text-uppercase font-weight-bold opacity-8">En Progreso</p>
-                            <h3 class="font-weight-bolder mb-0" id="statActivas">0</h3>
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold opacity-8">Aceptadas</p>
+                            <h3 class="font-weight-bolder mb-0" id="statAceptadas">0</h3>
                         </div>
                         <div class="icon icon-shape bg-white shadow text-center rounded-circle">
-                            <i class="fas fa-spinner text-info text-lg opacity-10"></i>
+                            <i class="fas fa-thumbs-up text-info text-lg opacity-10"></i>
                         </div>
                     </div>
                 </div>
@@ -74,11 +74,11 @@
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="text-sm mb-0 text-uppercase font-weight-bold opacity-8">Completadas</p>
-                            <h3 class="font-weight-bolder mb-0" id="statCompletadas">0</h3>
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold opacity-8">En Progreso</p>
+                            <h3 class="font-weight-bolder mb-0" id="statActivas">0</h3>
                         </div>
                         <div class="icon icon-shape bg-white shadow text-center rounded-circle">
-                            <i class="fas fa-check-circle text-success text-lg opacity-10"></i>
+                            <i class="fas fa-spinner text-success text-lg opacity-10"></i>
                         </div>
                     </div>
                 </div>
@@ -109,6 +109,14 @@
                 <i class="fas fa-clock me-2"></i>
                 <span>Pendientes</span>
                 <span class="badge bg-warning ms-2" id="badgePendientes">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link d-flex align-items-center justify-content-center" id="aceptadas-tab" 
+                    data-bs-toggle="tab" data-bs-target="#tabAceptadas" type="button" role="tab">
+                <i class="fas fa-thumbs-up me-2"></i>
+                <span>Aceptadas</span>
+                <span class="badge bg-info ms-2" id="badgeAceptadas">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -183,6 +191,51 @@
                                 <td colspan="7" class="text-center py-5">
                                     <i class="fas fa-spinner fa-spin fa-2x text-muted mb-3 d-block"></i>
                                     <span class="text-muted">Cargando contrataciones...</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Aceptadas -->
+        <div class="tab-pane fade" id="tabAceptadas" role="tabpanel">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
+                    <i class="fas fa-sync-alt me-1"></i>Actualizar
+                </button>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" class="form-control" id="searchAceptadas" placeholder="Buscar...">
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0"><i class="fas fa-thumbs-up me-2"></i>Contrataciones Aceptadas</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin Est.</th>
+                                <th class="text-end">Monto</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAceptadas">
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-thumbs-up fa-2x mb-3 d-block"></i>
+                                    No hay contrataciones aceptadas
                                 </td>
                             </tr>
                         </tbody>
@@ -335,6 +388,30 @@
                 <div id="contratacionAlert" class="alert d-none" role="alert"></div>
 
                 <form id="formNuevaContratacion">
+                    <!-- Sección: Contratista -->
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="mb-0"><i class="fas fa-user-check me-2 text-info"></i>Contratista y Servicio</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label fw-bold">Contratista <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="contratistaSelect" required>
+                                        <option value="">-- Seleccione un contratista --</option>
+                                    </select>
+                                    <small id="contratistaMeta" class="text-muted"></small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Servicio</label>
+                                    <select class="form-select" id="servicioSelect">
+                                        <option value="">-- Seleccione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Sección: Información del Trabajo -->
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-header bg-light py-2">
@@ -451,9 +528,12 @@
         
         // Variables globales para datos
         let allPendientes = [];
+        let allAceptadas = [];
         let allActivas = [];
         let allCompletadas = [];
         let allCanceladas = [];
+        let modalContratistas = [];
+        let serviciosByContratista = {};
         
         // ============================================
         // INICIALIZACIÓN
@@ -489,7 +569,8 @@
                     
                     // Clasificar por estado
                     // Estados: 1=Pendiente, 2=Aceptada, 3=En Progreso, 4=Completada, 5=Cancelada, 6=Rechazada
-                    allPendientes = items.filter(c => c.estatus === 1 || c.estatus === 2);
+                    allPendientes = items.filter(c => c.estatus === 1);
+                    allAceptadas = items.filter(c => c.estatus === 2);
                     allActivas = items.filter(c => c.estatus === 3);
                     allCompletadas = items.filter(c => c.estatus === 4);
                     allCanceladas = items.filter(c => c.estatus === 5 || c.estatus === 6);
@@ -499,6 +580,7 @@
                     
                     // Renderizar tablas
                     renderPendientes();
+                    renderAceptadas();
                     renderActivas();
                     renderCompletadas();
                     renderCanceladas();
@@ -517,9 +599,10 @@
         
         function updateStats() {
             document.getElementById('statPendientes').textContent = allPendientes.length;
+            document.getElementById('statAceptadas').textContent = allAceptadas.length;
             document.getElementById('statActivas').textContent = allActivas.length;
-            document.getElementById('statCompletadas').textContent = allCompletadas.length;
             document.getElementById('badgePendientes').textContent = allPendientes.length;
+            document.getElementById('badgeAceptadas').textContent = allAceptadas.length;
             document.getElementById('badgeActivas').textContent = allActivas.length;
             document.getElementById('badgeCompletadas').textContent = allCompletadas.length;
             document.getElementById('badgeCanceladas').textContent = allCanceladas.length;
@@ -572,6 +655,63 @@
             }
             
             tbody.innerHTML = allPendientes.map(c => `
+                <tr>
+                    <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                                 alt="${c.contratistaCompleteName}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40"
+                                 onerror="this.src='/images/circular1.png'">
+                            <div>
+                                <strong>${c.descripcionCorta || 'Sin descripción'}</strong>
+                                <br><small class="text-muted">${c.contratistaCompleteName || 'Contratista'}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${formatDate(c.fechaInicio)}</td>
+                    <td>${formatDate(c.fechaFinal)}</td>
+                    <td class="text-end">
+                        <strong class="text-success">RD$ ${(c.montoAcordado || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-${getStatusBadge(c.estatus)}">${c.nombreEstado || getStatusName(c.estatus)}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" onclick="aceptarContratacion(${c.detalleId})" title="Aceptar contratación">
+                                <i class="fas fa-thumbs-up"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelarContratacion(${c.detalleId})" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAceptadas() {
+            const tbody = document.getElementById('tbodyAceptadas');
+            
+            if (!allAceptadas.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-thumbs-up fa-2x text-muted mb-3 d-block"></i>
+                            <span class="text-muted">No hay contrataciones aceptadas</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = allAceptadas.map(c => `
                 <tr>
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
@@ -805,6 +945,8 @@
         // FORMULARIO NUEVA CONTRATACIÓN
         // ============================================
         function initFormEvents() {
+            loadContratistasForModal();
+
             // Character counters
             document.getElementById('descripcionCorta').addEventListener('input', function(e) {
                 document.getElementById('descripcionCortaCount').textContent = e.target.value.length;
@@ -829,14 +971,110 @@
             
             // Guardar contratación
             document.getElementById('btnGuardarContratacion').addEventListener('click', crearContratacion);
+            document.getElementById('contratistaSelect').addEventListener('change', onContratistaChange);
             
             // Reset form on modal close
             document.getElementById('modalNuevaContratacion').addEventListener('hidden.bs.modal', resetForm);
+            document.getElementById('modalNuevaContratacion').addEventListener('shown.bs.modal', hydratePreselectedContratista);
             
             // Search handlers
             document.getElementById('searchPendientes').addEventListener('input', filterPendientes);
+            document.getElementById('searchAceptadas').addEventListener('input', filterAceptadas);
             document.getElementById('searchActivas').addEventListener('input', filterActivas);
             document.getElementById('searchCompletadas').addEventListener('input', filterCompletadas);
+        }
+
+        async function loadContratistasForModal() {
+            try {
+                const listPath = '/contratistas?soloActivos=true&pageSize=200';
+                const response = await authenticatedFetch(listPath);
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                const items = payload?.items || payload?.contratistas || payload || [];
+                modalContratistas = Array.isArray(items) ? items : [];
+
+                const select = document.getElementById('contratistaSelect');
+                select.innerHTML = '<option value="">-- Seleccione un contratista --</option>' +
+                    modalContratistas.map(c => {
+                        const nombre = c.nombreCompleto || `${c.nombre || ''} ${c.apellido || ''}`.trim() || `Contratista #${c.contratistaId}`;
+                        const rating = c.promedioCalificacion ? ` (${Number(c.promedioCalificacion).toFixed(1)}★)` : '';
+                        return `<option value="${c.contratistaId}">${nombre}${rating}</option>`;
+                    }).join('');
+
+                hydratePreselectedContratista();
+            } catch (error) {
+                console.error('Error cargando contratistas para modal:', error);
+            }
+        }
+
+        function hydratePreselectedContratista() {
+            const raw = sessionStorage.getItem('mge:selectedContratistaForHire');
+            if (!raw) return;
+
+            try {
+                const preselected = JSON.parse(raw);
+                if (!preselected?.contratistaId) return;
+
+                const select = document.getElementById('contratistaSelect');
+                if (select.querySelector(`option[value="${preselected.contratistaId}"]`)) {
+                    select.value = String(preselected.contratistaId);
+                    onContratistaChange();
+                }
+            } catch (_) {
+                // ignore malformed preselection
+            } finally {
+                sessionStorage.removeItem('mge:selectedContratistaForHire');
+            }
+        }
+
+        async function onContratistaChange() {
+            const contratistaId = parseInt(document.getElementById('contratistaSelect').value || '0');
+            const servicioSelect = document.getElementById('servicioSelect');
+            const meta = document.getElementById('contratistaMeta');
+
+            servicioSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+            if (!contratistaId) {
+                meta.textContent = '';
+                return;
+            }
+
+            const contratista = modalContratistas.find(c => c.contratistaId === contratistaId);
+            if (contratista) {
+                const provincia = contratista.provincia || 'Sin provincia';
+                const cal = contratista.promedioCalificacion ? `${Number(contratista.promedioCalificacion).toFixed(1)}★` : 'Sin calificación';
+                meta.textContent = `${provincia} | ${cal}`;
+            }
+
+            try {
+                if (!serviciosByContratista[contratistaId]) {
+                    const serviciosPath = `/contratistas/${contratistaId}/servicios`;
+                    const response = await authenticatedFetch(serviciosPath);
+                    if (response.ok) {
+                        const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                        serviciosByContratista[contratistaId] = Array.isArray(payload) ? payload : (payload?.items || []);
+                    } else {
+                        serviciosByContratista[contratistaId] = [];
+                    }
+                }
+
+                const servicios = serviciosByContratista[contratistaId] || [];
+                if (servicios.length === 0) {
+                    servicioSelect.innerHTML = '<option value="">Servicio general</option>';
+                    return;
+                }
+
+                servicioSelect.innerHTML = '<option value="">-- Seleccione --</option>' + servicios.map(s => {
+                    const servicioId = s.servicioId || s.id || s.detalleServicioID || 0;
+                    const nombre = s.nombre || s.detalleServicio || s.descripcion || 'Servicio';
+                    return `<option value="${servicioId}">${nombre}</option>`;
+                }).join('');
+            } catch (error) {
+                console.error('Error cargando servicios del contratista:', error);
+                servicioSelect.innerHTML = '<option value="">Servicio general</option>';
+            }
         }
         
         async function crearContratacion() {
@@ -858,7 +1096,14 @@
             const fechaFin = document.getElementById('fechaFin').value;
             const montoStr = document.getElementById('montoAcordado').value.replace(/,/g, '');
             const monto = parseFloat(montoStr);
+            const contratistaId = parseInt(document.getElementById('contratistaSelect').value || '0');
+            const servicioId = parseInt(document.getElementById('servicioSelect').value || '0');
             
+            if (!contratistaId) {
+                Swal.fire('Error', 'Debe seleccionar un contratista', 'error');
+                return;
+            }
+
             if (!descripcionCorta || !fechaInicio || !fechaFin || isNaN(monto) || monto <= 0) {
                 Swal.fire('Error', 'Complete todos los campos requeridos correctamente', 'error');
                 return;
@@ -869,15 +1114,11 @@
                 return;
             }
             
-            const command = {
-                descripcionCorta: descripcionCorta,
-                descripcionAmpliada: document.getElementById('descripcionAmpliada').value.trim() || null,
-                fechaInicio: fechaInicio,
-                fechaFinal: fechaFin,  // Backend expects 'fechaFinal' not 'fechaFin'
-                montoAcordado: monto,
-                esquemaPagos: document.getElementById('esquemaPagos').value || null,
-                notas: document.getElementById('notas').value.trim() || null
-            };
+            const contratista = modalContratistas.find(c => c.contratistaId === contratistaId);
+            if (!contratista) {
+                Swal.fire('Error', 'No se encontró la información del contratista seleccionado', 'error');
+                return;
+            }
             
             // Confirmar
             const confirm = await Swal.fire({
@@ -886,6 +1127,7 @@
                     <p><strong>${descripcionCorta}</strong></p>
                     <p>Monto: <strong>RD$ ${monto.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></p>
                     <p>Período: ${new Date(fechaInicio).toLocaleDateString('es-DO')} - ${new Date(fechaFin).toLocaleDateString('es-DO')}</p>
+                    <p>Contratista: <strong>${contratista.nombreCompleto || `${contratista.nombre || ''} ${contratista.apellido || ''}`.trim()}</strong></p>
                 `,
                 icon: 'question',
                 showCancelButton: true,
@@ -900,6 +1142,66 @@
             try {
                 document.getElementById('btnGuardarContratacion').disabled = true;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
+
+                const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                if (!userId) {
+                    throw new Error('No se pudo identificar el usuario autenticado');
+                }
+
+                const nombreContratista = (contratista.nombreCompleto || `${contratista.nombre || ''} ${contratista.apellido || ''}`.trim()).trim();
+                const [nombre, ...resto] = nombreContratista.split(' ');
+                const apellido = resto.join(' ') || '-';
+                const servicioSeleccionado = document.getElementById('servicioSelect');
+                const servicioNombre = servicioSeleccionado.options[servicioSeleccionado.selectedIndex]?.text || 'Servicio general';
+
+                const temporalPayload = {
+                    userId: userId,
+                    tipo: contratista.tipo || 1,
+                    nombre: nombre || 'Contratista',
+                    apellido: apellido,
+                    identificacion: contratista.identificacion || `${contratistaId}`,
+                    telefono: contratista.telefono1 || null,
+                    direccion: contratista.provincia || null,
+                    email: contratista.email || null,
+                    servicio: servicioNombre,
+                    fechaInicio: fechaInicio,
+                    fechaFinal: fechaFin,
+                    pago: monto,
+                    estatus: 1
+                };
+
+                const temporalResponse = await authenticatedFetch('/empleados/temporales', {
+                    method: 'POST',
+                    body: JSON.stringify(temporalPayload)
+                });
+
+                if (!temporalResponse.ok) {
+                    const temporalError = window.readApiResponse ? await window.readApiResponse(temporalResponse) : await temporalResponse.json();
+                    throw new Error(window.getApiErrorMessage
+                        ? window.getApiErrorMessage(temporalError, 'No se pudo crear la contratación temporal base')
+                        : (temporalError?.error || 'No se pudo crear la contratación temporal base'));
+                }
+
+                const temporalResult = window.readApiResponse ? await window.readApiResponse(temporalResponse) : await temporalResponse.json();
+                const contratacionId = typeof temporalResult === 'number'
+                    ? temporalResult
+                    : (temporalResult?.contratacionId || temporalResult?.id || temporalResult?.result);
+                if (!contratacionId) {
+                    throw new Error('No se recibió el identificador de contratación temporal');
+                }
+
+                const command = {
+                    contratacionId: contratacionId,
+                    contratistaId: contratistaId,
+                    servicioId: servicioId || null,
+                    descripcionCorta: descripcionCorta,
+                    descripcionAmpliada: document.getElementById('descripcionAmpliada').value.trim() || null,
+                    fechaInicio: fechaInicio,
+                    fechaFinal: fechaFin,
+                    montoAcordado: monto,
+                    esquemaPagos: document.getElementById('esquemaPagos').value || null,
+                    notas: document.getElementById('notas').value.trim() || null
+                };
                 
                 const createPath = window.API_ENDPOINTS?.CONTRATACIONES?.CREATE || '/contrataciones';
                 const response = await authenticatedFetch(createPath, {
@@ -908,7 +1210,10 @@
                 });
                 
                 if (response.ok) {
-                    const detalleId = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const createResult = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const detalleId = typeof createResult === 'number'
+                        ? createResult
+                        : (createResult?.detalleId || createResult?.id || createResult?.result);
                     
                     // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById('modalNuevaContratacion')).hide();
@@ -940,6 +1245,8 @@
             document.getElementById('formNuevaContratacion').reset();
             document.getElementById('descripcionCortaCount').textContent = '0';
             document.getElementById('descripcionAmpliadaCount').textContent = '0';
+            document.getElementById('contratistaMeta').textContent = '';
+            document.getElementById('servicioSelect').innerHTML = '<option value="">-- Seleccione --</option>';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fechaInicio').value = today;
             hideAlert('contratacionAlert');
@@ -959,6 +1266,39 @@
         // ============================================
         // ACCIONES
         // ============================================
+        async function aceptarContratacion(detalleId) {
+            const confirm = await Swal.fire({
+                title: '¿Aceptar contratación?',
+                text: 'Esto marcará la contratación como "Aceptada"',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#17a2b8',
+                confirmButtonText: '<i class="fas fa-thumbs-up me-1"></i>Aceptar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const acceptPath = window.API_ENDPOINTS?.CONTRATACIONES?.ACCEPT
+                    ? window.API_ENDPOINTS.CONTRATACIONES.ACCEPT(detalleId)
+                    : `/contrataciones/${detalleId}/accept`;
+                const response = await authenticatedFetch(acceptPath, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    await Swal.fire('¡Aceptada!', 'La contratación ha sido aceptada', 'success');
+                    loadContrataciones();
+                } else {
+                    const error = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    Swal.fire('Error', error.error || 'No se pudo aceptar', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Error de conexión', 'error');
+            }
+        }
+
         async function verDetalle(detalleId) {
             const token = getAuthToken();
             if (!token) return;
@@ -1124,6 +1464,20 @@
             
             renderFilteredTable('tbodyPendientes', filtered, 7, renderPendientesRow);
         }
+
+        function filterAceptadas() {
+            const term = document.getElementById('searchAceptadas').value.toLowerCase().trim();
+            if (!term) {
+                renderAceptadas();
+                return;
+            }
+            
+            const filtered = allAceptadas.filter(c => 
+                (c.descripcionCorta || '').toLowerCase().includes(term)
+            );
+            
+            renderFilteredTable('tbodyAceptadas', filtered, 7, renderAceptadasRow);
+        }
         
         function filterActivas() {
             const term = document.getElementById('searchActivas').value.toLowerCase().trim();
@@ -1171,6 +1525,26 @@
         }
         
         function renderPendientesRow(c) {
+            return `
+                <tr>
+                    <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
+                    <td><strong>${c.descripcionCorta || 'Sin descripción'}</strong></td>
+                    <td>${formatDate(c.fechaInicio)}</td>
+                    <td>${formatDate(c.fechaFinal)}</td>
+                    <td class="text-end"><strong class="text-success">RD$ ${(c.montoAcordado || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
+                    <td class="text-center"><span class="badge bg-${getStatusBadge(c.estatus)}">${c.nombreEstado || getStatusName(c.estatus)}</span></td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-info" onclick="aceptarContratacion(${c.detalleId})"><i class="fas fa-thumbs-up"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="cancelarContratacion(${c.detalleId})"><i class="fas fa-times"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function renderAceptadasRow(c) {
             return `
                 <tr>
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
@@ -1333,7 +1707,7 @@
                         document.getElementById('fotoFileName').textContent = '';
                         
                         // Recargar datos
-                        cargarContrataciones();
+                        loadContrataciones();
                     });
                 } else {
                     Swal.fire({

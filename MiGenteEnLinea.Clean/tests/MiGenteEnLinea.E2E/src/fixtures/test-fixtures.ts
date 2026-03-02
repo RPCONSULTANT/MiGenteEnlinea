@@ -1,7 +1,7 @@
 import { test as base } from "@playwright/test";
 import { createApiContext } from "../helpers/api-client";
 import { RollbackManager } from "../helpers/rollback";
-import { RuntimeIssue, attachRuntimeMonitors } from "../helpers/error-monitor";
+import { RuntimeIssue, attachRuntimeMonitors, persistIssues } from "../helpers/error-monitor";
 
 type Fixtures = {
   api: Awaited<ReturnType<typeof createApiContext>>;
@@ -22,10 +22,19 @@ export const test = base.extend<Fixtures>({
     await rollback.executeAll();
   },
 
-  runtimeIssues: async ({ page }, use) => {
+  runtimeIssues: async ({ page }, use, testInfo) => {
     const issues: RuntimeIssue[] = [];
     attachRuntimeMonitors(page, issues);
     await use(issues);
+    await persistIssues(testInfo, issues);
+
+    if (issues.length > 0) {
+      const issuePreview = issues
+        .slice(0, 6)
+        .map((i) => `[${i.type}] ${i.message}`)
+        .join(" | ");
+      console.log(`[E2E runtime issues] ${testInfo.title}: ${issues.length} issue(s). ${issuePreview}`);
+    }
   }
 });
 

@@ -12,6 +12,7 @@
     },
     PAGOS: {
       PROCESAR: "/pagos/procesar",
+      PROCESAR_SIMPLE: "/pagos/procesar-simple",
       HISTORIAL: (userId) => `/pagos/historial/${userId}`,
     },
     SUSCRIPCIONES: {
@@ -25,6 +26,7 @@
       PROCESAR_LOTE: "/nominas/procesar-lote",
       RESUMEN: (periodo) => `/nominas/resumen?periodo=${encodeURIComponent(periodo)}`,
       HISTORIAL: "/nominas/historial",
+      HISTORIAL_UNIFICADO: "/nominas/historial-unificado",
       HISTORIAL_BY_USER: (userId) => `/nominas/historial/${userId}`,
       RECIBO_PDF: (reciboId) => `/nominas/recibo/${reciboId}/pdf`,
     },
@@ -45,6 +47,7 @@
       RESUMEN_USO: "/empleados/resumen-uso",
     },
     CONTRATISTAS: {
+      LIST: "/contratistas?soloActivos=true&pageSize=100",
       BY_USER: (userId) => `/contratistas/by-user/${userId}`,
       FOTO: (contratistaId) => `/contratistas/${contratistaId}/foto`,
       FOTO_UPLOAD: (userId) => `/contratistas/${userId}/foto`,
@@ -59,6 +62,7 @@
       LIST: "/contrataciones?pageSize=100",
       CREATE: "/contrataciones",
       DETALLE: (detalleId) => `/contrataciones/${detalleId}`,
+      ACCEPT: (detalleId) => `/contrataciones/${detalleId}/accept`,
       START: (detalleId) => `/contrataciones/${detalleId}/start`,
       COMPLETE: (detalleId) => `/contrataciones/${detalleId}/complete`,
       CANCEL: (detalleId) => `/contrataciones/${detalleId}/cancel`,

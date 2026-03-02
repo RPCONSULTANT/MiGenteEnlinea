@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Domain.Entities.Empleados;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
 using System;
 using System.Threading;
@@ -34,13 +36,52 @@ public class CreateContratacionCommandHandler : IRequestHandler<CreateContrataci
     public async Task<int> Handle(CreateContratacionCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Creating new contratacion: {DescripcionCorta}, Amount: {MontoAcordado}, Start: {FechaInicio}",
-            request.DescripcionCorta,
-            request.MontoAcordado,
-            request.FechaInicio);
+            "Creating new contratacion for user {UserId}. Contratista: {ContratistaId}, ContratacionPadre: {ContratacionId}, Amount: {MontoAcordado}",
+            request.EmpleadorUserId,
+            request.ContratistaId,
+            request.ContratacionId,
+            request.MontoAcordado);
 
         try
         {
+            if (!request.ContratacionId.HasValue)
+            {
+                throw new ArgumentException("Debe seleccionar un contratista antes de crear la contratación");
+            }
+
+            var contratista = await _context.Contratistas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == request.ContratistaId, cancellationToken);
+
+            if (contratista == null || !contratista.Activo)
+            {
+                throw new ArgumentException("El contratista seleccionado no existe o no está activo");
+            }
+
+            var empleadoTemporal = await _context.Set<EmpleadoTemporal>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(et => et.ContratacionId == request.ContratacionId.Value, cancellationToken);
+
+            if (empleadoTemporal == null)
+            {
+                throw new ArgumentException("La contratación temporal base no existe");
+            }
+
+            if (!string.Equals(empleadoTemporal.UserId, request.EmpleadorUserId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("La contratación temporal seleccionada no pertenece al usuario autenticado");
+            }
+
+            if (!empleadoTemporal.Activo)
+            {
+                throw new ArgumentException("La contratación temporal seleccionada está inactiva");
+            }
+
+            _logger.LogInformation(
+            "Creating detalle contratacion: {DescripcionCorta}, Amount: {MontoAcordado}, Start: {FechaInicio}",
+            request.DescripcionCorta,
+            request.MontoAcordado,
+            request.FechaInicio);
             // Crear entidad usando factory method del Domain
             var contratacion = DetalleContratacion.Crear(
                 descripcionCorta: request.DescripcionCorta,

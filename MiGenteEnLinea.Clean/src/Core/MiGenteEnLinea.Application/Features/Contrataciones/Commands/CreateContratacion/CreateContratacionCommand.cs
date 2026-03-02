@@ -20,10 +20,28 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.CreateCont
 public record CreateContratacionCommand : IRequest<int>
 {
     /// <summary>
+    /// UserId del empleador autenticado (inyectado por API desde JWT).
+    /// No debe venir confiado desde el cliente.
+    /// </summary>
+    public string EmpleadorUserId { get; init; } = string.Empty;
+
+    /// <summary>
     /// ID de la contratación padre (EmpleadoTemporal).
     /// Opcional: puede ser null para contrataciones independientes.
     /// </summary>
     public int? ContratacionId { get; init; }
+
+    /// <summary>
+    /// ID del contratista seleccionado por el empleador.
+    /// Se usa para validar vínculo y trazabilidad.
+    /// </summary>
+    public int ContratistaId { get; init; }
+
+    /// <summary>
+    /// ID del servicio seleccionado para la contratación.
+    /// Opcional cuando no aplica catálogo.
+    /// </summary>
+    public int? ServicioId { get; init; }
 
     /// <summary>
     /// Descripción breve del trabajo a realizar (máx 60 caracteres).

@@ -9,6 +9,7 @@ using MiGenteEnLinea.Application.Features.Nominas.Commands.ProcessContractPaymen
 using MiGenteEnLinea.Application.Features.Nominas.DTOs;
 using MiGenteEnLinea.Application.Features.Nominas.Queries.GetNominaResumen;
 using MiGenteEnLinea.Application.Features.Nominas.Queries.GetHistorialNominaByUserId;
+using MiGenteEnLinea.Application.Features.Nominas.Queries.GetHistorialNominaUnificado;
 using MiGenteEnLinea.Application.Features.Empleadores.Queries.GetEmpleadorByUserId;
 using System.Security.Claims;
 
@@ -353,6 +354,34 @@ public class NominasController : ControllerBase
         }
 
         return await GetHistorial(userId, pageIndex, pageSize, periodo, estado);
+    }
+
+    [HttpGet("historial-unificado")]
+    [ProducesResponseType(typeof(List<NominaHistorialUnificadoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<NominaHistorialUnificadoDto>>> GetHistorialUnificado(
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] DateTime? fechaDesde = null,
+        [FromQuery] DateTime? fechaHasta = null)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized(new { error = "Usuario no autenticado" });
+        }
+
+        var query = new GetHistorialNominaUnificadoQuery
+        {
+            UserId = userId,
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            FechaDesde = fechaDesde,
+            FechaHasta = fechaHasta
+        };
+
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     /// <param name="reciboId">ID del recibo</param>

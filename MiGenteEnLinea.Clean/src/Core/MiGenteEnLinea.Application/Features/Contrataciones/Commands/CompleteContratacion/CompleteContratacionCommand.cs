@@ -14,4 +14,5 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.CompleteCo
 public record CompleteContratacionCommand : IRequest<Unit>
 {
     public int DetalleId { get; init; }
+    public string UserId { get; init; } = string.Empty;
 }

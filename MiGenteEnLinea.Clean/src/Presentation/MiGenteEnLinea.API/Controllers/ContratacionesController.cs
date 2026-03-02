@@ -11,6 +11,9 @@ using MiGenteEnLinea.Application.Features.Contrataciones.Commands.RejectContrata
 using MiGenteEnLinea.Application.Features.Contrataciones.Commands.StartContratacion;
 using MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContratacionById;
 using MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContrataciones;
+using System.Security.Claims;
+using System.Linq;
+using System;
 
 namespace MiGenteEnLinea.API.Controllers;
 
@@ -19,7 +22,7 @@ namespace MiGenteEnLinea.API.Controllers;
 /// 
 /// WORKFLOW DE CONTRATACIÓN:
 /// 1. Empleador crea propuesta (POST /api/contrataciones) → Estado: Pendiente
-/// 2. Contratista acepta (PUT /api/contrataciones/{id}/accept) → Estado: Aceptada
+/// 2. Empleador confirma aceptación (PUT /api/contrataciones/{id}/accept) → Estado: Aceptada
 ///    O rechaza (PUT /api/contrataciones/{id}/reject) → Estado: Rechazada
 /// 3. Trabajo inicia (PUT /api/contrataciones/{id}/start) → Estado: En Progreso
 /// 4. Trabajo completa (PUT /api/contrataciones/{id}/complete) → Estado: Completada
@@ -66,8 +69,15 @@ public class ContratacionesController : ControllerBase
 
         try
         {
-            var detalleId = await _mediator.Send(command);
+            var userId = GetUserId();
+            var safeCommand = command with { EmpleadorUserId = userId };
+            var detalleId = await _mediator.Send(safeCommand);
             return Ok(detalleId);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized creating contratacion");
+            return Unauthorized(new { error = ex.Message });
         }
         catch (ArgumentException ex)
         {
@@ -113,12 +123,24 @@ public class ContratacionesController : ControllerBase
     {
         _logger.LogInformation("Getting contrataciones with filters");
 
-        var result = await _mediator.Send(query);
+        var scope = query.Scope;
+        if (!IsAdminUser())
+        {
+            scope = "mine";
+        }
+
+        var safeQuery = query with
+        {
+            UserId = GetUserId(),
+            Scope = string.IsNullOrWhiteSpace(scope) ? "mine" : scope
+        };
+
+        var result = await _mediator.Send(safeQuery);
         return Ok(result);
     }
 
     /// <summary>
-    /// Contratista acepta una propuesta de contratación.
+    /// Empleador confirma la aceptación de una propuesta de contratación.
     /// </summary>
     /// <param name="id">ID del detalle de contratación</param>
     /// <returns>Confirmación de aceptación</returns>
@@ -135,9 +157,14 @@ public class ContratacionesController : ControllerBase
 
         try
         {
-            var command = new AcceptContratacionCommand { DetalleId = id };
+            var command = new AcceptContratacionCommand { DetalleId = id, UserId = GetUserId() };
             await _mediator.Send(command);
             return Ok(new { message = "Contratación aceptada exitosamente" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized accept for contratacion {Id}", id);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
@@ -198,9 +225,14 @@ public class ContratacionesController : ControllerBase
 
         try
         {
-            var command = new StartContratacionCommand { DetalleId = id };
+            var command = new StartContratacionCommand { DetalleId = id, UserId = GetUserId() };
             await _mediator.Send(command);
             return Ok(new { message = "Trabajo iniciado exitosamente" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized start for contratacion {Id}", id);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
@@ -227,9 +259,14 @@ public class ContratacionesController : ControllerBase
 
         try
         {
-            var command = new CompleteContratacionCommand { DetalleId = id };
+            var command = new CompleteContratacionCommand { DetalleId = id, UserId = GetUserId() };
             await _mediator.Send(command);
             return Ok(new { message = "Trabajo completado exitosamente" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized complete for contratacion {Id}", id);
+            return Forbid();
         }
         catch (InvalidOperationException ex)
         {
@@ -285,6 +322,8 @@ public class ContratacionesController : ControllerBase
 
         var query = new GetContratacionesQuery 
         { 
+            UserId = GetUserId(),
+            Scope = "mine",
             SoloPendientes = true,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -307,6 +346,8 @@ public class ContratacionesController : ControllerBase
 
         var query = new GetContratacionesQuery 
         { 
+            UserId = GetUserId(),
+            Scope = "mine",
             SoloActivas = true,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -329,6 +370,8 @@ public class ContratacionesController : ControllerBase
 
         var query = new GetContratacionesQuery 
         { 
+            UserId = GetUserId(),
+            Scope = "mine",
             SoloNoCalificadas = true,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -478,5 +521,22 @@ public class ContratacionesController : ControllerBase
             success, 
             message = "Empleado temporal eliminado exitosamente" 
         });
+    }
+
+    private string GetUserId()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new UnauthorizedAccessException("Usuario no autenticado");
+        }
+
+        return userId;
+    }
+
+    private bool IsAdminUser()
+    {
+        var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value);
+        return roles.Any(r => string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -1,0 +1,53 @@
+# Copy this template to Set-LocalEnv.ps1 and replace placeholders.
+# Do not commit Set-LocalEnv.ps1 with real values.
+
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+
+# API
+$env:ConnectionStrings__DefaultConnection = "Server=localhost,1433;Database=MiGenteDev;User Id=sa;Password=Ray1234@;TrustServerCertificate=True;Encrypt=True"
+$env:Jwt__SecretKey = "REPLACE_ME_WITH_32+_CHARACTERS"
+$env:Jwt__Issuer = "MiGenteEnLinea.API"
+$env:Jwt__Audience = "MiGenteEnLinea.Client"
+$env:Jwt__AccessTokenExpirationMinutes = "15"
+$env:Jwt__RefreshTokenExpirationDays = "7"
+$env:EmailSettings__FromName = "MiGente En Linea"
+$env:EmailSettings__FromEmail = "noreply@example.com"
+$env:EmailSettings__SmtpServer = "smtp.example.com"
+$env:EmailSettings__SmtpPort = "587"
+$env:EmailSettings__EnableSsl = "true"
+$env:EmailSettings__Username = "smtp-user"
+$env:EmailSettings__Password = "Ray1234@"
+$env:PadronAPI__BaseUrl = "https://example.com/api/"
+$env:PadronAPI__Username = "REPLACE_ME"
+$env:PadronAPI__Password = "Ray1234@"
+$env:AuthLinks__PublicWebBaseUrl = "http://localhost:5244"
+$env:PaymentProcessing__Mode = "Fake"
+$env:PaymentProcessing__AllowSimpleCheckout = "true"
+$env:PaymentProcessing__RequireCardValidationInFakeMode = "false"
+
+# Web
+$env:ApiConfiguration__BaseUrl = "http://localhost:5015/api"
+$env:ApiConfiguration__StaticFilesBaseUrl = "http://localhost:5015"
+$env:ApiConfiguration__TimeoutSeconds = "30"
+$env:ApiConfiguration__RetryAttempts = "3"
+$env:ApiConfiguration__HealthCheckEndpoint = "/health"
+$env:ApiConfiguration__EnableRequestLogging = "false"
+$env:ApiConfiguration__HealthCheckTimeoutMs = "5000"
+$env:ApiConfiguration__UserAgent = "MiGenteEnLinea.Web/1.0-local"
+$env:PaymentConfiguration__Mode = "fake"
+
+# E2E
+$env:E2E_WEB_BASE_URL = "http://plattaformv2.migenteenlinea.do"
+$env:E2E_API_BASE_URL = "http://api2.migenteenlinea.do"
+$env:E2E_ALLOW_WRITE = "false"
+$env:E2E_USER_EMPLEADOR_EMAIL = "empleador@example.com"
+$env:E2E_USER_EMPLEADOR_PASSWORD = "Ray1234@"
+$env:E2E_USER_CONTRATISTA_EMAIL = "contratista@example.com"
+$env:E2E_USER_CONTRATISTA_PASSWORD = "Ray1234@"
+$env:E2E_USER_ADMIN_EMAIL = "admin@example.com"
+$env:E2E_USER_ADMIN_PASSWORD = "Ray1234@"
+$env:E2E_PASSWORD_EMPLEADOR = "Ray1234@"
+$env:E2E_PASSWORD_CONTRATISTA = "Ray1234@"
+$env:E2E_PASSWORD_ADMIN = "Ray1234@"
+
+Write-Host "Local environment variables loaded in current PowerShell session."

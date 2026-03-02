@@ -916,10 +916,11 @@
                 }
                 
                 // Load inactive employees
-                const responseInactive = await authenticatedFetch(${window.API_ENDPOINTS?.EMPLEADOS?.LIST || '/empleados'}?soloActivos=false&pageSize=100);
+                const inactivePath = `${window.API_ENDPOINTS?.EMPLEADOS?.LIST || '/empleados'}?soloActivos=false&pageSize=100`;
+                const responseInactive = await authenticatedFetch(inactivePath);
                 
                 if (responseInactive.ok) {
-                    const dataInactive = await responseInactive.json();
+                    const dataInactive = window.readApiResponse ? await window.readApiResponse(responseInactive) : await responseInactive.json();
                     // API devuelve PaginatedList, extraer .items
                     allEmpleadosInactivos = dataInactive.items || dataInactive;
                     console.log('Empleados inactivos cargados:', allEmpleadosInactivos.length);

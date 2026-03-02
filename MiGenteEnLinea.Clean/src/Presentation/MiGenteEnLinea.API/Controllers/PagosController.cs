@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Features.Pagos.Queries.GenerateIdempotencyKey;
 using MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVenta;
 using MiGenteEnLinea.Application.Features.Suscripciones.Commands.ProcesarVentaSimple;
@@ -10,6 +11,7 @@ using MiGenteEnLinea.Application.Features.Suscripciones.DTOs;
 using MiGenteEnLinea.Application.Features.Suscripciones.Queries.GetVentasByUserId;
 using MiGenteEnLinea.Infrastructure.Options;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 namespace MiGenteEnLinea.API.Controllers;
 
@@ -231,26 +233,118 @@ public class PagosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<int>> ProcesarPagoSimple([FromBody] ProcesarVentaSimpleCommand command)
     {
+        var correlationId = HttpContext.TraceIdentifier;
+
+        if (string.IsNullOrWhiteSpace(command.UserId) || command.PlanId <= 0)
+        {
+            return BadRequest(new
+            {
+                message = "Solicitud inválida para procesar pago simple.",
+                tipo = "validation",
+                correlationId
+            });
+        }
+
+        var tokenUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!string.IsNullOrWhiteSpace(tokenUserId) &&
+            !string.Equals(tokenUserId, command.UserId, StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "No está autorizado para procesar pagos para otro usuario.",
+                tipo = "forbidden",
+                correlationId
+            });
+        }
+
         if (!_paymentOptions.AllowSimpleCheckout)
         {
             return Conflict(new
             {
                 message = "El checkout simple está deshabilitado por configuración.",
-                tipo = "checkout_simple_deshabilitado"
+                tipo = "business_rule",
+                codigo = "checkout_simple_deshabilitado",
+                correlationId
             });
         }
 
         _logger.LogInformation(
-            "POST /api/pagos/procesar-simple - Processing simple checkout for user {UserId}, plan {PlanId}",
-            command.UserId, command.PlanId);
+            "POST /api/pagos/procesar-simple - CorrelationId={CorrelationId} Processing simple checkout for user {UserId}, plan {PlanId}",
+            correlationId,
+            command.UserId,
+            command.PlanId);
 
-        var ventaId = await _mediator.Send(command);
-
-        return Ok(new
+        try
         {
-            ventaId,
-            message = "Pago simple procesado exitosamente"
-        });
+            var ventaId = await _mediator.Send(command);
+
+            return Ok(new
+            {
+                ventaId,
+                message = "Pago simple procesado exitosamente",
+                correlationId
+            });
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex,
+                "Validation error in procesar-simple. CorrelationId={CorrelationId}, UserId={UserId}, PlanId={PlanId}",
+                correlationId,
+                command.UserId,
+                command.PlanId);
+
+            return BadRequest(new
+            {
+                message = ex.Message,
+                tipo = "validation",
+                correlationId
+            });
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex,
+                "Resource not found in procesar-simple. CorrelationId={CorrelationId}, UserId={UserId}, PlanId={PlanId}",
+                correlationId,
+                command.UserId,
+                command.PlanId);
+
+            return BadRequest(new
+            {
+                message = ex.Message,
+                tipo = "business_rule",
+                correlationId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex,
+                "Invalid operation in procesar-simple. CorrelationId={CorrelationId}, UserId={UserId}, PlanId={PlanId}",
+                correlationId,
+                command.UserId,
+                command.PlanId);
+
+            return BadRequest(new
+            {
+                message = ex.Message,
+                tipo = "business_rule",
+                correlationId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Unhandled error in procesar-simple. CorrelationId={CorrelationId}, UserId={UserId}, PlanId={PlanId}",
+                correlationId,
+                command.UserId,
+                command.PlanId);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                message = "Ha ocurrido un error interno. Por favor intente nuevamente.",
+                tipo = "internal_error",
+                correlationId
+            });
+        }
     }
 
     /// <summary>

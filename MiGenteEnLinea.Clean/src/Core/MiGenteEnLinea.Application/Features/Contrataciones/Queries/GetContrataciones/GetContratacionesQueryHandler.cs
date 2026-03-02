@@ -6,6 +6,7 @@ using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Contrataciones.DTOs;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
 using MiGenteEnLinea.Domain.Entities.Empleados;
+using System;
 
 namespace MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContrataciones;
 
@@ -40,6 +41,17 @@ public class GetContratacionesQueryHandler : IRequestHandler<GetContratacionesQu
 
         // Query base
         var query = _context.DetalleContrataciones.AsQueryable();
+
+        var scopeAll = string.Equals(request.Scope, "all", StringComparison.OrdinalIgnoreCase);
+        if (!scopeAll && !string.IsNullOrWhiteSpace(request.UserId))
+        {
+            var userId = request.UserId.Trim();
+            query = query.Where(c =>
+                c.ContratacionId.HasValue &&
+                _context.Set<EmpleadoTemporal>().Any(et =>
+                    et.ContratacionId == c.ContratacionId.Value &&
+                    et.UserId == userId));
+        }
 
         // Aplicar filtros
         if (request.ContratacionId.HasValue)

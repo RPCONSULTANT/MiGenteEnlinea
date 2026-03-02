@@ -18,6 +18,23 @@ public class CreateContratacionCommandValidator : AbstractValidator<CreateContra
 {
     public CreateContratacionCommandValidator()
     {
+        RuleFor(x => x.EmpleadorUserId)
+            .NotEmpty()
+            .WithMessage("No se pudo identificar el usuario autenticado");
+
+        RuleFor(x => x.ContratacionId)
+            .NotNull()
+            .WithMessage("Debe seleccionar un contratista válido antes de crear la contratación");
+
+        RuleFor(x => x.ContratistaId)
+            .GreaterThan(0)
+            .WithMessage("Debe seleccionar un contratista");
+
+        RuleFor(x => x.ServicioId)
+            .GreaterThan(0)
+            .When(x => x.ServicioId.HasValue)
+            .WithMessage("El servicio seleccionado no es válido");
+
         RuleFor(x => x.DescripcionCorta)
             .NotEmpty()
             .WithMessage("La descripción corta es requerida")

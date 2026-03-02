@@ -1,0 +1,131 @@
+{
+  "components": {
+    "API": {
+      "required": [
+        { "name": "ASPNETCORE_ENVIRONMENT" },
+        { "name": "ConnectionStrings__DefaultConnection" },
+        { "name": "Jwt__SecretKey" },
+        { "name": "Jwt__Issuer" },
+        { "name": "Jwt__Audience" },
+        { "name": "Jwt__AccessTokenExpirationMinutes" },
+        { "name": "Jwt__RefreshTokenExpirationDays" },
+        { "name": "PaymentProcessing__Mode" },
+        { "name": "PaymentProcessing__AllowSimpleCheckout" },
+        { "name": "PaymentProcessing__RequireCardValidationInFakeMode" },
+        { "name": "EmailSettings__FromName" },
+        { "name": "EmailSettings__FromEmail" },
+        { "name": "EmailSettings__SmtpServer" },
+        { "name": "EmailSettings__SmtpPort" },
+        { "name": "EmailSettings__EnableSsl" },
+        { "name": "EmailSettings__Username" },
+        { "name": "EmailSettings__Password" },
+        { "name": "EmailSettings__MaxRetryAttempts" },
+        { "name": "EmailSettings__RetryDelayMilliseconds" },
+        { "name": "EmailSettings__Timeout" },
+        { "name": "PadronAPI__BaseUrl" },
+        { "name": "PadronAPI__Username" },
+        { "name": "PadronAPI__Password" },
+        { "name": "AuthLinks__PublicWebBaseUrl" },
+        { "name": "FileStorage__RootFolder" },
+        { "name": "FileStorage__PublicBaseUrl" },
+        { "name": "FileStorage__MaxFileSizeMB" },
+        { "name": "FileStorage__EnableImageReencode" },
+        { "name": "CorsConfiguration__AllowCredentials" },
+        { "name": "CorsConfiguration__MaxAgeSeconds" },
+        { "name": "DatabaseInitialization__ApplyMigrationsOnStartup" },
+        { "name": "DatabaseInitialization__RunCatalogSeedOnStartup" },
+        { "name": "DatabaseInitialization__RunDemoSeedOnStartup" },
+        { "name": "DatabaseInitialization__FailFastOnInitializationError" },
+        { "name": "DatabaseSeedingSecurity__Enabled" },
+        { "name": "DatabaseSeedingSecurity__RequireHeaderKey" },
+        { "name": "DatabaseSeedingSecurity__HeaderName" },
+        { "name": "DatabaseSeedingSecurity__HeaderValue" },
+        { "name": "DatabaseSeedingSecurity__AllowDemoSeedInProduction" }
+      ],
+      "requiredPrefixes": [
+        "FileStorage__AllowedExtensions__",
+        "FileStorage__AllowedMimeTypes__",
+        "FileStorage__AllowedFolders__",
+        "CorsConfiguration__AllowedOrigins__",
+        "CorsConfiguration__AllowedMethods__",
+        "CorsConfiguration__AllowedHeaders__",
+        "CorsConfiguration__ExposedHeaders__"
+      ],
+      "optional": [
+        "BUILD_COMMIT",
+        "BUILD_SOURCEVERSION",
+        "GITHUB_SHA"
+      ]
+    },
+    "Web": {
+      "required": [
+        { "name": "ASPNETCORE_ENVIRONMENT" },
+        { "name": "ApiConfiguration__BaseUrl" },
+        { "name": "ApiConfiguration__StaticFilesBaseUrl" },
+        { "name": "ApiConfiguration__TimeoutSeconds" },
+        { "name": "ApiConfiguration__RetryAttempts" },
+        { "name": "ApiConfiguration__HealthCheckEndpoint" },
+        { "name": "ApiConfiguration__EnableRequestLogging" },
+        { "name": "ApiConfiguration__HealthCheckTimeoutMs" },
+        { "name": "ApiConfiguration__UserAgent" },
+        { "name": "PaymentConfiguration__Mode" }
+      ],
+      "requiredPrefixes": [],
+      "optional": []
+    },
+    "E2E": {
+      "required": [
+        { "name": "E2E_WEB_BASE_URL" },
+        { "name": "E2E_API_BASE_URL" },
+        { "name": "E2E_ALLOW_WRITE" },
+        {
+          "anyOf": [
+            "E2E_USER_EMPLEADOR_EMAIL",
+            "E2E_EMAIL_EMPLEADOR"
+          ],
+          "label": "Empleador email"
+        },
+        {
+          "anyOf": [
+            "E2E_USER_EMPLEADOR_PASSWORD",
+            "E2E_PASSWORD_EMPLEADOR"
+          ],
+          "label": "Empleador password"
+        },
+        {
+          "anyOf": [
+            "E2E_USER_CONTRATISTA_EMAIL",
+            "E2E_EMAIL_CONTRATISTA"
+          ],
+          "label": "Contratista email"
+        },
+        {
+          "anyOf": [
+            "E2E_USER_CONTRATISTA_PASSWORD",
+            "E2E_PASSWORD_CONTRATISTA"
+          ],
+          "label": "Contratista password"
+        },
+        {
+          "anyOf": [
+            "E2E_USER_ADMIN_EMAIL",
+            "E2E_EMAIL_ADMIN"
+          ],
+          "label": "Admin email"
+        },
+        {
+          "anyOf": [
+            "E2E_USER_ADMIN_PASSWORD",
+            "E2E_PASSWORD_ADMIN"
+          ],
+          "label": "Admin password"
+        }
+      ],
+      "requiredPrefixes": [],
+      "optional": [
+        "E2E_SEED_KEY",
+        "E2E_RUN_ID"
+      ]
+    }
+  }
+}

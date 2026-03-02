@@ -1,9 +1,13 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Common.Exceptions;
+using MiGenteEnLinea.Domain.Entities.Empleados;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
 using MiGenteEnLinea.Domain.Interfaces;
 using MiGenteEnLinea.Domain.Interfaces.Repositories;
+using System;
 
 namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.AcceptContratacion;
 
@@ -20,13 +24,16 @@ namespace MiGenteEnLinea.Application.Features.Contrataciones.Commands.AcceptCont
 public class AcceptContratacionCommandHandler : IRequestHandler<AcceptContratacionCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<AcceptContratacionCommandHandler> _logger;
 
     public AcceptContratacionCommandHandler(
         IUnitOfWork unitOfWork,
+        IApplicationDbContext context,
         ILogger<AcceptContratacionCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _context = context;
         _logger = logger;
     }
 
@@ -42,6 +49,24 @@ public class AcceptContratacionCommandHandler : IRequestHandler<AcceptContrataci
         {
             _logger.LogWarning("Contratacion not found with ID: {DetalleId}", request.DetalleId);
             throw new NotFoundException(nameof(DetalleContratacion), request.DetalleId);
+        }
+
+        if (!contratacion.ContratacionId.HasValue)
+        {
+            throw new InvalidOperationException("La contratación no está vinculada a una contratación temporal válida");
+        }
+
+        var empleadoTemporal = await _context.Set<EmpleadoTemporal>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(et => et.ContratacionId == contratacion.ContratacionId.Value, cancellationToken);
+
+        if (empleadoTemporal == null || !string.Equals(empleadoTemporal.UserId, request.UserId, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "Unauthorized accept attempt for detalle {DetalleId} by user {UserId}",
+                request.DetalleId,
+                request.UserId);
+            throw new UnauthorizedAccessException("No autorizado para aceptar esta contratación");
         }
 
         try

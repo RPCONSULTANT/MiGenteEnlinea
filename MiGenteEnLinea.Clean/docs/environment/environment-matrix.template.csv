@@ -1,0 +1,71 @@
+Variable,Component,Criticality,Local,Staging,Production,Required,Owner,Rotation,LastValidated,Notes
+ASPNETCORE_ENVIRONMENT,API,CRITICA-ARRANQUE,,,,Yes,Platform,Semestral,,
+ConnectionStrings__DefaultConnection,API,CRITICA-ARRANQUE,,,,Yes,DBA,Semestral,,
+Jwt__SecretKey,API,CRITICA-ARRANQUE,,,,Yes,Security,Semestral,Min 32 chars
+Jwt__Issuer,API,CRITICA-ARRANQUE,,,,Yes,Backend,Semestral,,
+Jwt__Audience,API,CRITICA-ARRANQUE,,,,Yes,Backend,Semestral,,
+Jwt__AccessTokenExpirationMinutes,API,CRITICA-RUN,,,,Yes,Backend,Semestral,,
+Jwt__RefreshTokenExpirationDays,API,CRITICA-RUN,,,,Yes,Backend,Semestral,,
+PaymentProcessing__Mode,API,CRITICA-RUN,,,,Yes,Backend,Semestral,Fake|Real
+PaymentProcessing__AllowSimpleCheckout,API,CRITICA-RUN,,,,Yes,Backend,Semestral,,
+PaymentProcessing__RequireCardValidationInFakeMode,API,CRITICA-RUN,,,,Yes,Backend,Semestral,,
+EmailSettings__FromName,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+EmailSettings__FromEmail,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,,
+EmailSettings__SmtpServer,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,,
+EmailSettings__SmtpPort,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+EmailSettings__EnableSsl,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+EmailSettings__Username,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,,
+EmailSettings__Password,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,Secret
+EmailSettings__MaxRetryAttempts,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+EmailSettings__RetryDelayMilliseconds,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+EmailSettings__Timeout,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+PadronAPI__BaseUrl,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,,
+PadronAPI__Username,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,Secret
+PadronAPI__Password,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,Secret
+AuthLinks__PublicWebBaseUrl,API,CRITICA-ARRANQUE,,,,Yes,Platform,Semestral,,
+FileStorage__RootFolder,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+FileStorage__PublicBaseUrl,API,CRITICA-ARRANQUE,,,,Yes,Ops,Semestral,,
+FileStorage__AllowedExtensions__0..N,API,CRITICA-RUN,,,,Yes,Ops,Semestral,Prefix variable
+FileStorage__AllowedMimeTypes__0..N,API,CRITICA-RUN,,,,Yes,Ops,Semestral,Prefix variable
+FileStorage__MaxFileSizeMB,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+FileStorage__EnableImageReencode,API,CRITICA-RUN,,,,Yes,Ops,Semestral,,
+FileStorage__AllowedFolders__0..N,API,CRITICA-RUN,,,,Yes,Ops,Semestral,Prefix variable
+CorsConfiguration__AllowedOrigins__0..N,API,CRITICA-ARRANQUE,,,,Yes,Platform,Semestral,Prefix variable
+CorsConfiguration__AllowCredentials,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+CorsConfiguration__AllowedMethods__0..N,API,CRITICA-RUN,,,,Yes,Platform,Semestral,Prefix variable
+CorsConfiguration__AllowedHeaders__0..N,API,CRITICA-RUN,,,,Yes,Platform,Semestral,Prefix variable
+CorsConfiguration__ExposedHeaders__0..N,API,CRITICA-RUN,,,,Yes,Platform,Semestral,Prefix variable
+CorsConfiguration__MaxAgeSeconds,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseInitialization__ApplyMigrationsOnStartup,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseInitialization__RunCatalogSeedOnStartup,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseInitialization__RunDemoSeedOnStartup,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseInitialization__FailFastOnInitializationError,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseSeedingSecurity__Enabled,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseSeedingSecurity__RequireHeaderKey,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseSeedingSecurity__HeaderName,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+DatabaseSeedingSecurity__HeaderValue,API,CRITICA-RUN,,,,Yes,Platform,Semestral,Secret
+DatabaseSeedingSecurity__AllowDemoSeedInProduction,API,CRITICA-RUN,,,,Yes,Platform,Semestral,,
+BUILD_COMMIT,API,OPCIONAL,,,,No,CI,Semestral,,
+BUILD_SOURCEVERSION,API,OPCIONAL,,,,No,CI,Semestral,,
+GITHUB_SHA,API,OPCIONAL,,,,No,CI,Semestral,,
+ASPNETCORE_ENVIRONMENT,Web,CRITICA-ARRANQUE,,,,Yes,Platform,Semestral,,
+ApiConfiguration__BaseUrl,Web,CRITICA-ARRANQUE,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__StaticFilesBaseUrl,Web,CRITICA-ARRANQUE,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__TimeoutSeconds,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__RetryAttempts,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__HealthCheckEndpoint,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__EnableRequestLogging,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__HealthCheckTimeoutMs,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+ApiConfiguration__UserAgent,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,,
+PaymentConfiguration__Mode,Web,CRITICA-RUN,,,,Yes,Frontend,Semestral,fake|real
+E2E_WEB_BASE_URL,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,,
+E2E_API_BASE_URL,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,,
+E2E_ALLOW_WRITE,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,,
+E2E_USER_EMPLEADOR_EMAIL or E2E_EMAIL_EMPLEADOR,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_USER_EMPLEADOR_PASSWORD or E2E_PASSWORD_EMPLEADOR,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_USER_CONTRATISTA_EMAIL or E2E_EMAIL_CONTRATISTA,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_USER_CONTRATISTA_PASSWORD or E2E_PASSWORD_CONTRATISTA,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_USER_ADMIN_EMAIL or E2E_EMAIL_ADMIN,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_USER_ADMIN_PASSWORD or E2E_PASSWORD_ADMIN,E2E,CRITICA-RUN,,,,Yes,QA,Semestral,AnyOf
+E2E_SEED_KEY,E2E,OPCIONAL,,,,No,QA,Semestral,Required by admin seed tests
+E2E_RUN_ID,E2E,OPCIONAL,,,,No,QA,Semestral,Traceability

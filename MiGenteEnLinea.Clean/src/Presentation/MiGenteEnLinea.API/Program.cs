@@ -14,6 +14,7 @@ using System.Text;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
+ValidateApiCriticalConfiguration(builder.Configuration, builder.Environment);
 
 // ========================================
 // CONFIGURACIÓN DE LOGGING CON SERILOG
@@ -422,6 +423,79 @@ static async Task InitializeDatabaseAsync(WebApplication app, DatabaseInitializa
         {
             throw;
         }
+    }
+}
+
+static void ValidateApiCriticalConfiguration(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    var errors = new List<string>();
+    var sensitivePlaceholders = new[] { "YOUR_", "CHANGE_ME", "REPLACE_ME", "TODO", "example", "placeholder" };
+    var strictPlaceholderCheck = environment.IsStaging() || environment.IsProduction();
+
+    string? Read(string key) => configuration[key];
+
+    void Require(string key, string description, bool secret = false, bool minJwtLength = false)
+    {
+        var value = Read(key);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            errors.Add($"{key} requerido ({description}).");
+            return;
+        }
+
+        if (minJwtLength && value.Length < 32)
+        {
+            errors.Add($"{key} debe tener al menos 32 caracteres.");
+        }
+
+        if (strictPlaceholderCheck)
+        {
+            var normalized = value.Trim();
+            if (sensitivePlaceholders.Any(p => normalized.Contains(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                errors.Add($"{key} no puede usar placeholder en {environment.EnvironmentName}.");
+            }
+        }
+    }
+
+    Require("ConnectionStrings:DefaultConnection", "cadena de conexión principal");
+    Require("Jwt:SecretKey", "firma JWT", secret: true, minJwtLength: true);
+    Require("Jwt:Issuer", "issuer JWT");
+    Require("Jwt:Audience", "audience JWT");
+
+    Require("EmailSettings:FromEmail", "remitente de email");
+    Require("EmailSettings:SmtpServer", "host SMTP");
+    Require("EmailSettings:Username", "usuario SMTP", secret: true);
+    Require("EmailSettings:Password", "password SMTP", secret: true);
+
+    Require("PadronAPI:BaseUrl", "URL del padrón");
+    Require("PadronAPI:Username", "usuario del padrón", secret: true);
+    Require("PadronAPI:Password", "password del padrón", secret: true);
+
+    Require("AuthLinks:PublicWebBaseUrl", "base URL pública web");
+    Require("FileStorage:PublicBaseUrl", "base URL pública para archivos");
+
+    var paymentMode = Read("PaymentProcessing:Mode");
+    if (!string.IsNullOrWhiteSpace(paymentMode) &&
+        !string.Equals(paymentMode, "Fake", StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(paymentMode, "Real", StringComparison.OrdinalIgnoreCase))
+    {
+        errors.Add("PaymentProcessing:Mode debe ser 'Fake' o 'Real'.");
+    }
+
+    if (environment.IsProduction())
+    {
+        var corsOrigins = configuration.GetSection("CorsConfiguration:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        if (corsOrigins.Length == 0)
+        {
+            errors.Add("CorsConfiguration:AllowedOrigins debe tener al menos un origen en Production.");
+        }
+    }
+
+    if (errors.Count > 0)
+    {
+        throw new InvalidOperationException(
+            "Configuración crítica incompleta o insegura:\n - " + string.Join("\n - ", errors));
     }
 }
 

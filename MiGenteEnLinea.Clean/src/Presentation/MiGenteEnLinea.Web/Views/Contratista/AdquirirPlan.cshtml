@@ -139,7 +139,7 @@
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    <img src="https://gcs-international.com/wp-content/uploads/2017/06/Cardnet-Web.png" alt="Cardnet" style="width: 150px;">
+                    <img src="~/images/Cardnet-Web.png" alt="Cardnet" style="width: 150px;">
                 </div>
                 <form id="formCheckout">
                     <div class="mb-3">
@@ -288,6 +288,9 @@
 
             try {
                 const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    throw new Error('No se encontró el usuario autenticado para procesar la suscripción.');
+                }
                 
                 let procesarPagoPath;
                 let pagoData;
@@ -328,12 +331,15 @@
 
                 if (!response.ok) {
                     const errorData = payload || {};
+                    const correlationText = errorData.correlationId
+                        ? ` (Ref: ${errorData.correlationId})`
+                        : '';
                     if (errorData.tipo === 'pago_rechazado') {
-                        throw new Error(errorData.message || 'El pago fue rechazado por la entidad bancaria');
+                        throw new Error((errorData.message || 'El pago fue rechazado por la entidad bancaria') + correlationText);
                     }
-                    throw new Error(window.getApiErrorMessage
+                    throw new Error((window.getApiErrorMessage
                         ? window.getApiErrorMessage(errorData, 'Error al procesar el pago')
-                        : (errorData.message || 'Error al procesar el pago'));
+                        : (errorData.message || 'Error al procesar el pago')) + correlationText);
                 }
 
                 const result = payload || {};
