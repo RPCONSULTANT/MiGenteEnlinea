@@ -1320,6 +1320,64 @@
 
             return [...new Set(items)];
         }
+
+        function normalizeEntityId(payload) {
+            if (typeof payload === 'number') return payload;
+            if (!payload || typeof payload !== 'object') return 0;
+            return Number(payload.id || payload.detalleId || payload.contratacionId || payload.result || 0);
+        }
+
+        function buildCreateTemporalPayload(contratista, formState) {
+            const nombreContratista = (contratista.nombreCompleto || `${contratista.nombre || ''} ${contratista.apellido || ''}`.trim()).trim();
+            const nombrePartes = splitNombreCompleto(nombreContratista);
+            const contratistaTipo = inferContratistaTipo(contratista);
+            const esJuridica = contratistaTipo === 2;
+            const identificacionLimpia = (contratista.identificacion || '').replace(/\D/g, '');
+            const rncLimpio = (contratista.rnc || contratista.Rnc || identificacionLimpia || '').replace(/\D/g, '');
+            const nombreComercial = (contratista.nombreComercial || contratista.nombreEmpresa || nombreContratista || '').trim();
+
+            if (esJuridica && (!nombreComercial || !rncLimpio)) {
+                throw new Error('El contratista jurídico debe tener nombre comercial y RNC para crear la contratación temporal.');
+            }
+
+            const payload = {
+                tipo: contratistaTipo,
+                telefono: contratista.telefono1 || null,
+                direccion: contratista.provincia || null,
+                email: contratista.email || null,
+                servicio: formState.servicioNombre || 'Servicio general',
+                fechaInicio: formState.fechaInicio,
+                fechaFinal: formState.fechaFin,
+                pago: formState.monto,
+                estatus: 1
+            };
+
+            if (esJuridica) {
+                payload.nombreComercial = nombreComercial;
+                payload.rnc = rncLimpio;
+            } else {
+                payload.nombre = nombrePartes.nombre;
+                payload.apellido = nombrePartes.apellido;
+                payload.identificacion = identificacionLimpia || `${formState.contratistaId}`;
+            }
+
+            return payload;
+        }
+
+        function buildCreateContratacionPayload(temporalId, formState) {
+            return {
+                contratacionId: temporalId,
+                contratistaId: formState.contratistaId,
+                servicioId: formState.servicioId || null,
+                descripcionCorta: formState.descripcionCorta,
+                descripcionAmpliada: formState.descripcionAmpliada || null,
+                fechaInicio: formState.fechaInicio,
+                fechaFinal: formState.fechaFin,
+                montoAcordado: formState.monto,
+                esquemaPagos: formState.esquemaPagos || null,
+                notas: formState.notas || null
+            };
+        }
         
         async function crearContratacion() {
             const token = getAuthToken();
@@ -1387,47 +1445,27 @@
                 document.getElementById('btnGuardarContratacion').disabled = true;
                 document.getElementById('btnGuardarContratacion').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creando...';
 
-                const nombreContratista = (contratista.nombreCompleto || `${contratista.nombre || ''} ${contratista.apellido || ''}`.trim()).trim();
-                const nombrePartes = splitNombreCompleto(nombreContratista);
                 const servicioSeleccionado = document.getElementById('servicioSelect');
-                const servicioNombre = servicioSeleccionado.options[servicioSeleccionado.selectedIndex]?.text || 'Servicio general';
-                const contratistaTipo = inferContratistaTipo(contratista);
-                const esJuridica = contratistaTipo === 2;
-                const identificacionLimpia = (contratista.identificacion || '').replace(/\D/g, '');
-                const rncLimpio = (contratista.rnc || contratista.Rnc || identificacionLimpia || '').replace(/\D/g, '');
-                const nombreComercial = (contratista.nombreComercial || contratista.nombreEmpresa || nombreContratista || '').trim();
-
-                if (esJuridica && (!nombreComercial || !rncLimpio)) {
-                    Swal.fire(
-                        'Datos incompletos',
-                        'El contratista jurídico debe tener nombre comercial y RNC para crear la contratación temporal.',
-                        'warning');
-                    return;
-                }
-
-                const temporalPayload = {
-                    tipo: contratistaTipo,
-                    telefono: contratista.telefono1 || null,
-                    direccion: contratista.provincia || null,
-                    email: contratista.email || null,
-                    servicio: servicioNombre || 'Servicio general',
-                    fechaInicio: fechaInicio,
-                    fechaFinal: fechaFin,
-                    pago: monto,
-                    estatus: 1
+                const formState = {
+                    contratistaId,
+                    servicioId,
+                    servicioNombre: servicioSeleccionado.options[servicioSeleccionado.selectedIndex]?.text || 'Servicio general',
+                    descripcionCorta,
+                    descripcionAmpliada: document.getElementById('descripcionAmpliada').value.trim(),
+                    fechaInicio,
+                    fechaFin,
+                    monto,
+                    esquemaPagos: document.getElementById('esquemaPagos').value,
+                    notas: document.getElementById('notas').value.trim()
                 };
-
-                if (esJuridica) {
-                    temporalPayload.nombreComercial = nombreComercial;
-                    temporalPayload.rnc = rncLimpio;
-                } else {
-                    temporalPayload.nombre = nombrePartes.nombre;
-                    temporalPayload.apellido = nombrePartes.apellido;
-                    temporalPayload.identificacion = identificacionLimpia || `${contratistaId}`;
-                }
+                const temporalPayload = buildCreateTemporalPayload(contratista, formState);
 
                 console.debug('CREATE_TEMPORAL_START', { contratistaId, servicioId, fechaInicio, fechaFin, monto });
-                const temporalResponse = await authenticatedFetch('/empleados/temporales', {
+                const temporalPath = window.API_ENDPOINTS?.EMPLEADOS?.TEMPORALES_CREATE;
+                if (!temporalPath) {
+                    throw new Error('No se encontró API_ENDPOINTS.EMPLEADOS.TEMPORALES_CREATE');
+                }
+                const temporalResponse = await authenticatedFetch(temporalPath, {
                     method: 'POST',
                     body: JSON.stringify(temporalPayload)
                 });
@@ -1443,25 +1481,12 @@
                 }
 
                 const temporalResult = window.readApiResponse ? await window.readApiResponse(temporalResponse) : await temporalResponse.json();
-                const contratacionId = typeof temporalResult === 'number'
-                    ? temporalResult
-                    : (temporalResult?.contratacionId || temporalResult?.id || temporalResult?.result);
+                const contratacionId = normalizeEntityId(temporalResult);
                 if (!contratacionId) {
                     throw new Error('No se recibió el identificador de contratación temporal');
                 }
 
-                const command = {
-                    contratacionId: contratacionId,
-                    contratistaId: contratistaId,
-                    servicioId: servicioId || null,
-                    descripcionCorta: descripcionCorta,
-                    descripcionAmpliada: document.getElementById('descripcionAmpliada').value.trim() || null,
-                    fechaInicio: fechaInicio,
-                    fechaFinal: fechaFin,
-                    montoAcordado: monto,
-                    esquemaPagos: document.getElementById('esquemaPagos').value || null,
-                    notas: document.getElementById('notas').value.trim() || null
-                };
+                const command = buildCreateContratacionPayload(contratacionId, formState);
                 
                 const createPath = window.API_ENDPOINTS?.CONTRATACIONES?.CREATE || '/contrataciones';
                 console.debug('CREATE_CONTRATACION_START', { contratacionId, contratistaId, servicioId, createPath });
@@ -1472,9 +1497,7 @@
                 
                 if (response.ok) {
                     const createResult = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
-                    const detalleId = typeof createResult === 'number'
-                        ? createResult
-                        : (createResult?.detalleId || createResult?.id || createResult?.result);
+                    const detalleId = normalizeEntityId(createResult);
                     
                     // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById('modalNuevaContratacion')).hide();
@@ -1740,7 +1763,13 @@
 
         async function verContratoTemporal(detalleId) {
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}/contrato-pdf`);
+                const contratoPath = window.API_ENDPOINTS?.CONTRATACIONES?.CONTRATO_PDF
+                    ? window.API_ENDPOINTS.CONTRATACIONES.CONTRATO_PDF(detalleId)
+                    : null;
+                if (!contratoPath) {
+                    throw new Error('No se encontró API_ENDPOINTS.CONTRATACIONES.CONTRATO_PDF');
+                }
+                const response = await authenticatedFetch(contratoPath);
                 if (!response.ok) {
                     const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     const message = window.getApiErrorMessage

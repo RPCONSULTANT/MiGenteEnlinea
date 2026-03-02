@@ -90,12 +90,36 @@ try {
         -Pattern "/empleados/consultar-padron/" `
         -Paths @($webSrc)
 
+    Assert-NoMatches -Name "No hardcoded contactos solicitudes route in views" `
+        -Pattern "/contactos/solicitudes" `
+        -Paths @("$webSrc/Views")
+
+    Assert-NoMatches -Name "No hardcoded empleados temporales create route in views" `
+        -Pattern "/empleados/temporales" `
+        -Paths @("$webSrc/Views")
+
+    Assert-NoMatches -Name "No hardcoded empleados temporales ficha route in views" `
+        -Pattern "/empleados/temporales/ficha\?" `
+        -Paths @("$webSrc/Views")
+
+    Assert-NoMatches -Name "No hardcoded empleados temporales vista route in views" `
+        -Pattern "/empleados/temporales/vista\?" `
+        -Paths @("$webSrc/Views")
+
+    Assert-NoMatches -Name "No hardcoded contrato temporal PDF route in views" `
+        -Pattern "contrato-pdf" `
+        -Paths @("$webSrc/Views")
+
     Assert-HasMatches -Name "API endpoints catalog included" `
         -Pattern "window\.API_ENDPOINTS" `
         -Paths @("$webSrc/wwwroot/js/api-endpoints.js")
 
     Assert-HasMatches -Name "Endpoint catalog includes contratos/dashboard/catalogos modules" `
         -Pattern "CONTRATACIONES|DASHBOARD|CATALOGOS|CALIFICACIONES|UTILITARIOS|NOMINAS" `
+        -Paths @("$webSrc/wwwroot/js/api-endpoints.js")
+
+    Assert-HasMatches -Name "Endpoint catalog includes migrated connectivity keys" `
+        -Pattern "TEMPORALES_CREATE|TEMPORALES_FICHA|TEMPORALES_VISTA|CONTACTOS|CONTRATO_PDF" `
         -Paths @("$webSrc/wwwroot/js/api-endpoints.js")
 
     Assert-HasMatches -Name "Custom.js exposes requestApi helper" `

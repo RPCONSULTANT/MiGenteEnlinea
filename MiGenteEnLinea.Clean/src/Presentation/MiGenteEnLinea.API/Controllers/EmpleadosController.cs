@@ -698,17 +698,30 @@ public class EmpleadosController : ControllerBase
         [FromQuery] int contratacionId,
         [FromQuery] string userId)
     {
+        var authenticatedUserId = GetUserId();
+        var isAdmin = IsAdminUser();
+        if (!string.IsNullOrWhiteSpace(userId) &&
+            !isAdmin &&
+            !string.Equals(userId, authenticatedUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
+        var effectiveUserId = isAdmin && !string.IsNullOrWhiteSpace(userId)
+            ? userId
+            : authenticatedUserId;
+
         var query = new GetFichaTemporalesQuery
         {
             ContratacionId = contratacionId,
-            UserId = userId
+            UserId = effectiveUserId
         };
 
         var result = await _mediator.Send(query);
 
         if (result == null)
         {
-            return NotFound($"No se encontró ficha temporal con ContratacionId={contratacionId} y UserId={userId}");
+            return NotFound($"No se encontró ficha temporal con ContratacionId={contratacionId} y UserId={effectiveUserId}");
         }
 
         return Ok(result);
@@ -731,9 +744,20 @@ public class EmpleadosController : ControllerBase
     public async Task<ActionResult<List<EmpleadoTemporalDto>>> GetTodosLosTemporales(
         [FromQuery] string userId)
     {
+        var authenticatedUserId = GetUserId();
+        var isAdmin = IsAdminUser();
+        if (!string.IsNullOrWhiteSpace(userId) &&
+            !isAdmin &&
+            !string.Equals(userId, authenticatedUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
         var query = new GetTodosLosTemporalesQuery
         {
-            UserId = userId
+            UserId = isAdmin && !string.IsNullOrWhiteSpace(userId)
+                ? userId
+                : authenticatedUserId
         };
 
         var result = await _mediator.Send(query);
@@ -757,17 +781,30 @@ public class EmpleadosController : ControllerBase
         [FromQuery] int contratacionId,
         [FromQuery] string userId)
     {
+        var authenticatedUserId = GetUserId();
+        var isAdmin = IsAdminUser();
+        if (!string.IsNullOrWhiteSpace(userId) &&
+            !isAdmin &&
+            !string.Equals(userId, authenticatedUserId, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
+        var effectiveUserId = isAdmin && !string.IsNullOrWhiteSpace(userId)
+            ? userId
+            : authenticatedUserId;
+
         var query = new GetVistaContratacionTemporalQuery
         {
             ContratacionId = contratacionId,
-            UserId = userId
+            UserId = effectiveUserId
         };
 
         var result = await _mediator.Send(query);
 
         if (result == null)
         {
-            return NotFound($"No se encontró vista temporal con ContratacionId={contratacionId} y UserId={userId}");
+            return NotFound($"No se encontró vista temporal con ContratacionId={contratacionId} y UserId={effectiveUserId}");
         }
 
         return Ok(result);
@@ -1586,6 +1623,12 @@ public class EmpleadosController : ControllerBase
         }
 
         return userId;
+    }
+
+    private bool IsAdminUser()
+    {
+        return User.FindAll(ClaimTypes.Role)
+            .Any(r => string.Equals(r.Value, "Admin", StringComparison.OrdinalIgnoreCase));
     }
 }
 

@@ -405,7 +405,12 @@
             if (!result.isConfirmed) return;
 
             try {
-                const response = await authenticatedFetch('/contactos/solicitudes', {
+                const solicitudesPath = window.API_ENDPOINTS?.CONTACTOS?.SOLICITUDES;
+                if (!solicitudesPath) {
+                    Swal.fire('Error', 'No se encontró API_ENDPOINTS.CONTACTOS.SOLICITUDES', 'error');
+                    return;
+                }
+                const response = await authenticatedFetch(solicitudesPath, {
                     method: 'POST',
                     body: JSON.stringify({
                         empleadorId,

@@ -164,7 +164,14 @@
                     return;
                 }
 
-                const fichaResponse = await authenticatedFetch(`/empleados/temporales/ficha?contratacionId=${currentContratacionId}&userId=${encodeURIComponent(userId)}`);
+                const fichaPath = window.API_ENDPOINTS?.EMPLEADOS?.TEMPORALES_FICHA
+                    ? window.API_ENDPOINTS.EMPLEADOS.TEMPORALES_FICHA(currentContratacionId, userId)
+                    : null;
+                if (!fichaPath) {
+                    showAlert('No se encontró API_ENDPOINTS.EMPLEADOS.TEMPORALES_FICHA.', 'danger');
+                    return;
+                }
+                const fichaResponse = await authenticatedFetch(fichaPath);
                 const fichaPayload = window.readApiResponse ? await window.readApiResponse(fichaResponse) : await fichaResponse.json();
                 if (!fichaResponse.ok || !fichaPayload) {
                     showAlert(window.getApiErrorMessage ? window.getApiErrorMessage(fichaPayload, 'No se pudo cargar la ficha temporal.') : 'No se pudo cargar la ficha temporal.', 'danger');
@@ -275,7 +282,10 @@
             }
 
             try {
-                const response = await authenticatedFetch(`/empleados/pagos-contrataciones?contratacionId=${currentContratacionId}&detalleId=${currentDetalleId}`);
+                const pagosPath = window.API_ENDPOINTS?.EMPLEADOS?.PAGOS_CONTRATACIONES
+                    ? window.API_ENDPOINTS.EMPLEADOS.PAGOS_CONTRATACIONES(currentContratacionId, currentDetalleId)
+                    : `/empleados/pagos-contrataciones?contratacionId=${currentContratacionId}&detalleId=${currentDetalleId}`;
+                const response = await authenticatedFetch(pagosPath);
                 const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                 if (!response.ok) {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">No se pudieron cargar los pagos.</td></tr>';
@@ -308,7 +318,14 @@
 
         async function verContrato(detalleId) {
             try {
-                const response = await authenticatedFetch(`/contrataciones/${detalleId}/contrato-pdf`);
+                const contratoPath = window.API_ENDPOINTS?.CONTRATACIONES?.CONTRATO_PDF
+                    ? window.API_ENDPOINTS.CONTRATACIONES.CONTRATO_PDF(detalleId)
+                    : null;
+                if (!contratoPath) {
+                    Swal.fire('Error', 'No se encontró API_ENDPOINTS.CONTRATACIONES.CONTRATO_PDF.', 'error');
+                    return;
+                }
+                const response = await authenticatedFetch(contratoPath);
                 if (!response.ok) {
                     const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     const message = window.getApiErrorMessage

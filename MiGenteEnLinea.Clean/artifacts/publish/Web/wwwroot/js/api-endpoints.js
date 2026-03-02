@@ -36,6 +36,10 @@
     EMPLEADOS: {
       LIST: "/empleados",
       LIST_ACTIVOS: "/empleados?soloActivos=true&pageSize=100",
+      TEMPORALES_CREATE: "/empleados/temporales",
+      TEMPORALES_FICHA: (contratacionId, userId) => `/empleados/temporales/ficha?contratacionId=${encodeURIComponent(contratacionId)}&userId=${encodeURIComponent(userId)}`,
+      TEMPORALES_VISTA: (contratacionId, userId) => `/empleados/temporales/vista?contratacionId=${encodeURIComponent(contratacionId)}&userId=${encodeURIComponent(userId)}`,
+      PAGOS_CONTRATACIONES: (contratacionId, detalleId) => `/empleados/pagos-contrataciones?contratacionId=${encodeURIComponent(contratacionId)}&detalleId=${encodeURIComponent(detalleId)}`,
       PADRON: (cedula) => `/empleados/padron/${cedula}`,
       DETALLE: (empleadoId) => `/empleados/${empleadoId}`,
       NOMINA: (empleadoId) => `/empleados/${empleadoId}/nomina`,
@@ -62,6 +66,7 @@
       LIST: "/contrataciones?pageSize=100",
       CREATE: "/contrataciones",
       DETALLE: (detalleId) => `/contrataciones/${detalleId}`,
+      CONTRATO_PDF: (detalleId) => `/contrataciones/${detalleId}/contrato-pdf`,
       ACCEPT: (detalleId) => `/contrataciones/${detalleId}/accept`,
       START: (detalleId) => `/contrataciones/${detalleId}/start`,
       COMPLETE: (detalleId) => `/contrataciones/${detalleId}/complete`,
@@ -75,6 +80,9 @@
     },
     CONSULTAS: {
       COUNT: (userId) => `/consultas/count/${userId}`,
+    },
+    CONTACTOS: {
+      SOLICITUDES: "/contactos/solicitudes",
     },
     DASHBOARD: {
       EMPLEADOR: "/dashboard/empleador",

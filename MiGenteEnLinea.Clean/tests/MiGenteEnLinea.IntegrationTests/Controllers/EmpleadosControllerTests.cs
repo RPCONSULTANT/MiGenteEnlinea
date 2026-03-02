@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System;
 using FluentAssertions;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateEmpleado;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.UpdateEmpleado;
@@ -415,6 +416,58 @@ public class EmpleadosControllerTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    #endregion
+
+    #region Temporales Connectivity Tests (2 tests)
+
+    [Fact]
+    public async Task CreateEmpleadoTemporal_WithInvalidPayload_ReturnsBadRequestWithContractShape()
+    {
+        // Arrange
+        var email = GenerateUniqueEmail("empleador");
+        await RegisterUserAsync(email, "Password123!", "Empresa", "Test", "Empleador");
+        await LoginAsync(email, "Password123!");
+
+        var invalidPayload = new
+        {
+            // Missing required values for física/jurídica and invalid payment range
+            tipo = 1,
+            servicio = "",
+            fechaInicio = DateTime.UtcNow.Date,
+            fechaFinal = DateTime.UtcNow.Date.AddDays(-1),
+            pago = 0
+        };
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/empleados/temporales", invalidPayload);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        doc.RootElement.TryGetProperty("code", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("message", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("details", out _).Should().BeTrue();
+        doc.RootElement.TryGetProperty("correlationId", out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetFichaTemporales_WithMismatchedUserId_ReturnsForbidden()
+    {
+        // Arrange
+        var email = GenerateUniqueEmail("empleador");
+        var userId = await RegisterUserAsync(email, "Password123!", "Empresa", "Test", "Empleador");
+        await LoginAsync(email, "Password123!");
+        var anotherUserId = Guid.NewGuid().ToString();
+        anotherUserId.Should().NotBe(userId);
+
+        // Act
+        var response = await Client.GetAsync($"/api/empleados/temporales/ficha?contratacionId=1&userId={anotherUserId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     #endregion
