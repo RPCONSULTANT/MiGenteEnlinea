@@ -440,6 +440,47 @@ function formatDate(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
+function sanitizeNumeric(value, maxLength = Number.MAX_SAFE_INTEGER) {
+  return String(value || "").replace(/\D/g, "").slice(0, maxLength);
+}
+
+function formatPhoneDigits(digits) {
+  const clean = sanitizeNumeric(digits, 10);
+  if (clean.length > 6) return `${clean.slice(0, 3)}-${clean.slice(3, 6)}-${clean.slice(6)}`;
+  if (clean.length > 3) return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+  return clean;
+}
+
+function formatCedulaDigits(digits) {
+  const clean = sanitizeNumeric(digits, 11);
+  if (clean.length > 10) return `${clean.slice(0, 3)}-${clean.slice(3, 10)}-${clean.slice(10)}`;
+  if (clean.length > 3) return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+  return clean;
+}
+
+function applyMaskedInput(input, formatter, maxDigits) {
+  if (!input) return;
+  const previousValue = String(input.value || "");
+  const previousStart = input.selectionStart || 0;
+  const digits = sanitizeNumeric(previousValue, maxDigits);
+  const nextValue = formatter(digits);
+  input.value = nextValue;
+
+  const delta = nextValue.length - previousValue.length;
+  const nextCaret = Math.max(0, Math.min(nextValue.length, previousStart + delta));
+  if (typeof input.setSelectionRange === "function") {
+    requestAnimationFrame(() => input.setSelectionRange(nextCaret, nextCaret));
+  }
+}
+
+function formatPhoneInput(input) {
+  applyMaskedInput(input, formatPhoneDigits, 10);
+}
+
+function formatCedulaInput(input) {
+  applyMaskedInput(input, formatCedulaDigits, 11);
+}
+
 // Exponer funciones globalmente
 window.renderStars = renderStars;
 window.loadProvincias = loadProvincias;
@@ -447,6 +488,11 @@ window.loadSectores = loadSectores;
 window.loadServicios = loadServicios;
 window.formatCurrency = formatCurrency;
 window.formatDate = formatDate;
+window.sanitizeNumeric = sanitizeNumeric;
+window.formatPhoneDigits = formatPhoneDigits;
+window.formatCedulaDigits = formatCedulaDigits;
+window.formatPhoneInput = formatPhoneInput;
+window.formatCedulaInput = formatCedulaInput;
 window.API_BASE = API_BASE;
 window.buildApiUrl = buildApiUrl;
 window.readApiResponse = readApiResponse;

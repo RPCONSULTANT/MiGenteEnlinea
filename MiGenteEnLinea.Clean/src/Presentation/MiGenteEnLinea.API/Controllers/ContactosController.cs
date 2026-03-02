@@ -1,9 +1,9 @@
-using System.Data;
 using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MiGenteEnLinea.Domain.Entities.Contactos;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 
 namespace MiGenteEnLinea.API.Controllers;
@@ -51,102 +51,46 @@ public class ContactosController : ControllerBase
             }
         }
 
-        await EnsureContactoSolicitudesTableAsync();
-
-        await using var connection = _context.Database.GetDbConnection();
-        if (connection.State != ConnectionState.Open)
-        {
-            await connection.OpenAsync();
-        }
-
         // Regla anti-duplicado: una pendiente por contratista-empleador
-        await using (var duplicateCmd = connection.CreateCommand())
+        var existePendiente = await _context.ContactoSolicitudes
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.ContratistaUserId == contratistaUserId &&
+                x.EmpleadorId == request.EmpleadorId &&
+                x.Estatus == "Pendiente");
+
+        if (existePendiente)
         {
-            duplicateCmd.CommandText = @"
-                SELECT COUNT(1)
-                FROM ContactoSolicitudes
-                WHERE contratistaUserId = @contratistaUserId
-                  AND empleadorId = @empleadorId
-                  AND estatus = 'Pendiente';";
-
-            AddParam(duplicateCmd, "@contratistaUserId", contratistaUserId);
-            AddParam(duplicateCmd, "@empleadorId", request.EmpleadorId);
-
-            var count = Convert.ToInt32(await duplicateCmd.ExecuteScalarAsync());
-            if (count > 0)
+            return Conflict(new
             {
-                return Conflict(new
-                {
-                    code = "duplicate_pending_request",
-                    message = "Ya existe una solicitud de contacto pendiente para este empleador.",
-                    correlationId
-                });
-            }
+                code = "duplicate_pending_request",
+                message = "Ya existe una solicitud de contacto pendiente para este empleador.",
+                correlationId
+            });
         }
 
-        int solicitudId;
-        await using (var insertCmd = connection.CreateCommand())
-        {
-            insertCmd.CommandText = @"
-                INSERT INTO ContactoSolicitudes
-                    (contratistaUserId, empleadorId, mensaje, canalPreferido, estatus, createdAt, updatedAt)
-                VALUES
-                    (@contratistaUserId, @empleadorId, @mensaje, @canalPreferido, 'Pendiente', GETDATE(), GETDATE());
-                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+        var solicitud = ContactoSolicitud.Crear(
+            contratistaUserId,
+            request.EmpleadorId,
+            request.Mensaje,
+            request.CanalPreferido);
 
-            AddParam(insertCmd, "@contratistaUserId", contratistaUserId);
-            AddParam(insertCmd, "@empleadorId", request.EmpleadorId);
-            AddParam(insertCmd, "@mensaje", request.Mensaje?.Trim());
-            AddParam(insertCmd, "@canalPreferido", request.CanalPreferido?.Trim().ToLowerInvariant());
-
-            solicitudId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
-        }
+        _context.ContactoSolicitudes.Add(solicitud);
+        await _context.SaveChangesAsync();
 
         _logger.LogInformation(
             "CONTACT_REQUEST_CREATE_SUCCESS CorrelationId={CorrelationId} SolicitudId={SolicitudId} ContratistaUserId={ContratistaUserId} EmpleadorId={EmpleadorId}",
             correlationId,
-            solicitudId,
+            solicitud.SolicitudId,
             contratistaUserId,
             request.EmpleadorId);
 
-        return Created($"/api/contactos/solicitudes/{solicitudId}", new
+        return Created($"/api/contactos/solicitudes/{solicitud.SolicitudId}", new
         {
-            solicitudId,
+            solicitudId = solicitud.SolicitudId,
             estatus = "Pendiente",
             correlationId
         });
-    }
-
-    private async Task EnsureContactoSolicitudesTableAsync()
-    {
-        var sql = @"
-            IF OBJECT_ID('dbo.ContactoSolicitudes', 'U') IS NULL
-            BEGIN
-                CREATE TABLE dbo.ContactoSolicitudes
-                (
-                    solicitudId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-                    contratistaUserId NVARCHAR(100) NOT NULL,
-                    empleadorId INT NOT NULL,
-                    mensaje NVARCHAR(500) NULL,
-                    canalPreferido NVARCHAR(20) NULL,
-                    estatus NVARCHAR(20) NOT NULL,
-                    createdAt DATETIME NOT NULL,
-                    updatedAt DATETIME NOT NULL
-                );
-
-                CREATE INDEX IX_ContactoSolicitudes_Contratista_Empleador_Estatus
-                    ON dbo.ContactoSolicitudes (contratistaUserId, empleadorId, estatus);
-            END";
-
-        await _context.Database.ExecuteSqlRawAsync(sql);
-    }
-
-    private static void AddParam(IDbCommand command, string name, object? value)
-    {
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = name;
-        parameter.Value = value ?? DBNull.Value;
-        command.Parameters.Add(parameter);
     }
 
     private string GetUserId()

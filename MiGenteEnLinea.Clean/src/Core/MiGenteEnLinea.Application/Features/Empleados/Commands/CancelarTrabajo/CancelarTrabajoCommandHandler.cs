@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 
@@ -6,14 +7,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.CancelarTrabajo
 
 public class CancelarTrabajoCommandHandler : IRequestHandler<CancelarTrabajoCommand, bool>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<CancelarTrabajoCommandHandler> _logger;
 
     public CancelarTrabajoCommandHandler(
-        ILegacyDataService legacyDataService,
+        IApplicationDbContext context,
         ILogger<CancelarTrabajoCommandHandler> logger)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
         _logger = logger;
     }
 
@@ -24,16 +25,16 @@ public class CancelarTrabajoCommandHandler : IRequestHandler<CancelarTrabajoComm
             request.ContratacionId,
             request.DetalleId);
 
-        var result = await _legacyDataService.CancelarTrabajoAsync(
-            request.ContratacionId,
-            request.DetalleId,
-            cancellationToken);
+        await _context.DetalleContrataciones
+            .Where(d => d.ContratacionId == request.ContratacionId && d.DetalleId == request.DetalleId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(d => d.Estatus, 3), cancellationToken);
 
         _logger.LogInformation(
             "Trabajo temporal cancelado (estatus=3): ContratacionId={ContratacionId}, DetalleId={DetalleId}",
             request.ContratacionId,
             request.DetalleId);
         
-        return result;
+        return true;
     }
 }

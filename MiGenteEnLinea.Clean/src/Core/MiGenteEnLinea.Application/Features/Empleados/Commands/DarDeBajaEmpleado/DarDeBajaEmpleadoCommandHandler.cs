@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 
@@ -6,14 +7,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.DarDeBajaEmplea
 
 public class DarDeBajaEmpleadoCommandHandler : IRequestHandler<DarDeBajaEmpleadoCommand, bool>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<DarDeBajaEmpleadoCommandHandler> _logger;
 
     public DarDeBajaEmpleadoCommandHandler(
-        ILegacyDataService legacyDataService,
+        IApplicationDbContext context,
         ILogger<DarDeBajaEmpleadoCommandHandler> logger)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
         _logger = logger;
     }
 
@@ -25,16 +26,38 @@ public class DarDeBajaEmpleadoCommandHandler : IRequestHandler<DarDeBajaEmpleado
             request.FechaBaja,
             request.Motivo);
 
-        var result = await _legacyDataService.DarDeBajaEmpleadoAsync(
-            request.EmpleadoId,
-            request.UserId,
-            request.FechaBaja,
-            request.Prestaciones,
-            request.Motivo,
-            cancellationToken);
+        var empleado = await _context.Empleados
+            .AsNoTracking()
+            .Where(e => e.EmpleadoId == request.EmpleadoId && e.UserId == request.UserId)
+            .Select(e => new { e.EmpleadoId, e.Activo })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (empleado is null)
+        {
+            throw new InvalidOperationException(
+                $"Empleado {request.EmpleadoId} no encontrado o no pertenece al usuario {request.UserId}");
+        }
+
+        if (!empleado.Activo)
+        {
+            throw new InvalidOperationException($"Empleado {request.EmpleadoId} ya está dado de baja");
+        }
+
+        var rowsAffected = await _context.Empleados
+            .Where(e => e.EmpleadoId == request.EmpleadoId && e.UserId == request.UserId && e.Activo)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(e => e.Activo, false)
+                .SetProperty(e => e.FechaSalida, request.FechaBaja.Date)
+                .SetProperty(e => e.MotivoBaja, request.Motivo)
+                .SetProperty(e => e.Prestaciones, request.Prestaciones), cancellationToken);
+
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException($"No se pudo dar de baja al empleado {request.EmpleadoId}");
+        }
 
         _logger.LogInformation("Empleado dado de baja exitosamente: {EmpleadoId}", request.EmpleadoId);
         
-        return result;
+        return true;
     }
 }

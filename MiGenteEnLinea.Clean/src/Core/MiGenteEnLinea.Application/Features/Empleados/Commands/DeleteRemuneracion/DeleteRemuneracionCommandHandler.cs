@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Domain.Entities.Empleados;
 
 namespace MiGenteEnLinea.Application.Features.Empleados.Commands.DeleteRemuneracion;
 
@@ -16,20 +18,27 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.DeleteRemunerac
 /// </summary>
 public class DeleteRemuneracionCommandHandler : IRequestHandler<DeleteRemuneracionCommand, Unit>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
 
-    public DeleteRemuneracionCommandHandler(ILegacyDataService legacyDataService)
+    public DeleteRemuneracionCommandHandler(IApplicationDbContext context)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
     }
 
     public async Task<Unit> Handle(DeleteRemuneracionCommand request, CancellationToken cancellationToken)
     {
-        // Buscar y eliminar remuneración (mismo where del Legacy)
-        await _legacyDataService.DeleteRemuneracionAsync(
-            request.UserId,
-            request.RemuneracionId,
-            cancellationToken);
+        var remuneracion = await _context.Set<Remuneracion>()
+            .FirstOrDefaultAsync(
+                x => x.UserId == request.UserId && x.Id == request.RemuneracionId,
+                cancellationToken);
+
+        if (remuneracion is null)
+        {
+            return Unit.Value;
+        }
+
+        _context.Set<Remuneracion>().Remove(remuneracion);
+        await _context.SaveChangesAsync(cancellationToken);
 
         // Legacy no lanza error si no encuentra (sólo valida != null)
         // Mantenemos comportamiento idéntico

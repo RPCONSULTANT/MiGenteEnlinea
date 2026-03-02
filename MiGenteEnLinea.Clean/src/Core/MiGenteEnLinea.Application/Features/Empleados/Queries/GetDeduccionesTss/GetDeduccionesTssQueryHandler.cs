@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
 
@@ -11,16 +12,24 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Queries.GetDeduccionesTs
 /// </summary>
 public class GetDeduccionesTssQueryHandler : IRequestHandler<GetDeduccionesTssQuery, List<DeduccionTssDto>>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
 
-    public GetDeduccionesTssQueryHandler(ILegacyDataService legacyDataService)
+    public GetDeduccionesTssQueryHandler(IApplicationDbContext context)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
     }
 
     public async Task<List<DeduccionTssDto>> Handle(GetDeduccionesTssQuery request, CancellationToken cancellationToken)
     {
-        // Legacy: return db.Deducciones_TSS.ToList();
-        return await _legacyDataService.GetDeduccionesTssAsync(cancellationToken);
+        return await _context.DeduccionesTss
+            .AsNoTracking()
+            .OrderBy(x => x.Id)
+            .Select(x => new DeduccionTssDto
+            {
+                Id = x.Id,
+                Descripcion = x.Descripcion,
+                Porcentaje = x.Porcentaje
+            })
+            .ToListAsync(cancellationToken);
     }
 }

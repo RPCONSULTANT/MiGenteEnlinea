@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 
@@ -6,14 +7,14 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.EliminarRecibo;
 
 public class EliminarReciboContratacionCommandHandler : IRequestHandler<EliminarReciboContratacionCommand, bool>
 {
-    private readonly ILegacyDataService _legacyDataService;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<EliminarReciboContratacionCommandHandler> _logger;
 
     public EliminarReciboContratacionCommandHandler(
-        ILegacyDataService legacyDataService,
+        IApplicationDbContext context,
         ILogger<EliminarReciboContratacionCommandHandler> logger)
     {
-        _legacyDataService = legacyDataService;
+        _context = context;
         _logger = logger;
     }
 
@@ -21,12 +22,20 @@ public class EliminarReciboContratacionCommandHandler : IRequestHandler<Eliminar
     {
         _logger.LogWarning("Eliminando recibo de contratación: PagoId={PagoId}", request.PagoId);
 
-        var result = await _legacyDataService.EliminarReciboContratacionAsync(
-            request.PagoId,
-            cancellationToken);
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        await _context.EmpleadorRecibosDetalleContrataciones
+            .Where(d => d.PagoId == request.PagoId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await _context.EmpleadorRecibosHeaderContrataciones
+            .Where(h => h.PagoId == request.PagoId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
 
         _logger.LogInformation("Recibo de contratación eliminado (Header + Detalle): PagoId={PagoId}", request.PagoId);
         
-        return result;
+        return true;
     }
 }

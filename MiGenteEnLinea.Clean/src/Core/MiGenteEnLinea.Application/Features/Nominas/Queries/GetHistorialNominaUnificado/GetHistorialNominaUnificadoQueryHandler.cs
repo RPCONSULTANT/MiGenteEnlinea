@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Nominas.DTOs;
+using MiGenteEnLinea.Domain.Entities.Empleados;
 
 namespace MiGenteEnLinea.Application.Features.Nominas.Queries.GetHistorialNominaUnificado;
 
@@ -25,54 +26,99 @@ public class GetHistorialNominaUnificadoQueryHandler : IRequestHandler<GetHistor
     {
         var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
         var pageSize = request.PageSize < 1 ? 20 : Math.Min(request.PageSize, 200);
+        var empleadosTemporales = _context.Set<EmpleadoTemporal>().AsNoTracking();
 
-        const string sql = @"
-            SELECT
-                rh.pagoID AS PagoId,
-                COALESCE(rh.fechaPago, rh.fechaRegistro) AS FechaPago,
-                COALESCE(NULLIF(LTRIM(RTRIM(CONCAT(e.nombre, ' ', e.apellido))), ''), 'Empleado') AS Beneficiario,
-                COALESCE(rh.conceptoPago, 'Pago de nómina') AS Concepto,
-                COALESCE(SUM(CASE WHEN COALESCE(rd.Monto, 0) > 0 THEN rd.Monto ELSE 0 END), 0) AS TotalBruto,
-                ABS(COALESCE(SUM(CASE WHEN COALESCE(rd.Monto, 0) < 0 THEN rd.Monto ELSE 0 END), 0)) AS TotalDeducciones,
-                COALESCE(SUM(COALESCE(rd.Monto, 0)), 0) AS TotalNeto,
-                CAST('Fijo' AS nvarchar(20)) AS TipoRegistro,
-                COALESCE(rh.empleadoID, 0) AS ReferenciaId,
-                COALESCE(rh.tipo, 1) AS Estado
-            FROM Empleador_Recibos_Header rh
-            LEFT JOIN Empleador_Recibos_Detalle rd ON rd.pagoID = rh.pagoID
-            LEFT JOIN Empleados e ON e.empleadoID = rh.empleadoID
-            WHERE rh.userID = {0}
-            GROUP BY rh.pagoID, rh.fechaPago, rh.fechaRegistro, rh.conceptoPago, rh.empleadoID, rh.tipo, e.nombre, e.apellido
-
-            UNION ALL
-
-            SELECT
-                rhc.pagoID AS PagoId,
-                COALESCE(rhc.fechaPago, rhc.fechaRegistro) AS FechaPago,
-                COALESCE(
-                    NULLIF(LTRIM(RTRIM(CONCAT(et.nombre, ' ', et.apellido))), ''),
-                    NULLIF(LTRIM(RTRIM(et.nombreComercial)), ''),
-                    'Contratista temporal'
-                ) AS Beneficiario,
-                COALESCE(rhc.conceptoPago, 'Pago de contratación temporal') AS Concepto,
-                COALESCE(SUM(COALESCE(rdc.Monto, 0)), 0) AS TotalBruto,
-                CAST(0 AS decimal(18,2)) AS TotalDeducciones,
-                COALESCE(SUM(COALESCE(rdc.Monto, 0)), 0) AS TotalNeto,
-                CAST('Temporal' AS nvarchar(20)) AS TipoRegistro,
-                COALESCE(rhc.contratacionID, 0) AS ReferenciaId,
-                COALESCE(rhc.tipo, 1) AS Estado
-            FROM Empleador_Recibos_Header_Contrataciones rhc
-            LEFT JOIN Empleador_Recibos_Detalle_Contrataciones rdc ON rdc.pagoID = rhc.pagoID
-            LEFT JOIN Empleados_Temporales et ON et.contratacionID = rhc.contratacionID
-            WHERE rhc.userID = {0}
-            GROUP BY rhc.pagoID, rhc.fechaPago, rhc.fechaRegistro, rhc.conceptoPago, rhc.contratacionID, rhc.tipo, et.nombre, et.apellido, et.nombreComercial
-        ";
-
-        var rows = await _context.Database
-            .SqlQueryRaw<NominaHistorialUnificadoDto>(sql, request.UserId)
+        var fixedRows = await _context.RecibosHeader
+            .AsNoTracking()
+            .Where(rh => rh.UserId == request.UserId)
+            .Select(rh => new
+            {
+                rh.PagoId,
+                FechaPago = rh.FechaPago ?? rh.FechaRegistro,
+                Nombre = _context.Empleados
+                    .Where(e => e.EmpleadoId == rh.EmpleadoId)
+                    .Select(e => e.Nombre)
+                    .FirstOrDefault(),
+                Apellido = _context.Empleados
+                    .Where(e => e.EmpleadoId == rh.EmpleadoId)
+                    .Select(e => e.Apellido)
+                    .FirstOrDefault(),
+                Concepto = rh.ConceptoPago,
+                TotalBruto = _context.RecibosDetalle
+                    .Where(rd => rd.PagoId == rh.PagoId && rd.Monto > 0)
+                    .Select(rd => (decimal?)rd.Monto)
+                    .Sum() ?? 0m,
+                TotalDeducciones = _context.RecibosDetalle
+                    .Where(rd => rd.PagoId == rh.PagoId && rd.Monto < 0)
+                    .Select(rd => (decimal?)(-rd.Monto))
+                    .Sum() ?? 0m,
+                TotalNeto = _context.RecibosDetalle
+                    .Where(rd => rd.PagoId == rh.PagoId)
+                    .Select(rd => (decimal?)rd.Monto)
+                    .Sum() ?? 0m,
+                ReferenciaId = rh.EmpleadoId,
+                Estado = rh.Tipo
+            })
             .ToListAsync(cancellationToken);
 
-        var query = rows.AsQueryable();
+        var temporalRows = await _context.EmpleadorRecibosHeaderContrataciones
+            .AsNoTracking()
+            .Where(rh => rh.UserId == request.UserId)
+            .Select(rh => new
+            {
+                rh.PagoId,
+                FechaPago = rh.FechaPago ?? rh.FechaRegistro,
+                Nombre = empleadosTemporales
+                    .Where(et => et.ContratacionId == rh.ContratacionId)
+                    .Select(et => et.Nombre)
+                    .FirstOrDefault(),
+                Apellido = empleadosTemporales
+                    .Where(et => et.ContratacionId == rh.ContratacionId)
+                    .Select(et => et.Apellido)
+                    .FirstOrDefault(),
+                NombreComercial = empleadosTemporales
+                    .Where(et => et.ContratacionId == rh.ContratacionId)
+                    .Select(et => et.NombreComercial)
+                    .FirstOrDefault(),
+                Concepto = rh.ConceptoPago,
+                TotalBruto = _context.EmpleadorRecibosDetalleContrataciones
+                    .Where(rd => rd.PagoId == rh.PagoId)
+                    .Select(rd => rd.Monto ?? 0m)
+                    .Sum(),
+                ReferenciaId = rh.ContratacionId ?? 0,
+                Estado = rh.Tipo ?? 1
+            })
+            .ToListAsync(cancellationToken);
+
+        var query = fixedRows
+            .Select(x => new NominaHistorialUnificadoDto
+            {
+                PagoId = x.PagoId,
+                FechaPago = x.FechaPago,
+                Beneficiario = BuildFixedBeneficiario(x.Nombre, x.Apellido),
+                Concepto = string.IsNullOrWhiteSpace(x.Concepto) ? "Pago de nómina" : x.Concepto,
+                TotalBruto = x.TotalBruto,
+                TotalDeducciones = x.TotalDeducciones,
+                TotalNeto = x.TotalNeto,
+                TipoRegistro = "Fijo",
+                ReferenciaId = x.ReferenciaId,
+                Estado = x.Estado
+            })
+            .Concat(temporalRows.Select(x => new NominaHistorialUnificadoDto
+            {
+                PagoId = x.PagoId,
+                FechaPago = x.FechaPago ?? DateTime.MinValue,
+                Beneficiario = BuildTemporalBeneficiario(x.Nombre, x.Apellido, x.NombreComercial),
+                Concepto = string.IsNullOrWhiteSpace(x.Concepto) ? "Pago de contratación temporal" : x.Concepto,
+                TotalBruto = x.TotalBruto,
+                TotalDeducciones = 0m,
+                TotalNeto = x.TotalBruto,
+                TipoRegistro = "Temporal",
+                ReferenciaId = x.ReferenciaId,
+                Estado = x.Estado
+            }))
+            .AsQueryable();
+
         if (request.FechaDesde.HasValue)
         {
             query = query.Where(x => x.FechaPago >= request.FechaDesde.Value);
@@ -95,5 +141,22 @@ public class GetHistorialNominaUnificadoQueryHandler : IRequestHandler<GetHistor
             result.Count);
 
         return result;
+    }
+
+    private static string BuildFixedBeneficiario(string? nombre, string? apellido)
+    {
+        var nombreCompleto = string.Join(" ", new[] { nombre, apellido }.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
+        return string.IsNullOrWhiteSpace(nombreCompleto) ? "Empleado" : nombreCompleto;
+    }
+
+    private static string BuildTemporalBeneficiario(string? nombre, string? apellido, string? nombreComercial)
+    {
+        var nombrePersona = string.Join(" ", new[] { nombre, apellido }.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
+        if (!string.IsNullOrWhiteSpace(nombrePersona))
+        {
+            return nombrePersona;
+        }
+
+        return string.IsNullOrWhiteSpace(nombreComercial) ? "Contratista temporal" : nombreComercial.Trim();
     }
 }

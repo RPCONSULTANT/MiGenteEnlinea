@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Interfaces;
-using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateRemuneraciones;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateEmpleadoTemporal;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateDetalleContratacion;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.UpdateDetalleContratacion;
@@ -10,7 +9,6 @@ using MiGenteEnLinea.Application.Features.Empleados.DTOs;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Infrastructure.Persistence.Entities.Generated;
 using System;
-using System.Text;
 
 namespace MiGenteEnLinea.Infrastructure.Services;
 
@@ -25,201 +23,6 @@ public class LegacyDataService : ILegacyDataService
     public LegacyDataService(MiGenteDbContext context)
     {
         _context = context;
-    }
-
-    public async Task<List<RemuneracionDto>> GetRemuneracionesAsync(
-        string userId,
-        int empleadoId,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy: return db.Remuneraciones.Where(x => x.userID == userID && x.empleadoID == empleadoID).ToList();
-        return await _context.Database
-            .SqlQueryRaw<RemuneracionDto>(
-                "SELECT id AS Id, userID AS UserId, empleadoID AS EmpleadoId, " +
-                "descripcion AS Descripcion, monto AS Monto " +
-                "FROM Remuneraciones WHERE userID = {0} AND empleadoID = {1}",
-                userId, empleadoId)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task DeleteRemuneracionAsync(
-        string userId,
-        int remuneracionId,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy: db.Remuneraciones.Remove(toDelete); db.SaveChanges();
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Remuneraciones WHERE userID = {0} AND id = {1}",
-            [userId, remuneracionId],
-            cancellationToken);
-    }
-
-    public async Task CreateRemuneracionesAsync(
-        string userId,
-        int empleadoId,
-        List<RemuneracionItemDto> remuneraciones,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy: db.Remuneraciones.AddRange(rem); db.SaveChanges();
-        // Construir INSERT batch usando StringBuilder
-        var sqlBuilder = new StringBuilder();
-        var parameters = new List<object>();
-        int paramIndex = 0;
-
-        foreach (var rem in remuneraciones)
-        {
-            if (sqlBuilder.Length > 0)
-                sqlBuilder.Append(";");
-
-            sqlBuilder.Append($"INSERT INTO Remuneraciones (userID, empleadoID, descripcion, monto) " +
-                            $"VALUES ({{{paramIndex}}}, {{{paramIndex + 1}}}, {{{paramIndex + 2}}}, {{{paramIndex + 3}}})");
-
-            parameters.Add(userId);
-            parameters.Add(empleadoId);
-            parameters.Add(rem.Descripcion);
-            parameters.Add(rem.Monto);
-
-            paramIndex += 4;
-        }
-
-        if (sqlBuilder.Length > 0)
-        {
-            await _context.Database.ExecuteSqlRawAsync(
-                sqlBuilder.ToString(),
-                parameters.ToArray(),
-                cancellationToken);
-        }
-    }
-
-    public async Task UpdateRemuneracionesAsync(
-        string userId,
-        int empleadoId,
-        List<RemuneracionItemDto> remuneraciones,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy: DELETE existing, then INSERT new
-        // Step 1: Delete existing remuneraciones for this empleadoId
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Remuneraciones WHERE userID = {0} AND empleadoID = {1}",
-            [userId, empleadoId],
-            cancellationToken);
-
-        // Step 2: Insert new remuneraciones
-        await CreateRemuneracionesAsync(userId, empleadoId, remuneraciones, cancellationToken);
-    }
-
-    public async Task<List<DeduccionTssDto>> GetDeduccionesTssAsync(CancellationToken cancellationToken = default)
-    {
-        // Legacy: return db.Deducciones_TSS.ToList();
-        return await _context.Database
-            .SqlQueryRaw<DeduccionTssDto>(
-                "SELECT id AS Id, descripcion AS Descripcion, porcentaje AS Porcentaje " +
-                "FROM Deducciones_TSS")
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<bool> DarDeBajaEmpleadoAsync(
-        int empleadoId,
-        string userId,
-        DateTime fechaBaja,
-        decimal prestaciones,
-        string motivo,
-        CancellationToken cancellationToken = default)
-    {
-        // ✅ FIX: Validar que el empleado existe y está activo ANTES de actualizar
-        var empleado = await _context.Empleados
-            .Where(e => e.EmpleadoId == empleadoId && e.UserId == userId)
-            .Select(e => new { e.EmpleadoId, e.Activo })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (empleado == null)
-        {
-            throw new InvalidOperationException($"Empleado {empleadoId} no encontrado o no pertenece al usuario {userId}");
-        }
-
-        if (!empleado.Activo)
-        {
-            throw new InvalidOperationException($"Empleado {empleadoId} ya está dado de baja");
-        }
-
-        // Legacy: 
-        // empleado.Activo = false;
-        // empleado.fechaSalida = fechaBaja.Date;
-        // empleado.motivoBaja = motivo;
-        // empleado.prestaciones = prestaciones;
-        // db.SaveChanges();
-
-        var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Empleados SET Activo = 0, fechaSalida = {0}, motivoBaja = {1}, prestaciones = {2} " +
-            "WHERE empleadoID = {3} AND userID = {4} AND Activo = 1",
-            [fechaBaja.Date, motivo, prestaciones, empleadoId, userId],
-            cancellationToken);
-
-        // ✅ FIX: Validar que la actualización fue exitosa
-        if (rowsAffected == 0)
-        {
-            throw new InvalidOperationException($"No se pudo dar de baja al empleado {empleadoId}");
-        }
-
-        return true;
-    }
-
-    public async Task<bool> CancelarTrabajoAsync(
-        int contratacionId,
-        int detalleId,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy:
-        // detalle.estatus = 3;
-        // db.SaveChanges();
-
-        await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE DetalleContrataciones SET estatus = 3 " +
-            "WHERE contratacionID = {0} AND detalleID = {1}",
-            [contratacionId, detalleId],
-            cancellationToken);
-
-        return true;
-    }
-
-    public async Task<bool> EliminarReciboEmpleadoAsync(
-        int pagoId,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy uses 2 separate DbContexts - we'll use 2 separate SQL commands
-        // Step 1: Delete details
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Empleador_Recibos_Detalle WHERE pagoID = {0}",
-            [pagoId],
-            cancellationToken);
-
-        // Step 2: Delete header
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Empleador_Recibos_Header WHERE pagoID = {0}",
-            [pagoId],
-            cancellationToken);
-
-        return true;
-    }
-
-    public async Task<bool> EliminarReciboContratacionAsync(
-        int pagoId,
-        CancellationToken cancellationToken = default)
-    {
-        // Legacy uses 2 separate DbContexts - same pattern for contrataciones
-        // Step 1: Delete details
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Empleador_Recibos_Detalle_Contrataciones WHERE pagoID = {0}",
-            [pagoId],
-            cancellationToken);
-
-        // Step 2: Delete header
-        await _context.Database.ExecuteSqlRawAsync(
-            "DELETE FROM Empleador_Recibos_Header_Contrataciones WHERE pagoID = {0}",
-            [pagoId],
-            cancellationToken);
-
-        return true;
     }
 
     public async Task<ReciboContratacionDto?> GetReciboContratacionAsync(
@@ -364,46 +167,54 @@ public class LegacyDataService : ILegacyDataService
 
         try
         {
-            // Legacy: Uses 2 separate DbContexts (2 transactions)
-            // Step 1: Create EmpleadoTemporal
-            var empleadoTemporal = new EmpleadosTemporale
+            await using var tx = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            var temporalParams = new object[]
             {
-                UserId = command.UserId,
-                FechaRegistro = DateTime.Now,
-                Tipo = command.Tipo,
-                NombreComercial = command.NombreComercial,
-                Rnc = command.Rnc,
-                Nombre = command.Nombre?.Trim(),
-                Apellido = command.Apellido?.Trim(),
-                Identificacion = command.Identificacion?.Trim(),
-                Telefono1 = command.Telefono?.Trim(),
-                Direccion = command.Direccion?.Trim()
+                command.UserId,
+                command.Tipo ?? 1,
+                (object?)command.NombreComercial?.Trim() ?? DBNull.Value,
+                (object?)command.Rnc?.Trim() ?? DBNull.Value,
+                (object?)command.Nombre?.Trim() ?? DBNull.Value,
+                (object?)command.Apellido?.Trim() ?? DBNull.Value,
+                (object?)command.Identificacion?.Trim() ?? DBNull.Value,
+                (object?)command.Telefono?.Trim() ?? DBNull.Value,
+                (object?)command.Direccion?.Trim() ?? DBNull.Value
             };
 
-            _context.Set<EmpleadosTemporale>().Add(empleadoTemporal);
-            await _context.SaveChangesAsync(cancellationToken);
+            var contratacionId = await _context.Database
+                .SqlQueryRaw<int>(
+                    @"INSERT INTO EmpleadosTemporales
+                      (userID, fechaRegistro, tipo, nombreComercial, rnc, nombre, apellido, identificacion, telefono1, direccion)
+                      VALUES ({0}, GETDATE(), {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8});
+                      SELECT CAST(SCOPE_IDENTITY() AS int);",
+                    temporalParams)
+                .SingleAsync(cancellationToken);
 
-            int contratacionId = empleadoTemporal.ContratacionId;
-
-            // Step 2: Create DetalleContrataciones (with the generated contratacionId)
-            var detalle = new DetalleContratacione
+            var detalleParams = new object[]
             {
-                ContratacionId = contratacionId,
-                DescripcionCorta = command.Servicio?.Trim(), // "Servicio" maps to "DescripcionCorta"
-                FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : null,
-                FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : null,
-                MontoAcordado = command.Pago,
-                DescripcionAmpliada = command.LugarTrabajo, // Assuming LugarTrabajo maps to DescripcionAmpliada
-                EsquemaPagos = command.HorarioTrabajo, // Assuming HorarioTrabajo maps to EsquemaPagos
-                Estatus = command.Estatus ?? 1 // Default to 1 (active)
+                contratacionId,
+                (object?)command.Servicio?.Trim() ?? DBNull.Value,
+                (object?)command.FechaInicio?.Date ?? DBNull.Value,
+                (object?)command.FechaFinal?.Date ?? DBNull.Value,
+                (object?)command.Pago ?? DBNull.Value,
+                (object?)command.LugarTrabajo?.Trim() ?? DBNull.Value,
+                (object?)command.HorarioTrabajo?.Trim() ?? DBNull.Value,
+                command.Estatus ?? 1
             };
 
-            _context.Set<DetalleContratacione>().Add(detalle);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.Database.ExecuteSqlRawAsync(
+                @"INSERT INTO DetalleContrataciones
+                  (contratacionID, descripcionCorta, fechaInicio, fechaFinal, montoAcordado, descripcionAmpliada, esquemaPagos, estatus)
+                  VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+                detalleParams,
+                cancellationToken);
+
+            await tx.CommitAsync(cancellationToken);
 
             return contratacionId;
         }
-        catch (DbUpdateException ex) when (IsKnownDataError(ex))
+        catch (Exception ex) when (IsKnownDataError(ex))
         {
             throw new ArgumentException("Datos inválidos para crear la contratación temporal. Verifique longitudes y campos requeridos.");
         }
@@ -417,7 +228,7 @@ public class LegacyDataService : ILegacyDataService
         }
     }
 
-    private static bool IsKnownDataError(DbUpdateException ex)
+    private static bool IsKnownDataError(Exception ex)
     {
         var message = ex.GetBaseException().Message;
         return message.Contains("String or binary data would be truncated", StringComparison.OrdinalIgnoreCase)
@@ -534,7 +345,7 @@ public class LegacyDataService : ILegacyDataService
     {
         // Legacy: Get EmpleadosTemporales with DetalleContrataciones included
         var empleadoTemporal = await _context
-            .Set<EmpleadosTemporale>()
+            .Set<Domain.Entities.Empleados.EmpleadoTemporal>()
             .Where(x => x.UserId == userId && x.ContratacionId == contratacionId)
             .Select(e => new EmpleadoTemporalDto
             {
@@ -550,7 +361,7 @@ public class LegacyDataService : ILegacyDataService
                 Telefono1 = e.Telefono1,
                 Direccion = e.Direccion,
                 // Include DetalleContrataciones
-                Detalle = _context.Set<DetalleContratacione>()
+                Detalle = _context.Set<Domain.Entities.Contrataciones.DetalleContratacion>()
                     .Where(d => d.ContratacionId == e.ContratacionId)
                     .Select(d => new DetalleContratacionDto
                     {
@@ -587,7 +398,7 @@ public class LegacyDataService : ILegacyDataService
     {
         // Legacy: Query EmpleadosTemporales by userID with Include
         var empleadosTemporales = await _context
-            .Set<EmpleadosTemporale>()
+            .Set<Domain.Entities.Empleados.EmpleadoTemporal>()
             .Where(x => x.UserId == userId)
             .Select(e => new EmpleadoTemporalDto
             {
@@ -603,7 +414,7 @@ public class LegacyDataService : ILegacyDataService
                 Telefono1 = e.Telefono1,
                 Direccion = e.Direccion,
                 // Include DetalleContrataciones
-                Detalle = _context.Set<DetalleContratacione>()
+                Detalle = _context.Set<Domain.Entities.Contrataciones.DetalleContratacion>()
                     .Where(d => d.ContratacionId == e.ContratacionId)
                     .Select(d => new DetalleContratacionDto
                     {

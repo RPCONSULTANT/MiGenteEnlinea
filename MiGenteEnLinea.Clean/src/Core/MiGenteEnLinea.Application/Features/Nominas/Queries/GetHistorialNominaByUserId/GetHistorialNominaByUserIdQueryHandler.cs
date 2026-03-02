@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Nominas.DTOs;
+using System.Globalization;
 
 namespace MiGenteEnLinea.Application.Features.Nominas.Queries.GetHistorialNominaByUserId;
 
@@ -41,80 +42,73 @@ public class GetHistorialNominaByUserIdQueryHandler : IRequestHandler<GetHistori
 
         try
         {
-            // Construir filtro de período si se proporciona
-            var periodoFilter = "";
+            var userIdAsString = request.UserId.ToString(CultureInfo.InvariantCulture);
+            var query = _context.RecibosHeader
+                .AsNoTracking()
+                .Where(x => x.UserId == userIdAsString);
+
+            // Construir filtro de período si se proporciona (formato YYYY-MM)
             if (!string.IsNullOrEmpty(request.Periodo))
             {
-                // Período en formato "YYYY-MM"
                 var parts = request.Periodo.Split('-');
                 if (parts.Length == 2 && int.TryParse(parts[0], out int year) && int.TryParse(parts[1], out int month))
                 {
-                    periodoFilter = $"AND YEAR(rh.fechaPago) = {year} AND MONTH(rh.fechaPago) = {month}";
+                    query = query.Where(rh =>
+                        (rh.FechaPago ?? rh.FechaRegistro).Year == year &&
+                        (rh.FechaPago ?? rh.FechaRegistro).Month == month);
                 }
             }
 
-            // Usar raw SQL para obtener el histórico
-            var sql = $@"
-                SELECT 
-                    rh.pagoID AS NominaId,
-                    FORMAT(rh.fechaPago, 'MMMM yyyy', 'es-ES') AS Periodo,
-                    COUNT(DISTINCT rd.detalleID) AS CantidadEmpleados,
-                    COALESCE(SUM(rd.Monto), 0) AS TotalNomina,
-                    COALESCE(rh.fechaPago, rh.fechaRegistro) AS FechaProcesamiento,
-                    COALESCE(rh.tipo, 1) AS Estado,
-                    CASE COALESCE(rh.tipo, 1)
-                        WHEN 1 THEN 'Procesado'
-                        WHEN 2 THEN 'Parcial'
-                        WHEN 3 THEN 'Error'
-                        ELSE 'Desconocido'
-                    END AS EstadoTexto,
-                    0 AS EmailEnviado,
-                    CAST(NULL AS datetime2) AS FechaEnvioEmail,
-                    rh.conceptoPago AS Notas
-                FROM [Empleador_Recibos_Header] rh
-                LEFT JOIN [Empleador_Recibos_Detalle] rd ON rh.pagoID = rd.pagoID
-                WHERE rh.userID = {{0}}
-                {periodoFilter}
-                GROUP BY rh.pagoID, rh.fechaPago, rh.fechaRegistro, rh.tipo, rh.conceptoPago
-                ORDER BY rh.fechaPago DESC, rh.fechaRegistro DESC
-                OFFSET {(request.PageIndex - 1) * request.PageSize} ROWS
-                FETCH NEXT {request.PageSize} ROWS ONLY
-            ";
-
-            // Obtener los datos como dinámicos
-            var result = new List<NominaHistorialDto>();
-            
-            try
+            if (request.Estado.HasValue)
             {
-                // Ejecutar la query y mapear a DTOs
-                var data = await _context.Database
-                    .SqlQueryRaw<NominaHistorialDto>(sql, request.UserId)
-                    .ToListAsync(cancellationToken);
+                query = query.Where(rh => rh.Tipo == request.Estado.Value);
+            }
 
-                if (data.Any())
+            var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
+            var pageSize = request.PageSize < 1 ? 10 : Math.Min(request.PageSize, 100);
+            var spanishCulture = CultureInfo.GetCultureInfo("es-ES");
+
+            var rows = await query
+                .OrderByDescending(rh => rh.FechaPago ?? rh.FechaRegistro)
+                .ThenByDescending(rh => rh.FechaRegistro)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .Select(rh => new
                 {
-                    result = data;
-                    _logger.LogInformation(
-                        "Histórico de nómina obtenido - Registros encontrados: {TotalRegistros}",
-                        result.Count);
-                }
-                else
+                    rh.PagoId,
+                    FechaProcesamiento = rh.FechaPago ?? rh.FechaRegistro,
+                    rh.Tipo,
+                    rh.ConceptoPago,
+                    CantidadEmpleados = _context.RecibosDetalle
+                        .Where(rd => rd.PagoId == rh.PagoId)
+                        .Select(rd => rd.DetalleId)
+                        .Distinct()
+                        .Count(),
+                    TotalNomina = _context.RecibosDetalle
+                        .Where(rd => rd.PagoId == rh.PagoId)
+                        .Select(rd => (decimal?)rd.Monto)
+                        .Sum() ?? 0m
+                })
+                .ToListAsync(cancellationToken);
+
+            var result = rows.Select(row => new NominaHistorialDto
                 {
-                    _logger.LogInformation(
-                        "No se encontraron registros de histórico de nómina para UserId: {UserId}",
-                        request.UserId);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Si falla la query raw, retornar lista vacía con log
-                _logger.LogWarning(
-                    ex,
-                    "Error ejecutando query de histórico de nómina. Retornando lista vacía. UserId: {UserId}",
-                    request.UserId);
-                
-                result = new List<NominaHistorialDto>();
-            }
+                    NominaId = row.PagoId,
+                    Periodo = row.FechaProcesamiento.ToString("MMMM yyyy", spanishCulture),
+                    CantidadEmpleados = row.CantidadEmpleados,
+                    TotalNomina = row.TotalNomina,
+                    FechaProcesamiento = row.FechaProcesamiento,
+                    Estado = row.Tipo,
+                    EstadoTexto = MapEstadoTexto(row.Tipo),
+                    EmailEnviado = false,
+                    FechaEnvioEmail = null,
+                    Notas = row.ConceptoPago
+                })
+                .ToList();
+
+            _logger.LogInformation(
+                "Histórico de nómina obtenido - Registros encontrados: {TotalRegistros}",
+                result.Count);
 
             return result;
         }
@@ -123,5 +117,16 @@ public class GetHistorialNominaByUserIdQueryHandler : IRequestHandler<GetHistori
             _logger.LogError(ex, "Error al obtener histórico de nómina para UserId: {UserId}", request.UserId);
             throw;
         }
+    }
+
+    private static string MapEstadoTexto(int estado)
+    {
+        return estado switch
+        {
+            1 => "Procesado",
+            2 => "Parcial",
+            3 => "Error",
+            _ => "Desconocido"
+        };
     }
 }

@@ -13,6 +13,7 @@ using MiGenteEnLinea.Domain.Entities.Catalogos;
 using MiGenteEnLinea.Domain.Entities.Contrataciones;
 using MiGenteEnLinea.Domain.Entities.Seguridad;
 using MiGenteEnLinea.Domain.Entities.Configuracion;
+using MiGenteEnLinea.Domain.Entities.Contactos;
 using MiGenteEnLinea.Domain.ReadModels;
 using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Interfaces;
@@ -126,6 +127,9 @@ public partial class MiGenteDbContext : IdentityDbContext<ApplicationUser>, IApp
 
     // Tracking de consultas de perfil (nueva entidad - no existe en Legacy)
     public virtual DbSet<Domain.Entities.Consultas.ConsultaPerfil> ConsultasPerfil { get; set; }
+
+    // Solicitudes de contacto Contratista -> Empleador
+    public virtual DbSet<ContactoSolicitud> ContactoSolicitudes { get; set; }
 
     // Legacy scaffolded entity (kept for reference)
     // public virtual DbSet<Infrastructure.Persistence.Entities.Generated.Empleado> EmpleadosLegacy { get; set; }
