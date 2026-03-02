@@ -13,11 +13,13 @@
   - `E2E_EMAIL_EMPLEADOR` / `E2E_PASSWORD_EMPLEADOR`
   - `E2E_EMAIL_CONTRATISTA` / `E2E_PASSWORD_CONTRATISTA`
   - `E2E_EMAIL_ADMIN` / `E2E_PASSWORD_ADMIN`
-- `E2E_SEED_KEY` (optional, required for admin seed tests)
-- `E2E_ALLOW_WRITE` (`false` for smoke, `true` for full)
-- `E2E_RUN_ID` (optional)
+- `E2E_SEED_KEY` (required for suite full sin skips)
+- `E2E_ALLOW_WRITE` (`true` para escenarios funcionales de escritura)
+- `E2E_RUN_ID` (required)
+- `E2E_STRICT_RUNTIME_ISSUES` (`true` para fallar en cualquier runtime issue)
 
 ## Commands
+- `npm run test` (one command: validate env + run full suite + summary/backlog)
 - `npm run test:e2e:smoke`
 - `npm run test:e2e:full`
 - `npm run test:e2e:all`

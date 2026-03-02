@@ -4,6 +4,7 @@
   "private": true,
   "description": "Playwright E2E suite for MiGenteEnLinea public web+api",
   "scripts": {
+    "test": "powershell -ExecutionPolicy Bypass -File ../../scripts/env/Invoke-E2EOneCommand.ps1",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:full": "playwright test --grep @full",

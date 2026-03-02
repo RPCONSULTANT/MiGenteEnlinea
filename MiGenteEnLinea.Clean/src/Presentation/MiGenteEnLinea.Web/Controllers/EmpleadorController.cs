@@ -33,6 +33,16 @@ public class EmpleadorController : Controller
     }
 
     /// <summary>
+    /// Ficha Colaborador Temporal - Temporary hiring details/profile
+    /// </summary>
+    public IActionResult FichaColaboradorTemporal(int? detalleId, int? contratacionId)
+    {
+        ViewData["DetalleId"] = detalleId;
+        ViewData["ContratacionId"] = contratacionId;
+        return View();
+    }
+
+    /// <summary>
     /// Nomina - Payroll management
     /// </summary>
     public IActionResult Nomina()

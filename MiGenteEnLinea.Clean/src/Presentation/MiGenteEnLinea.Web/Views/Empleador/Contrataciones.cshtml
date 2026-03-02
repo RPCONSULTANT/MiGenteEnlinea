@@ -3,6 +3,27 @@
     Layout = "_LayoutEmpleador";
 }
 
+@section Styles {
+    <style>
+        #modalNuevaContratacion .card {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+        }
+        #modalNuevaContratacion .form-label {
+            font-weight: 600;
+            color: #344767;
+        }
+        #modalNuevaContratacion .form-control:focus,
+        #modalNuevaContratacion .form-select:focus {
+            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.15);
+            border-color: #5e72e4;
+        }
+        .badge-status {
+            min-width: 90px;
+        }
+    </style>
+}
+
 <!-- Breadcrumb Navigation -->
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
@@ -153,6 +174,9 @@
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalNuevaContratacion">
                     <i class="fas fa-plus me-1"></i>Nueva Contratación
                 </button>
+                <button class="btn btn-outline-success" type="button" onclick="exportarContrataciones('pendientes')">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
+                </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
                 </button>
@@ -202,6 +226,9 @@
         <!-- Tab Aceptadas -->
         <div class="tab-pane fade" id="tabAceptadas" role="tabpanel">
             <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-success" type="button" onclick="exportarContrataciones('aceptadas')">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
+                </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
                 </button>
@@ -247,6 +274,9 @@
         <!-- Tab En Progreso -->
         <div class="tab-pane fade" id="tabEnProgreso" role="tabpanel">
             <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-success" type="button" onclick="exportarContrataciones('progreso')">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
+                </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
                 </button>
@@ -295,6 +325,9 @@
                 <a href="@Url.Action("Calificaciones", "Empleador")" class="btn btn-warning">
                     <i class="fas fa-star me-1"></i>Calificar Pendientes
                 </a>
+                <button class="btn btn-outline-success" type="button" onclick="exportarContrataciones('completadas')">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
+                </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
                 </button>
@@ -339,6 +372,9 @@
         <!-- Tab Canceladas -->
         <div class="tab-pane fade" id="tabCanceladas" role="tabpanel">
             <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-success" type="button" onclick="exportarContrataciones('canceladas')">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
+                </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadContrataciones()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
                 </button>
@@ -690,6 +726,9 @@
                     </td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}" title="Ver ficha temporal">
+                                <i class="fas fa-id-card"></i>
+                            </a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -747,6 +786,9 @@
                     </td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}" title="Ver ficha temporal">
+                                <i class="fas fa-id-card"></i>
+                            </a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -811,6 +853,9 @@
                     </td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}" title="Ver ficha temporal">
+                                <i class="fas fa-id-card"></i>
+                            </a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -874,6 +919,9 @@
                     </td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}" title="Ver ficha temporal">
+                                <i class="fas fa-id-card"></i>
+                            </a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -915,9 +963,14 @@
                         <s>RD$ ${(c.montoAcordado || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</s>
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}" title="Ver ficha temporal">
+                                <i class="fas fa-id-card"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -957,6 +1010,56 @@
                 6: 'secondary'
             };
             return badges[estatus] || 'secondary';
+        }
+
+        function getFichaTemporalUrl(item) {
+            const detalleId = Number(item?.detalleId || 0);
+            const contratacionId = Number(item?.contratacionId || 0);
+            const query = `detalleId=${detalleId}${contratacionId ? `&contratacionId=${contratacionId}` : ''}`;
+            return `@Url.Action("FichaColaboradorTemporal", "Empleador")?${query}`;
+        }
+
+        function exportarContrataciones(scope) {
+            const map = {
+                pendientes: allPendientes,
+                aceptadas: allAceptadas,
+                progreso: allActivas,
+                completadas: allCompletadas,
+                canceladas: allCanceladas
+            };
+            const rows = map[scope] || [];
+            if (!rows.length) {
+                Swal.fire('Sin datos', 'No hay contrataciones para exportar.', 'info');
+                return;
+            }
+
+            const headers = ['DetalleId', 'ContratacionId', 'Estado', 'Descripcion', 'Contratista', 'FechaInicio', 'FechaFin', 'Monto'];
+            const lines = rows.map(r => [
+                r.detalleId ?? '',
+                r.contratacionId ?? '',
+                escapeCsv(r.nombreEstado || getStatusName(r.estatus)),
+                escapeCsv(r.descripcionCorta),
+                escapeCsv(r.contratistaCompleteName),
+                r.fechaInicio ? new Date(r.fechaInicio).toISOString().split('T')[0] : '',
+                r.fechaFinal ? new Date(r.fechaFinal).toISOString().split('T')[0] : '',
+                Number(r.montoAcordado || 0).toFixed(2)
+            ].join(','));
+
+            const csv = [headers.join(','), ...lines].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `contrataciones-${scope}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeCsv(value) {
+            const raw = value == null ? '' : String(value);
+            return `"${raw.replace(/"/g, '""')}"`;
         }
         
         // ============================================
@@ -1640,6 +1743,7 @@
                     <td class="text-center"><span class="badge bg-${getStatusBadge(c.estatus)}">${c.nombreEstado || getStatusName(c.estatus)}</span></td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}"><i class="fas fa-id-card"></i></a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-info" onclick="aceptarContratacion(${c.detalleId})"><i class="fas fa-thumbs-up"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick="cancelarContratacion(${c.detalleId})"><i class="fas fa-times"></i></button>
@@ -1660,6 +1764,7 @@
                     <td class="text-center"><span class="badge bg-${getStatusBadge(c.estatus)}">${c.nombreEstado || getStatusName(c.estatus)}</span></td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}"><i class="fas fa-id-card"></i></a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="verContratoTemporal(${c.detalleId})"><i class="fas fa-file-contract"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="iniciarTrabajo(${c.detalleId})"><i class="fas fa-play"></i></button>
@@ -1681,6 +1786,7 @@
                     <td class="text-center"><div class="progress" style="height: 20px;"><div class="progress-bar bg-info" style="width: ${c.porcentajeAvance || 0}%">${c.porcentajeAvance || 0}%</div></div></td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}"><i class="fas fa-id-card"></i></a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="verContratoTemporal(${c.detalleId})"><i class="fas fa-file-contract"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="completarTrabajo(${c.detalleId})"><i class="fas fa-check"></i></button>
@@ -1701,6 +1807,7 @@
                     <td class="text-center">${c.calificado ? '<span class="badge bg-success"><i class="fas fa-star me-1"></i>Calificado</span>' : '<span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Pendiente</span>'}</td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-outline-dark" href="${getFichaTemporalUrl(c)}"><i class="fas fa-id-card"></i></a>
                             <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${c.detalleId})"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="verContratoTemporal(${c.detalleId})"><i class="fas fa-file-contract"></i></button>
                             ${!c.calificado ? `<a href="@Url.Action("Calificaciones", "Empleador")?id=${c.detalleId}" class="btn btn-sm btn-outline-warning"><i class="fas fa-star"></i></a>` : ''}

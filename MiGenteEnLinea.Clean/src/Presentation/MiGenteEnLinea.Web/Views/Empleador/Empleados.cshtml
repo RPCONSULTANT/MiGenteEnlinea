@@ -3,6 +3,33 @@
     Layout = "_LayoutEmpleador";
 }
 
+@section Styles {
+    <style>
+        .accordion-item {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.65rem;
+            margin-bottom: 0.65rem;
+            overflow: hidden;
+        }
+        .accordion-button {
+            font-weight: 600;
+        }
+        .form-label {
+            color: #344767;
+            letter-spacing: 0.1px;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.15);
+            border-color: #5e72e4;
+        }
+        .field-error {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+        }
+    </style>
+}
+
 <!-- Breadcrumb Navigation -->
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
@@ -131,7 +158,7 @@
                     <i class="fas fa-file-invoice-dollar me-1"></i>Gestión de Nómina
                 </button>
                 <button class="btn btn-outline-success" id="btnExportar" type="button" onclick="exportarEmpleados()">
-                    <i class="fas fa-file-excel me-1"></i>Exportar a Excel
+                    <i class="fas fa-file-csv me-1"></i>Exportar
                 </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadEmpleados()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
@@ -184,8 +211,8 @@
             
             <!-- Action Buttons -->
             <div class="d-flex flex-wrap gap-2 mb-3">
-                <button class="btn btn-outline-success" id="btnExportarInactivos" type="button">
-                    <i class="fas fa-file-excel me-1"></i>Exportar a Excel
+                <button class="btn btn-outline-success" id="btnExportarInactivos" type="button" onclick="exportarEmpleados(false)">
+                    <i class="fas fa-file-csv me-1"></i>Exportar
                 </button>
                 <button class="btn btn-outline-secondary" type="button" onclick="loadEmpleados()">
                     <i class="fas fa-sync-alt me-1"></i>Actualizar
@@ -754,6 +781,7 @@
         // ============================================
         document.getElementById('btnCrear').addEventListener('click', async function() {
             hideAlert('empleadoAlert');
+            clearFieldErrors();
             
             // Validar campos requeridos
             const cedula = document.getElementById('txtIdentificacion').value.replace(/\D/g, '');
@@ -762,6 +790,9 @@
             const posicion = document.getElementById('posicion').value.trim();
             const salario = parseCurrency(document.getElementById('salario').value);
             const fechaIngreso = document.getElementById('fechaDeIngreso').value;
+            const estadoCivil = parseInt(document.getElementById('ddlEstadoCivil').value, 10);
+            const periodoPago = parseInt(document.getElementById('periodos').value, 10);
+            const todayIso = new Date().toISOString().split('T')[0];
             
             if (!cedula || cedula.length !== 11) {
                 showAlert('empleadoAlert', 'La cédula debe tener 11 dígitos', 'danger');
@@ -780,10 +811,31 @@
                 document.getElementById('collapseContratacion').classList.add('show');
                 return;
             }
+
+            if (!fechaIngreso) {
+                showAlert('empleadoAlert', 'La fecha de ingreso es requerida', 'danger');
+                document.getElementById('collapseContratacion').classList.add('show');
+                return;
+            }
+
+            if (fechaIngreso > todayIso) {
+                showAlert('empleadoAlert', 'La fecha de ingreso no puede ser futura', 'danger');
+                document.getElementById('collapseContratacion').classList.add('show');
+                return;
+            }
             
             if (salario <= 0) {
                 showAlert('empleadoAlert', 'El salario debe ser mayor a cero', 'danger');
                 document.getElementById('collapseContratacion').classList.add('show');
+                return;
+            }
+
+            const identificacionesExistentes = [...allEmpleadosActivos, ...allEmpleadosInactivos]
+                .map(x => (x.identificacion || '').replace(/\D/g, ''));
+            if (identificacionesExistentes.includes(cedula)) {
+                showAlert('empleadoAlert', 'Ya existe un colaborador con esa cédula para este empleador.', 'danger');
+                markFieldError('txtIdentificacion', 'Cédula ya registrada');
+                document.getElementById('collapsePersonal').classList.add('show');
                 return;
             }
             
@@ -800,22 +852,22 @@
             // Construir objeto empleado - nombres deben coincidir con CreateEmpleadoCommand
             const empleado = {
                 identificacion: cedula,  // Backend espera 'identificacion', no 'cedula'
-                nombre: nombre,
-                apellido: apellido,
-                alias: document.getElementById('alias').value.trim() || null,
-                estadoCivil: parseInt(document.getElementById('ddlEstadoCivil').value),
+                nombre: truncateText(nombre, 100),
+                apellido: truncateText(apellido, 100),
+                alias: truncateText(document.getElementById('alias').value.trim(), 100) || null,
+                estadoCivil: Number.isFinite(estadoCivil) ? estadoCivil : 1,
                 nacimiento: document.getElementById('nacimiento').value || null,  // Backend: 'nacimiento'
-                direccion: document.getElementById('direccion').value.trim() || null,
+                direccion: truncateText(document.getElementById('direccion').value.trim(), 250) || null,
                 provincia: document.getElementById('provincia').value || null,
-                municipio: document.getElementById('municipio').value.trim() || null,
+                municipio: truncateText(document.getElementById('municipio').value.trim(), 100) || null,
                 telefono1: document.getElementById('telefono1').value.replace(/\D/g, '') || null,
                 telefono2: document.getElementById('telefono2').value.replace(/\D/g, '') || null,
-                posicion: posicion,
+                posicion: truncateText(posicion, 100),
                 salario: salario,  // Backend: 'salario', no 'salarioBruto'
-                periodoPago: parseInt(document.getElementById('periodos').value),
+                periodoPago: Number.isFinite(periodoPago) ? periodoPago : 2,
                 tss: document.getElementById('chkDeducciones').checked,  // Backend: 'tss', no 'aplicaTss'
                 fechaInicio: fechaIngreso,  // Backend: 'fechaInicio', no 'fechaIngreso'
-                contactoEmergencia: document.getElementById('nombreContacto').value.trim() || null,  // Backend: 'contactoEmergencia'
+                contactoEmergencia: truncateText(document.getElementById('nombreContacto').value.trim(), 100) || null,  // Backend: 'contactoEmergencia'
                 telefonoEmergencia: document.getElementById('telefonoContacto').value.replace(/\D/g, '') || null  // Backend: 'telefonoEmergencia'
                 // Nota: remuneraciones se manejan por separado después de crear el empleado
             };
@@ -846,7 +898,14 @@
                         resetForm();
                     });
                 } else {
-                    const errorMsg = data.message || data.title || 'Error al guardar el colaborador';
+                    const errorDetails = getValidationDetails(data);
+                    const errorMsg = window.getApiErrorMessage
+                        ? window.getApiErrorMessage(data, 'Error al guardar el colaborador')
+                        : (data?.message || data?.title || 'Error al guardar el colaborador');
+                    if (errorDetails.length) {
+                        errorDetails.forEach(item => markFieldError(item.fieldId, item.message));
+                        showAlert('empleadoAlert', errorDetails.map(x => x.message).join(' | '), 'danger');
+                    }
                     // Mostrar error con SweetAlert para mejor visibilidad
                     Swal.fire({
                         title: 'Error',
@@ -1180,13 +1239,109 @@
         // ============================================
         // EXPORTAR A EXCEL
         // ============================================
-        function exportarEmpleados() {
-            Swal.fire({
-                title: 'Exportar Colaboradores',
-                text: 'Esta función estará disponible próximamente.',
-                icon: 'info',
-                confirmButtonText: 'Entendido'
+        function exportarEmpleados(activos = true) {
+            const rows = activos ? allEmpleadosActivos : allEmpleadosInactivos;
+            const fileName = activos ? 'colaboradores-activos.csv' : 'colaboradores-inactivos.csv';
+            exportarListadoCsv(rows, fileName);
+        }
+
+        function exportarListadoCsv(rows, fileName) {
+            if (!rows || !rows.length) {
+                Swal.fire('Sin datos', 'No hay registros para exportar.', 'info');
+                return;
+            }
+
+            const headers = ['EmpleadoId', 'Identificacion', 'Nombre', 'Apellido', 'FechaInicio', 'Salario', 'PeriodoPago', 'Activo'];
+            const lines = rows.map(r => [
+                r.empleadoId ?? '',
+                escapeCsv(r.identificacion),
+                escapeCsv(r.nombre),
+                escapeCsv(r.apellido),
+                r.fechaInicio ? new Date(r.fechaInicio).toISOString().split('T')[0] : '',
+                Number(r.salario || 0).toFixed(2),
+                escapeCsv(r.periodoPagoDescripcion || getPeriodoPagoText(r.periodoPago)),
+                r.activo === false ? 'No' : 'Si'
+            ].join(','));
+
+            const csv = [headers.join(','), ...lines].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeCsv(value) {
+            const raw = value == null ? '' : String(value);
+            return `"${raw.replace(/"/g, '""')}"`;
+        }
+
+        function truncateText(value, max) {
+            if (!value) return '';
+            return value.length > max ? value.substring(0, max) : value;
+        }
+
+        function clearFieldErrors() {
+            document.querySelectorAll('.field-error').forEach(el => el.remove());
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        }
+
+        function markFieldError(fieldId, message) {
+            if (!fieldId || !message) return;
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            field.classList.add('is-invalid');
+            const exists = field.parentElement?.querySelector('.field-error');
+            if (exists) return;
+            const div = document.createElement('div');
+            div.className = 'field-error';
+            div.textContent = message;
+            field.parentElement?.appendChild(div);
+        }
+
+        function getValidationDetails(payload) {
+            const details = [];
+            if (!payload || !payload.errors || typeof payload.errors !== 'object') {
+                return details;
+            }
+
+            const fieldMap = {
+                identificacion: 'txtIdentificacion',
+                nombre: 'nombre',
+                apellido: 'apellido',
+                alias: 'alias',
+                estadoCivil: 'ddlEstadoCivil',
+                nacimiento: 'nacimiento',
+                telefono1: 'telefono1',
+                telefono2: 'telefono2',
+                direccion: 'direccion',
+                provincia: 'provincia',
+                municipio: 'municipio',
+                posicion: 'posicion',
+                salario: 'salario',
+                periodoPago: 'periodos',
+                fechaInicio: 'fechaDeIngreso',
+                contactoEmergencia: 'nombreContacto',
+                telefonoEmergencia: 'telefonoContacto'
+            };
+
+            Object.entries(payload.errors).forEach(([key, value]) => {
+                const messages = Array.isArray(value) ? value : [value];
+                const normalizedKey = (key || '').toString().trim().toLowerCase();
+                messages.forEach(msg => {
+                    if (!msg) return;
+                    details.push({
+                        fieldId: fieldMap[normalizedKey],
+                        message: String(msg)
+                    });
+                });
             });
+
+            return details;
         }
         
         function getPeriodoPagoText(periodo) {

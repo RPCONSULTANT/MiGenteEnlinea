@@ -1,0 +1,309 @@
+@{
+    ViewData["Title"] = "Ficha de Colaborador Temporal";
+    Layout = "_LayoutEmpleador";
+    var detalleId = ViewData["DetalleId"] as int?;
+    var contratacionId = ViewData["ContratacionId"] as int?;
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Empleador")" class="text-primary">
+                <i class="fas fa-home me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Contrataciones", "Empleador")" class="text-primary">
+                <i class="fas fa-handshake me-1"></i>Contrataciones
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-id-card me-1"></i>Ficha temporal
+        </li>
+    </ol>
+</nav>
+
+<div class="container-fluid bg-white pt-3 pb-4 shadow-sm rounded-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h3 class="mb-1"><i class="fas fa-id-card text-primary me-2"></i>Ficha de Contratación Temporal</h3>
+            <p class="text-muted mb-0">Detalle de contratación, contrato y recibos asociados.</p>
+        </div>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Contrataciones", "Empleador")">
+            <i class="fas fa-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    <div id="temporalAlert" class="alert d-none" role="alert"></div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Colaborador</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Nombre:</strong> <span id="lblNombre">-</span></p>
+                    <p class="mb-1"><strong>Identificación:</strong> <span id="lblId">-</span></p>
+                    <p class="mb-1"><strong>Teléfono:</strong> <span id="lblTelefono">-</span></p>
+                    <p class="mb-0"><strong>Dirección:</strong> <span id="lblDireccion">-</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-file-signature me-2"></i>Detalles de contratación</h6>
+                    <span id="badgeEstado" class="badge bg-secondary">Sin estado</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-6"><strong>Detalle ID:</strong> <span id="lblDetalleId">-</span></div>
+                        <div class="col-md-6"><strong>Contratación ID:</strong> <span id="lblContratacionId">-</span></div>
+                        <div class="col-md-6"><strong>Fecha inicio:</strong> <span id="lblFechaInicio">-</span></div>
+                        <div class="col-md-6"><strong>Fecha fin:</strong> <span id="lblFechaFin">-</span></div>
+                        <div class="col-md-6"><strong>Monto acordado:</strong> <span id="lblMonto">RD$ 0.00</span></div>
+                        <div class="col-md-6"><strong>Esquema de pago:</strong> <span id="lblEsquema">-</span></div>
+                    </div>
+                    <hr />
+                    <p class="mb-1"><strong>Descripción corta:</strong> <span id="lblDescripcionCorta">-</span></p>
+                    <p class="mb-0"><strong>Descripción ampliada:</strong> <span id="lblDescripcionAmpliada">-</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>Documentos</h6>
+            <div class="d-flex gap-2">
+                <button id="btnContrato" class="btn btn-sm btn-outline-primary" type="button">
+                    <i class="fas fa-file-contract me-1"></i>Ver Contrato
+                </button>
+                <button id="btnActualizarPagos" class="btn btn-sm btn-outline-secondary" type="button">
+                    <i class="fas fa-sync-alt me-1"></i>Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Recibos y pagos</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Pago ID</th>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPagos">
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="fas fa-spinner fa-spin me-2"></i>Cargando pagos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const detalleIdParam = Number('@(detalleId ?? 0)');
+        const contratacionIdParam = Number('@(contratacionId ?? 0)');
+
+        let currentDetalleId = detalleIdParam || 0;
+        let currentContratacionId = contratacionIdParam || 0;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!currentDetalleId) {
+                showAlert('No se recibió el detalle de contratación.', 'danger');
+                return;
+            }
+
+            await loadFichaTemporal();
+
+            document.getElementById('btnContrato').addEventListener('click', () => verContrato(currentDetalleId));
+            document.getElementById('btnActualizarPagos').addEventListener('click', () => loadPagos());
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('temporalAlert');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.classList.remove('d-none');
+        }
+
+        async function loadFichaTemporal() {
+            try {
+                const detalleResponse = await authenticatedFetch(`/contrataciones/${currentDetalleId}`);
+                const detallePayload = window.readApiResponse ? await window.readApiResponse(detalleResponse) : await detalleResponse.json();
+                if (!detalleResponse.ok || !detallePayload) {
+                    showAlert(window.getApiErrorMessage ? window.getApiErrorMessage(detallePayload, 'No se pudo cargar el detalle.') : 'No se pudo cargar el detalle.', 'danger');
+                    return;
+                }
+
+                currentContratacionId = Number(detallePayload.contratacionId || currentContratacionId || 0);
+                const userId = getCurrentUserId();
+
+                if (!currentContratacionId || !userId) {
+                    showAlert('No se pudo resolver la contratación temporal asociada.', 'warning');
+                    return;
+                }
+
+                const fichaResponse = await authenticatedFetch(`/empleados/temporales/ficha?contratacionId=${currentContratacionId}&userId=${encodeURIComponent(userId)}`);
+                const fichaPayload = window.readApiResponse ? await window.readApiResponse(fichaResponse) : await fichaResponse.json();
+                if (!fichaResponse.ok || !fichaPayload) {
+                    showAlert(window.getApiErrorMessage ? window.getApiErrorMessage(fichaPayload, 'No se pudo cargar la ficha temporal.') : 'No se pudo cargar la ficha temporal.', 'danger');
+                    return;
+                }
+
+                renderFicha(fichaPayload);
+                await loadPagos();
+            } catch (error) {
+                console.error('Error cargando ficha temporal:', error);
+                showAlert('Error de conexión cargando la ficha temporal.', 'danger');
+            }
+        }
+
+        function renderFicha(data) {
+            const detalle = data.detalle || {};
+            const nombre = data.nombreComercial || `${data.nombre || ''} ${data.apellido || ''}`.trim() || '-';
+
+            document.getElementById('lblNombre').textContent = nombre;
+            document.getElementById('lblId').textContent = data.rnc || data.identificacion || '-';
+            document.getElementById('lblTelefono').textContent = data.telefono1 || '-';
+            document.getElementById('lblDireccion').textContent = data.direccion || '-';
+            document.getElementById('lblDetalleId').textContent = detalle.detalleId || currentDetalleId;
+            document.getElementById('lblContratacionId').textContent = detalle.contratacionId || currentContratacionId || '-';
+            document.getElementById('lblFechaInicio').textContent = formatDate(detalle.fechaInicio);
+            document.getElementById('lblFechaFin').textContent = formatDate(detalle.fechaFinal);
+            document.getElementById('lblMonto').textContent = `RD$ ${Number(detalle.montoAcordado || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            document.getElementById('lblEsquema').textContent = detalle.esquemaPagos || '-';
+            document.getElementById('lblDescripcionCorta').textContent = detalle.descripcionCorta || '-';
+            document.getElementById('lblDescripcionAmpliada').textContent = detalle.descripcionAmpliada || '-';
+
+            const estado = Number(detalle.estatus || 0);
+            const badge = document.getElementById('badgeEstado');
+            badge.textContent = getEstadoNombre(estado);
+            badge.className = `badge bg-${getEstadoBadge(estado)}`;
+        }
+
+        async function loadPagos() {
+            const tbody = document.getElementById('tbodyPagos');
+            if (!currentContratacionId || !currentDetalleId) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay pagos disponibles.</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`/empleados/pagos-contrataciones?contratacionId=${currentContratacionId}&detalleId=${currentDetalleId}`);
+                const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                if (!response.ok) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">No se pudieron cargar los pagos.</td></tr>';
+                    return;
+                }
+
+                const pagos = Array.isArray(payload) ? payload : [];
+                if (!pagos.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Sin pagos registrados todavía.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = pagos.map(p => `
+                    <tr>
+                        <td>#${p.pagoId}</td>
+                        <td>${formatDate(p.fechaPago || p.fechaRegistro)}</td>
+                        <td>${p.expr1 || 'Pago de contratación temporal'}</td>
+                        <td class="text-end">RD$ ${Number(p.monto || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-center">
+                            <a class="btn btn-sm btn-outline-primary" href="/Empleador/Nomina?recibo=${p.pagoId}" title="Ver recibo en nómina">
+                                <i class="fas fa-receipt"></i>
+                            </a>
+                        </td>
+                    </tr>`).join('');
+            } catch (error) {
+                console.error('Error cargando pagos:', error);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión al cargar pagos.</td></tr>';
+            }
+        }
+
+        async function verContrato(detalleId) {
+            try {
+                const response = await authenticatedFetch(`/contrataciones/${detalleId}/contrato-pdf`);
+                if (!response.ok) {
+                    const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                    const message = window.getApiErrorMessage
+                        ? window.getApiErrorMessage(payload, 'No se pudo generar el contrato.')
+                        : 'No se pudo generar el contrato.';
+                    Swal.fire('Error', message, 'error');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank', 'noopener');
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch (error) {
+                console.error('Error al abrir contrato temporal:', error);
+                Swal.fire('Error', 'No se pudo abrir el contrato temporal.', 'error');
+            }
+        }
+
+        function formatDate(value) {
+            if (!value) return '-';
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return value;
+            return parsed.toLocaleDateString('es-DO');
+        }
+
+        function getEstadoNombre(estado) {
+            const estados = {
+                1: 'Pendiente',
+                2: 'Aceptada',
+                3: 'En Progreso',
+                4: 'Completada',
+                5: 'Cancelada',
+                6: 'Rechazada'
+            };
+            return estados[estado] || 'Desconocido';
+        }
+
+        function getEstadoBadge(estado) {
+            const badges = {
+                1: 'warning',
+                2: 'info',
+                3: 'primary',
+                4: 'success',
+                5: 'danger',
+                6: 'secondary'
+            };
+            return badges[estado] || 'secondary';
+        }
+
+        function getCurrentUserId() {
+            const cached = localStorage.getItem('userId');
+            if (cached) return cached;
+
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            if (!token) return '';
+
+            try {
+                const base64Url = token.split('.')[1] || '';
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+                const payload = JSON.parse(atob(padded));
+                return payload?.nameid || payload?.sub || '';
+            } catch {
+                return '';
+            }
+        }
+    </script>
+}

@@ -91,19 +91,72 @@ public class EmpleadosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<int>> CreateEmpleado([FromBody] CreateEmpleadoCommand command)
     {
-        _logger.LogInformation("Creando nuevo empleado: {Nombre} {Apellido}", command.Nombre, command.Apellido);
+        var correlationId = HttpContext.TraceIdentifier;
+        _logger.LogInformation("CREATE_EMPLEADO_START CorrelationId={CorrelationId} Nombre={Nombre} Apellido={Apellido}", correlationId, command.Nombre, command.Apellido);
 
-        // Asegurar que el UserId del comando es el usuario autenticado
-        command = command with { UserId = GetUserId() };
+        try
+        {
+            // Asegurar que el UserId del comando es el usuario autenticado
+            command = command with { UserId = GetUserId() };
 
-        var empleadoId = await _mediator.Send(command);
+            var empleadoId = await _mediator.Send(command);
 
-        _logger.LogInformation("Empleado creado exitosamente. EmpleadoId: {EmpleadoId}", empleadoId);
+            _logger.LogInformation("CREATE_EMPLEADO_SUCCESS CorrelationId={CorrelationId} EmpleadoId={EmpleadoId}", correlationId, empleadoId);
 
-        return CreatedAtAction(
-            nameof(GetEmpleadoById),
-            new { id = empleadoId },
-            new { empleadoId });
+            return CreatedAtAction(
+                nameof(GetEmpleadoById),
+                new { id = empleadoId },
+                new { empleadoId });
+        }
+        catch (FluentValidation.ValidationException ex)
+        {
+            var errors = ex.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray());
+
+            _logger.LogWarning(ex, "CREATE_EMPLEADO_VALIDATION_FAIL CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "validation_error",
+                message = "Validación fallida al crear colaborador.",
+                errors,
+                correlationId
+            });
+        }
+        catch (Application.Common.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "CREATE_EMPLEADO_BUSINESS_FAIL CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "business_rule_error",
+                message = ex.Message,
+                details = new[] { ex.Message },
+                correlationId
+            });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "CREATE_EMPLEADO_DB_FAIL CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "data_persistence_error",
+                message = "No se pudo guardar el colaborador por inconsistencias de datos.",
+                details = new[] { "Verifique los campos de identificación, contacto y ubicación." },
+                correlationId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CREATE_EMPLEADO_FAIL CorrelationId={CorrelationId}", correlationId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                code = "internal_error",
+                message = "Ha ocurrido un error interno. Por favor intente nuevamente.",
+                correlationId
+            });
+        }
     }
 
     /// <summary>

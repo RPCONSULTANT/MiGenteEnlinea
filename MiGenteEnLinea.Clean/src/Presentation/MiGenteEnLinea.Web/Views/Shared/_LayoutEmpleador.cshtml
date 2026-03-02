@@ -1,5 +1,11 @@
 @inject IOptions<ApiOptions> ApiOptions
 @inject IOptions<PaymentOptions> PaymentOptions
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    var isGestorActiva = currentAction is "Empleados" or "Contrataciones" or "FichaEmpleado" or "FichaColaboradorTemporal";
+    var isDashboardActiva = currentAction == "Index";
+    var isNominaActiva = currentAction == "Nomina";
+}
 
 @* Layout para dashboard de Empleadores
 EXACTO al: FRONT_Publicado/Empleador/dashboard.Master
@@ -121,6 +127,17 @@ Tema: Argon Dashboard 2.0 *@
             background-size: cover;
             background-position: unset;
         }
+        .sidenav .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-radius: 0.65rem;
+        }
+        .sidenav .nav-link:hover {
+            background: rgba(26, 115, 232, 0.08);
+            transform: translateX(2px);
+        }
+        .sidenav .nav-link.active {
+            box-shadow: 0 8px 18px rgba(17, 72, 152, 0.15);
+        }
     </style>
     
     @await RenderSectionAsync("Styles", required: false)
@@ -142,7 +159,7 @@ Tema: Argon Dashboard 2.0 *@
             <ul class="navbar-nav justify-content-end">
                 <!-- Menu Principal -->
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Empleador" asp-action="Index">
+                    <a class="nav-link @(isDashboardActiva ? "active" : "")" asp-controller="Empleador" asp-action="Index">
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="ni ni-tv-2 text-primary text-sm opacity-10"></i>
                         </div>
@@ -151,11 +168,19 @@ Tema: Argon Dashboard 2.0 *@
                 </li>
                 <!-- Gestor de Colaboradores -->
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Empleados" ? "active" : "")" href="#" data-bs-toggle="modal" data-bs-target="#modalGestorColaboradores">
+                    <a class="nav-link @(isGestorActiva ? "active" : "")" href="#" data-bs-toggle="modal" data-bs-target="#modalGestorColaboradores">
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"></i>
                         </div>
                         <span class="nav-link-text ms-1">Gestor de Colaboradores</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(isNominaActiva ? "active" : "")" asp-controller="Empleador" asp-action="Nomina">
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-archive-2 text-info text-sm opacity-10"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Nómina e Históricos</span>
                     </a>
                 </li>
                 <!-- Calificacion de Perfiles -->
@@ -264,7 +289,8 @@ Tema: Argon Dashboard 2.0 *@
                 </div>
                 <div class="modal-body text-center">
                     <a asp-controller="Empleador" asp-action="Empleados" class="btn btn-primary btn-lg mb-3">Colaboradores Fijos</a>
-                    <a asp-controller="Empleador" asp-action="Contrataciones" class="btn btn-secondary btn-lg">Contrataciones Temporales</a>
+                    <a asp-controller="Empleador" asp-action="Contrataciones" class="btn btn-secondary btn-lg mb-3">Contrataciones Temporales</a>
+                    <a asp-controller="Empleador" asp-action="Nomina" class="btn btn-outline-info btn-lg">Nómina e Históricos</a>
                 </div>
             </div>
         </div>
