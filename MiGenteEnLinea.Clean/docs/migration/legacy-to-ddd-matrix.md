@@ -25,11 +25,11 @@ Estado inicial de migracion para erradicar `ILegacyDataService`, entidades `Gene
 | `CreateEmpleadoTemporalAsync` | `CreateEmpleadoTemporalCommandHandler` | EF tipado (`DbSet<EmpleadoTemporal>` + `DbSet<DetalleContratacion>`) | Migrated | Sin SQL raw |
 | `CreateDetalleContratacionAsync` | `CreateDetalleContratacionCommandHandler` | EF tipado (`DbSet<DetalleContratacion>`) | Migrated | |
 | `UpdateDetalleContratacionAsync` | `UpdateDetalleContratacionCommandHandler` | EF tipado + `ExecuteUpdate` | Migrated | |
-| `Calificar*Async` | calificaciones handlers | `ICalificacionRepository` | Pending | |
-| `GetFichaTemporalesAsync` | ficha temporal queries | Query EF tipada | Pending | |
-| `GetTodosLosTemporalesAsync` | listado temporal queries | Query EF tipada | Pending | |
-| `GetVistaContratacionTemporalAsync` | contrataciones queries | `VistaContratacionTemporal` read model | Pending | |
-| `GetReciboHeaderByPagoIdAsync` | recibo query | `ReciboHeader` repo/query | Pending | |
+| `Calificar*Async` | `CalificarContratacionCommandHandler` | EF tipado (`DbSet<DetalleContratacion>`) | Migrated | marca `calificado` + `calificacionId` |
+| `GetFichaTemporalesAsync` | `GetFichaTemporalesQueryHandler` | Query EF tipada | Migrated | |
+| `GetTodosLosTemporalesAsync` | `GetTodosLosTemporalesQueryHandler` | Query EF tipada | Migrated | |
+| `GetVistaContratacionTemporalAsync` | `GetVistaContratacionTemporalQueryHandler` | `VistaContratacionTemporal` read model | Migrated | |
+| `GetReciboHeaderByPagoIdAsync` | `GetReciboHeaderByPagoIdQueryHandler` | Query EF tipada sobre `ReciboHeader/Detalle/Empleado` | Migrated | |
 | SQL raw en `ContactosController` | `POST /api/contactos/solicitudes` | EF entity `ContactoSolicitud` | Migrated | Migrado a entidad/configuracion EF |
 | SQL raw en `GetHistorialNominaByUserId` | nomina query | LINQ + proyeccion DTO | Pending | Prioridad alta |
 | SQL raw en `GetHistorialNominaUnificado` | nomina unificada query | LINQ + union tipado | Pending | Prioridad alta |
