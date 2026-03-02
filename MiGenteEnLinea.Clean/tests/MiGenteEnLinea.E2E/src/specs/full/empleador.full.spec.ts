@@ -46,4 +46,58 @@ test.describe("@full @empleador Empleador module", () => {
 
     expect([200, 404]).toContain(profile.status);
   });
+
+  test("@full @empleador directory hire flow asks fixed or temporary", async ({ page, runtimeIssues }) => {
+    const creds = getRoleCredentials("empleador");
+    const authPage = new AuthPage(page);
+
+    await authPage.openLogin();
+    await authPage.login(creds.email, creds.password);
+    await page.goto("/Empleador/Buscador", { waitUntil: "domcontentloaded" });
+
+    const hireButton = page.locator(".btn-contratar").first();
+    const count = await hireButton.count();
+    if (count === 0) {
+      runtimeIssues.push({
+        type: "ui-error",
+        message: "No contract buttons found in Empleador/Buscador",
+        url: page.url()
+      });
+      test.skip(true, "No contractors available for hire flow");
+    }
+
+    await hireButton.click();
+    await expect(page.getByText(/Tipo de contratación/i)).toBeVisible();
+
+    await page.getByRole("button", { name: /Temporal/i }).click();
+    await expect(page).toHaveURL(/Empleador\/Contrataciones/i);
+    await expect(page.locator("#modalNuevaContratacion.show")).toBeVisible();
+  });
+
+  test("@full @empleador directory fixed hire opens empleados modal prefill", async ({ page, runtimeIssues }) => {
+    const creds = getRoleCredentials("empleador");
+    const authPage = new AuthPage(page);
+
+    await authPage.openLogin();
+    await authPage.login(creds.email, creds.password);
+    await page.goto("/Empleador/Buscador", { waitUntil: "domcontentloaded" });
+
+    const hireButton = page.locator(".btn-contratar").first();
+    const count = await hireButton.count();
+    if (count === 0) {
+      runtimeIssues.push({
+        type: "ui-error",
+        message: "No contract buttons found in Empleador/Buscador for fixed flow",
+        url: page.url()
+      });
+      test.skip(true, "No contractors available for fixed hire flow");
+    }
+
+    await hireButton.click();
+    await expect(page.getByText(/Tipo de contratación/i)).toBeVisible();
+
+    await page.getByRole("button", { name: /^Fija$/i }).click();
+    await expect(page).toHaveURL(/Empleador\/Empleados/i);
+    await expect(page.locator("#registroEmpleadoModal.show")).toBeVisible();
+  });
 });

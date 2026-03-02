@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Preguntas Frecuentes";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold">Preguntas Frecuentes</h1>
+                <p class="text-muted mb-0">Respuestas rápidas sobre Mi Gente en Línea.</p>
+            </div>
+
+            <div class="accordion" id="faqPublicAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeading1">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+                            ¿Cómo creo una cuenta?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse1" class="accordion-collapse collapse show" aria-labelledby="faqHeading1" data-bs-parent="#faqPublicAccordion">
+                        <div class="accordion-body">
+                            Ingresa a <a href="/Auth/Register">Crear cuenta</a>, completa tus datos y activa tu perfil desde el correo de confirmación.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeading2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                            ¿Puedo contratar colaboradores fijos y temporales?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqPublicAccordion">
+                        <div class="accordion-body">
+                            Sí. Como empleador puedes registrar colaboradores fijos y también crear contrataciones temporales según tus necesidades.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeading3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                            ¿Cómo funciona el plan de suscripción?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqPublicAccordion">
+                        <div class="accordion-body">
+                            Puedes revisar los planes disponibles en <a href="/Home/Planes">Planes</a> y elegir el que mejor se adapte a tu volumen de gestión.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a class="btn btn-primary me-2" href="/Home/Planes">Ver Planes</a>
+                <a class="btn btn-outline-secondary" href="/Auth/Login">Iniciar Sesión</a>
+            </div>
+        </div>
+    </div>
+</div>

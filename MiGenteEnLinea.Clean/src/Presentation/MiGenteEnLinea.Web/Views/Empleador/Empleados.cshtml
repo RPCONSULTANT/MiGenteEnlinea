@@ -604,7 +604,51 @@
             
             // Load empleados on page load
             loadEmpleados();
+            consumeHireIntentFija();
         });
+
+        function consumeHireIntentFija() {
+            const raw = sessionStorage.getItem('mge:hireIntent');
+            if (!raw) return;
+
+            try {
+                const intent = JSON.parse(raw);
+                if (intent?.tipoContratacion !== 'fija') return;
+
+                const nombre = (intent.nombre || '').trim();
+                const apellido = (intent.apellido || '').trim();
+                const identificacion = (intent.identificacion || '').replace(/\D/g, '');
+                const telefono = (intent.telefono1 || '').replace(/\D/g, '');
+
+                if (nombre) document.getElementById('nombre').value = nombre;
+                if (apellido) document.getElementById('apellido').value = apellido;
+                if (identificacion) {
+                    const cedulaInput = document.getElementById('txtIdentificacion');
+                    cedulaInput.value = identificacion;
+                    formatCedula(cedulaInput);
+                }
+                if (telefono) {
+                    const telInput = document.getElementById('telefono1');
+                    telInput.value = telefono;
+                    formatPhone(telInput);
+                }
+                if (intent.provincia) {
+                    const provinciaSelect = document.getElementById('provincia');
+                    provinciaSelect.value = intent.provincia;
+                    setTimeout(() => {
+                        provinciaSelect.value = intent.provincia;
+                    }, 500);
+                }
+
+                const modalEl = document.getElementById('registroEmpleadoModal');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            } catch (error) {
+                console.warn('No se pudo procesar la intención de contratación fija:', error);
+            } finally {
+                sessionStorage.removeItem('mge:hireIntent');
+            }
+        }
         
         // ============================================
         // REMUNERACIONES DINÁMICAS

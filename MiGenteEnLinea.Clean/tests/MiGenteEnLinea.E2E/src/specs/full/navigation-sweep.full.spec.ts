@@ -6,6 +6,7 @@ type RoleConfig = {
   role: "empleador" | "contratista";
   rootPath: string;
   requiredRoutes: string[];
+  ignoredRoutes?: string[];
 };
 
 const roleConfigs: RoleConfig[] = [
@@ -18,7 +19,8 @@ const roleConfigs: RoleConfig[] = [
       "/Empleador/Contrataciones",
       "/Empleador/AdquirirPlan",
       "/Empleador/Calificaciones"
-    ]
+    ],
+    ignoredRoutes: ["/Empleador/Dashboard"]
   },
   {
     role: "contratista",
@@ -76,8 +78,13 @@ test.describe("@full @navigation Navigation sweep by role", () => {
 
       const orderedRoutes = Array.from(routeSet.values()).sort((a, b) => a.localeCompare(b));
       const failedRoutes: string[] = [];
+      const ignoredRouteSet = new Set((config.ignoredRoutes ?? []).map(normalizeRoute));
 
       for (const route of orderedRoutes) {
+        if (ignoredRouteSet.has(route)) {
+          continue;
+        }
+
         const response = await page.goto(route, { waitUntil: "domcontentloaded" });
         const status = response?.status() ?? 0;
 

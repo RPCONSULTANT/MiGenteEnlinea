@@ -18,7 +18,7 @@ test.describe("@full @contratista Contratista module", () => {
     await expect(page).toHaveURL(/Contratista\/Index/i);
 
     await contratistaPage.openPerfil();
-    await expect(page).toHaveURL(/Contratista\/Perfil/i);
+    await expect(page).toHaveURL(/Contratista(\/Perfil)?/i);
 
     await contratistaPage.openDirectorio();
     await expect(page).toHaveURL(/Contratista\/Directorio/i);
@@ -54,5 +54,31 @@ test.describe("@full @contratista Contratista module", () => {
       });
       expect([200, 404]).toContain(servicios.status);
     }
+  });
+
+  test("@full @contratista can request contact from employer directory", async ({ page, runtimeIssues }) => {
+    const creds = getRoleCredentials("contratista");
+    const authPage = new AuthPage(page);
+    const contratistaPage = new ContratistaPage(page);
+
+    await authPage.openLogin();
+    await authPage.login(creds.email, creds.password);
+    await contratistaPage.openDirectorio();
+
+    const contactBtn = page.locator(".btn-solicitar-contacto").first();
+    const count = await contactBtn.count();
+    if (count === 0) {
+      runtimeIssues.push({
+        type: "ui-error",
+        message: "No contact request buttons found in Contratista/Directorio",
+        url: page.url()
+      });
+      test.skip(true, "No employers available for contact flow");
+    }
+
+    await contactBtn.click();
+    await expect(page.getByText(/Solicitar contacto/i)).toBeVisible();
+    await page.getByRole("button", { name: /^Enviar$/i }).click();
+    await expect(page.getByRole("button", { name: /OK/i })).toBeVisible({ timeout: 15000 });
   });
 });

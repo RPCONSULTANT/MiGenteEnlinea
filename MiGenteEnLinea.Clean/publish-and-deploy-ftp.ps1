@@ -158,8 +158,18 @@ if (-not $WebOnly) {
         $content = $content -replace "processPath='\.\\MiGenteEnLinea\.API\.exe'", "processPath='dotnet'"
         $content = $content -replace 'arguments="\s*"', 'arguments=".\MiGenteEnLinea.API.dll"'
         $content = $content -replace "arguments='\s*'", "arguments='.\MiGenteEnLinea.API.dll'"
+        if ($content -match "<aspNetCore[^>]*\/>") {
+            $content = $content -replace "<aspNetCore([^>]*)\/>", "<aspNetCore`$1><environmentVariables><environmentVariable name=`"ASPNETCORE_ENVIRONMENT`" value=`"Production`" /></environmentVariables></aspNetCore>"
+        }
+        elseif ($content -match "<aspNetCore[^>]*>") {
+            if ($content -match "ASPNETCORE_ENVIRONMENT") {
+                $content = $content -replace '(<environmentVariable\s+name="ASPNETCORE_ENVIRONMENT"\s+value=")[^"]*(")', '$1Production$2'
+            } else {
+                $content = $content -replace "(</aspNetCore>)", "<environmentVariables><environmentVariable name=`"ASPNETCORE_ENVIRONMENT`" value=`"Production`" /></environmentVariables>`$1"
+            }
+        }
         Set-Content -Path $apiWebConfig -Value $content -NoNewline -Force -ErrorAction Stop
-        Write-Host "    API web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.API.dll`")" -ForegroundColor $ColorSuccess
+        Write-Host "    API web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.API.dll`", ASPNETCORE_ENVIRONMENT=`"Production`")" -ForegroundColor $ColorSuccess
     } else {
         Write-Host "     API web.config not found, skipping..." -ForegroundColor $ColorWarning
     }
@@ -175,6 +185,16 @@ if (-not $ApiOnly) {
         $content = $content -replace "processPath='\.\\MiGenteEnLinea\.Web\.exe'", "processPath='dotnet'"
         $content = $content -replace 'arguments="\s*"', 'arguments=".\MiGenteEnLinea.Web.dll"'
         $content = $content -replace "arguments='\s*'", "arguments='.\MiGenteEnLinea.Web.dll'"
+        if ($content -match "<aspNetCore[^>]*\/>") {
+            $content = $content -replace "<aspNetCore([^>]*)\/>", "<aspNetCore`$1><environmentVariables><environmentVariable name=`"ASPNETCORE_ENVIRONMENT`" value=`"Production`" /></environmentVariables></aspNetCore>"
+        }
+        elseif ($content -match "<aspNetCore[^>]*>") {
+            if ($content -match "ASPNETCORE_ENVIRONMENT") {
+                $content = $content -replace '(<environmentVariable\s+name="ASPNETCORE_ENVIRONMENT"\s+value=")[^"]*(")', '$1Production$2'
+            } else {
+                $content = $content -replace "(</aspNetCore>)", "<environmentVariables><environmentVariable name=`"ASPNETCORE_ENVIRONMENT`" value=`"Production`" /></environmentVariables>`$1"
+            }
+        }
         if ($WebOutOfProcessFallback) {
             $content = $content -replace 'hostingModel="inprocess"', 'hostingModel="outofprocess"'
             $content = $content -replace "hostingModel='inprocess'", "hostingModel='outofprocess'"
@@ -184,9 +204,9 @@ if (-not $ApiOnly) {
         }
         Set-Content -Path $webWebConfig -Value $content -NoNewline -Force -ErrorAction Stop
         if ($WebOutOfProcessFallback) {
-            Write-Host "    Web web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.Web.dll`", hostingModel=`"outofprocess`")" -ForegroundColor $ColorSuccess
+            Write-Host "    Web web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.Web.dll`", hostingModel=`"outofprocess`", ASPNETCORE_ENVIRONMENT=`"Production`")" -ForegroundColor $ColorSuccess
         } else {
-            Write-Host "    Web web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.Web.dll`", hostingModel=`"inprocess`")" -ForegroundColor $ColorSuccess
+            Write-Host "    Web web.config fixed (processPath=`"dotnet`", arguments=`".\\MiGenteEnLinea.Web.dll`", hostingModel=`"inprocess`", ASPNETCORE_ENVIRONMENT=`"Production`")" -ForegroundColor $ColorSuccess
         }
     } else {
         Write-Host "     Web web.config not found, skipping..." -ForegroundColor $ColorWarning

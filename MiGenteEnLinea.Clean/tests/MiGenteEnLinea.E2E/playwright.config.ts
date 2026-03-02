@@ -1,12 +1,14 @@
 import { defineConfig } from "@playwright/test";
 
 const webBaseUrl = process.env.E2E_WEB_BASE_URL ?? "http://plattaformv2.migenteenlinea.do";
+const configuredWorkers = Number.parseInt(process.env.E2E_WORKERS ?? "", 10);
+const workers = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 1;
 
 export default defineConfig({
   testDir: "./src/specs",
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  workers,
   timeout: 60000,
   expect: {
     timeout: 10000

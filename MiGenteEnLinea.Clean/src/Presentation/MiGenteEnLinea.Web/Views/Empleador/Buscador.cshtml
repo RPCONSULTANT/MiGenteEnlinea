@@ -569,18 +569,59 @@
             });
         }
 
-        function contratarDesdeDirectorio(contratistaId) {
+        async function contratarDesdeDirectorio(contratistaId) {
             const perfil = (window.contratistas || []).find(c => c.contratistaId === contratistaId);
             if (!perfil) {
                 Swal.fire('Error', 'No se pudo preparar la contratación para este contratista', 'error');
                 return;
             }
 
-            sessionStorage.setItem('mge:selectedContratistaForHire', JSON.stringify({
+            const nombreCompleto = perfil.nombreCompleto || `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim();
+            const hireIntent = {
                 contratistaId: perfil.contratistaId,
-                nombreCompleto: perfil.nombreCompleto || `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim()
-            }));
-            window.location.href = '/Empleador/Contrataciones';
+                nombreCompleto,
+                nombre: perfil.nombre || null,
+                apellido: perfil.apellido || null,
+                identificacion: perfil.identificacion || null,
+                telefono1: perfil.telefono1 || null,
+                email: perfil.email || null,
+                provincia: perfil.provincia || null
+            };
+
+            const pick = await Swal.fire({
+                title: 'Tipo de contratación',
+                html: `<p class="mb-1"><strong>${nombreCompleto}</strong></p><p class="text-muted mb-0">Seleccione si será colaborador fijo o contratación temporal.</p>`,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Temporal',
+                denyButtonText: 'Fija',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d6efd',
+                denyButtonColor: '#198754'
+            });
+
+            if (pick.isConfirmed) {
+                sessionStorage.setItem('mge:hireIntent', JSON.stringify({
+                    ...hireIntent,
+                    tipoContratacion: 'temporal'
+                }));
+                // Compatibilidad con flujo anterior
+                sessionStorage.setItem('mge:selectedContratistaForHire', JSON.stringify({
+                    contratistaId: hireIntent.contratistaId,
+                    nombreCompleto: hireIntent.nombreCompleto
+                }));
+                window.location.href = '/Empleador/Contrataciones?source=directorio';
+                return;
+            }
+
+            if (pick.isDenied) {
+                sessionStorage.setItem('mge:hireIntent', JSON.stringify({
+                    ...hireIntent,
+                    tipoContratacion: 'fija'
+                }));
+                window.location.href = '/Empleador/Empleados?source=directorio';
+            }
         }
         
         // Ver perfil del contratista

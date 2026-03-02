@@ -9,6 +9,7 @@ using MiGenteEnLinea.Application.Features.Empleados.Commands.ModificarCalificaci
 using MiGenteEnLinea.Application.Features.Empleados.DTOs;
 using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
 using MiGenteEnLinea.Infrastructure.Persistence.Entities.Generated;
+using System;
 using System.Text;
 
 namespace MiGenteEnLinea.Infrastructure.Services;
@@ -349,45 +350,79 @@ public class LegacyDataService : ILegacyDataService
         CreateEmpleadoTemporalCommand command,
         CancellationToken cancellationToken = default)
     {
-        // Legacy: Uses 2 separate DbContexts (2 transactions)
-        // Step 1: Create EmpleadoTemporal
-        var empleadoTemporal = new EmpleadosTemporale
+        if (string.IsNullOrWhiteSpace(command.UserId))
         {
-            UserId = command.UserId,
-            FechaRegistro = DateTime.Now,
-            Tipo = command.Tipo,
-            NombreComercial = command.NombreComercial,
-            Rnc = command.Rnc,
-            Nombre = command.Nombre,
-            Apellido = command.Apellido,
-            Identificacion = command.Identificacion,
-            Telefono1 = command.Telefono,
-            Direccion = command.Direccion
-        };
+            throw new ArgumentException("No se pudo identificar el usuario autenticado.");
+        }
 
-        _context.Set<EmpleadosTemporale>().Add(empleadoTemporal);
-        await _context.SaveChangesAsync(cancellationToken);
+        ValidateTemporalFieldLength(command.Nombre, 50, "Nombre");
+        ValidateTemporalFieldLength(command.Apellido, 50, "Apellido");
+        ValidateTemporalFieldLength(command.Identificacion, 20, "Identificación");
+        ValidateTemporalFieldLength(command.Telefono, 18, "Teléfono");
+        ValidateTemporalFieldLength(command.Direccion, 250, "Dirección");
+        ValidateTemporalFieldLength(command.Servicio, 60, "Servicio");
 
-        int contratacionId = empleadoTemporal.ContratacionId;
-
-        // Step 2: Create DetalleContrataciones (with the generated contratacionId)
-        // Map Command properties to entity properties
-        var detalle = new DetalleContratacione
+        try
         {
-            ContratacionId = contratacionId,
-            DescripcionCorta = command.Servicio, // "Servicio" maps to "DescripcionCorta"
-            FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : null,
-            FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : null,
-            MontoAcordado = command.Pago,
-            DescripcionAmpliada = command.LugarTrabajo, // Assuming LugarTrabajo maps to DescripcionAmpliada
-            EsquemaPagos = command.HorarioTrabajo, // Assuming HorarioTrabajo maps to EsquemaPagos
-            Estatus = command.Estatus ?? 1 // Default to 1 (active)
-        };
+            // Legacy: Uses 2 separate DbContexts (2 transactions)
+            // Step 1: Create EmpleadoTemporal
+            var empleadoTemporal = new EmpleadosTemporale
+            {
+                UserId = command.UserId,
+                FechaRegistro = DateTime.Now,
+                Tipo = command.Tipo,
+                NombreComercial = command.NombreComercial,
+                Rnc = command.Rnc,
+                Nombre = command.Nombre?.Trim(),
+                Apellido = command.Apellido?.Trim(),
+                Identificacion = command.Identificacion?.Trim(),
+                Telefono1 = command.Telefono?.Trim(),
+                Direccion = command.Direccion?.Trim()
+            };
 
-        _context.Set<DetalleContratacione>().Add(detalle);
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.Set<EmpleadosTemporale>().Add(empleadoTemporal);
+            await _context.SaveChangesAsync(cancellationToken);
 
-        return contratacionId;
+            int contratacionId = empleadoTemporal.ContratacionId;
+
+            // Step 2: Create DetalleContrataciones (with the generated contratacionId)
+            var detalle = new DetalleContratacione
+            {
+                ContratacionId = contratacionId,
+                DescripcionCorta = command.Servicio?.Trim(), // "Servicio" maps to "DescripcionCorta"
+                FechaInicio = command.FechaInicio.HasValue ? DateOnly.FromDateTime(command.FechaInicio.Value) : null,
+                FechaFinal = command.FechaFinal.HasValue ? DateOnly.FromDateTime(command.FechaFinal.Value) : null,
+                MontoAcordado = command.Pago,
+                DescripcionAmpliada = command.LugarTrabajo, // Assuming LugarTrabajo maps to DescripcionAmpliada
+                EsquemaPagos = command.HorarioTrabajo, // Assuming HorarioTrabajo maps to EsquemaPagos
+                Estatus = command.Estatus ?? 1 // Default to 1 (active)
+            };
+
+            _context.Set<DetalleContratacione>().Add(detalle);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return contratacionId;
+        }
+        catch (DbUpdateException ex) when (IsKnownDataError(ex))
+        {
+            throw new ArgumentException("Datos inválidos para crear la contratación temporal. Verifique longitudes y campos requeridos.");
+        }
+    }
+
+    private static void ValidateTemporalFieldLength(string? value, int maxLength, string field)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && value.Trim().Length > maxLength)
+        {
+            throw new ArgumentException($"{field} excede la longitud máxima permitida ({maxLength}).");
+        }
+    }
+
+    private static bool IsKnownDataError(DbUpdateException ex)
+    {
+        var message = ex.GetBaseException().Message;
+        return message.Contains("String or binary data would be truncated", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Cannot insert the value NULL", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("conflicted with the FOREIGN KEY constraint", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<int> CreateDetalleContratacionAsync(

@@ -187,6 +187,11 @@
                 const id = $(this).data('id');
                 mostrarModal(id);
             });
+
+            $(document).on('click', '.btn-solicitar-contacto', async function() {
+                const id = Number($(this).data('id'));
+                await solicitarContacto(id);
+            });
         });
 
         async function cargarEmpleadores() {
@@ -285,9 +290,12 @@
                                     <span class="text-dark ms-2">${rating.toFixed(1)}</span>
                                 </div>
                                 <span class="badge ${badgeStatus} mb-3">${statusText}</span>
-                                <div class="d-grid">
+                                <div class="d-grid gap-2">
                                     <button class="btn btn-outline-primary btn-ver-empleador" data-id="${emp.empleadorId}">
                                         <i class="fa fa-eye"></i> Ver Perfil
+                                    </button>
+                                    <button class="btn btn-success btn-solicitar-contacto" data-id="${emp.empleadorId}">
+                                        <i class="fa fa-paper-plane"></i> Solicitar contacto
                                     </button>
                                 </div>
                             </div>
@@ -324,6 +332,62 @@
 
             // Mostrar modal
             $('#modalEmpleador').modal('show');
+        }
+
+        async function solicitarContacto(empleadorId) {
+            if (!empleadorId) return;
+
+            const result = await Swal.fire({
+                title: 'Solicitar contacto',
+                html:
+                    '<div class="text-start">' +
+                    '  <label class="form-label">Mensaje (opcional)</label>' +
+                    '  <textarea id="swalMensajeContacto" class="form-control mb-2" maxlength="500" rows="3" placeholder="Hola, me interesa colaborar en futuras oportunidades."></textarea>' +
+                    '  <label class="form-label">Canal preferido</label>' +
+                    '  <select id="swalCanalContacto" class="form-select">' +
+                    '    <option value="">-- Seleccione --</option>' +
+                    '    <option value="whatsapp">WhatsApp</option>' +
+                    '    <option value="email">Email</option>' +
+                    '    <option value="telefono">Teléfono</option>' +
+                    '  </select>' +
+                    '</div>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Enviar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const mensaje = document.getElementById('swalMensajeContacto').value;
+                    const canalPreferido = document.getElementById('swalCanalContacto').value;
+                    return { mensaje, canalPreferido };
+                }
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await authenticatedFetch('/contactos/solicitudes', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        empleadorId,
+                        mensaje: result.value.mensaje || null,
+                        canalPreferido: result.value.canalPreferido || null
+                    })
+                });
+
+                const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                if (response.ok) {
+                    Swal.fire('Enviada', 'La solicitud de contacto fue enviada correctamente.', 'success');
+                    return;
+                }
+
+                const message = window.getApiErrorMessage
+                    ? window.getApiErrorMessage(payload, 'No se pudo enviar la solicitud de contacto')
+                    : (payload?.message || payload?.error || 'No se pudo enviar la solicitud de contacto');
+                Swal.fire('Error', message, response.status === 409 ? 'info' : 'error');
+            } catch (error) {
+                console.error('Error enviando solicitud de contacto:', error);
+                Swal.fire('Error', 'No se pudo enviar la solicitud de contacto', 'error');
+            }
         }
     </script>
 }

@@ -15,7 +15,7 @@ $ColorInfo = "Cyan"
 $FtpHost = "win8146.site4now.net"
 $FtpUsername = "rainiery"
 $FtpPassword = "Pevertiman00!"
-$RemoteLogPath = "/migenteenlinea2/api/logs"
+$RemoteLogPath = "/MigenteApi/api/logs"
 
 Write-Host "========================================" -ForegroundColor $ColorInfo
 Write-Host "  📥 Downloading stdout Logs from FTP" -ForegroundColor $ColorInfo

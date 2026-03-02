@@ -11,6 +11,10 @@ using MiGenteEnLinea.Application.Features.Contrataciones.Commands.RejectContrata
 using MiGenteEnLinea.Application.Features.Contrataciones.Commands.StartContratacion;
 using MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContratacionById;
 using MiGenteEnLinea.Application.Features.Contrataciones.Queries.GetContrataciones;
+using MiGenteEnLinea.Application.Features.Authentication.Queries.GetProfileById;
+using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Infrastructure.Persistence.Contexts;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Linq;
 using System;
@@ -43,13 +47,19 @@ public class ContratacionesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ContratacionesController> _logger;
+    private readonly MiGenteDbContext _context;
+    private readonly IPdfService _pdfService;
 
     public ContratacionesController(
         IMediator mediator,
-        ILogger<ContratacionesController> logger)
+        ILogger<ContratacionesController> logger,
+        MiGenteDbContext context,
+        IPdfService pdfService)
     {
         _mediator = mediator;
         _logger = logger;
+        _context = context;
+        _pdfService = pdfService;
     }
 
     /// <summary>
@@ -63,26 +73,53 @@ public class ContratacionesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<int>> Create([FromBody] CreateContratacionCommand command)
     {
-        _logger.LogInformation("Creating new contratacion");
+        var correlationId = HttpContext.TraceIdentifier;
+        _logger.LogInformation("CREATE_CONTRATACION_START CorrelationId={CorrelationId}", correlationId);
 
         try
         {
             var userId = GetUserId();
             var safeCommand = command with { EmpleadorUserId = userId };
             var detalleId = await _mediator.Send(safeCommand);
+            _logger.LogInformation(
+                "CREATE_CONTRATACION_SUCCESS CorrelationId={CorrelationId} DetalleId={DetalleId}",
+                correlationId,
+                detalleId);
             return Ok(detalleId);
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogWarning(ex, "Unauthorized creating contratacion");
-            return Unauthorized(new { error = ex.Message });
+            _logger.LogWarning(ex, "CREATE_CONTRATACION_FAIL_UNAUTHORIZED CorrelationId={CorrelationId}", correlationId);
+            return Unauthorized(new
+            {
+                code = "unauthorized",
+                message = ex.Message,
+                correlationId
+            });
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Validation error creating contratacion");
-            return BadRequest(new { error = ex.Message });
+            _logger.LogWarning(ex, "CREATE_CONTRATACION_FAIL_ARGUMENT CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "business_rule_error",
+                message = ex.Message,
+                details = new[] { ex.Message },
+                correlationId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CREATE_CONTRATACION_FAIL_UNKNOWN CorrelationId={CorrelationId}", correlationId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                code = "internal_error",
+                message = "Error interno procesando la contratación.",
+                correlationId
+            });
         }
     }
 
@@ -521,6 +558,116 @@ public class ContratacionesController : ControllerBase
             success, 
             message = "Empleado temporal eliminado exitosamente" 
         });
+    }
+
+    /// <summary>
+    /// Genera el contrato PDF de una contratación temporal.
+    /// Disponible desde estado Aceptada en adelante.
+    /// </summary>
+    [HttpGet("{detalleId}/contrato-pdf")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GetContratoTemporalPdf(int detalleId)
+    {
+        var correlationId = HttpContext.TraceIdentifier;
+        var userId = GetUserId();
+
+        var detalle = await _context.DetalleContrataciones
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.DetalleId == detalleId);
+
+        if (detalle == null)
+        {
+            return NotFound(new
+            {
+                code = "not_found",
+                message = "No se encontró el detalle de contratación solicitado.",
+                correlationId
+            });
+        }
+
+        if (!detalle.ContratacionId.HasValue)
+        {
+            return Conflict(new
+            {
+                code = "invalid_state",
+                message = "La contratación no tiene vínculo temporal para generar contrato.",
+                correlationId
+            });
+        }
+
+        // Estados permitidos: Aceptada(2), En Progreso(3), Completada(4)
+        if (detalle.Estatus is < 2 or > 4)
+        {
+            return Conflict(new
+            {
+                code = "invalid_state",
+                message = "El contrato solo está disponible para contrataciones aceptadas o en ejecución.",
+                correlationId
+            });
+        }
+
+        var temporal = await _context.EmpleadosTemporales
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.ContratacionId == detalle.ContratacionId.Value);
+
+        if (temporal == null)
+        {
+            return NotFound(new
+            {
+                code = "not_found",
+                message = "No se encontró la contratación temporal asociada.",
+                correlationId
+            });
+        }
+
+        if (!string.Equals(temporal.UserId, userId, StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+        {
+            return Forbid();
+        }
+
+        var perfil = await _mediator.Send(new GetProfileByIdQuery { UserId = userId });
+        if (perfil == null)
+        {
+            return NotFound(new
+            {
+                code = "not_found",
+                message = "No se encontró el perfil del empleador autenticado.",
+                correlationId
+            });
+        }
+
+        var empleadorNombre = !string.IsNullOrWhiteSpace(perfil.NombreComercial)
+            ? perfil.NombreComercial
+            : $"{perfil.Nombre} {perfil.Apellido}".Trim();
+        var empleadorIdentificacion = perfil.Identificacion ?? "N/A";
+
+        var contratistaNombre = temporal.Tipo == 2
+            ? (temporal.NombreComercial ?? "Contratista")
+            : $"{temporal.Nombre} {temporal.Apellido}".Trim();
+        var contratistaIdentificacion = temporal.Tipo == 2
+            ? (temporal.Rnc ?? "N/A")
+            : (temporal.Identificacion ?? "N/A");
+
+        var fechaInicio = detalle.FechaInicio.ToDateTime(TimeOnly.MinValue);
+        var pdfBytes = _pdfService.GenerarContratoTrabajo(
+            empleadorNombre: empleadorNombre,
+            empleadorRnc: empleadorIdentificacion,
+            empleadoNombre: string.IsNullOrWhiteSpace(contratistaNombre) ? "Contratista" : contratistaNombre,
+            empleadoCedula: contratistaIdentificacion,
+            puesto: detalle.DescripcionCorta,
+            salario: detalle.MontoAcordado,
+            fechaInicio: fechaInicio);
+
+        _logger.LogInformation(
+            "TEMP_CONTRACT_PDF_SUCCESS CorrelationId={CorrelationId} DetalleId={DetalleId} UserId={UserId}",
+            correlationId,
+            detalleId,
+            userId);
+
+        return File(pdfBytes, "application/pdf", $"contrato-temporal-{detalleId}.pdf");
     }
 
     private string GetUserId()

@@ -1,10 +1,12 @@
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.CreateEmpleado;
 using MiGenteEnLinea.Application.Features.Empleados.Commands.UpdateEmpleado;
@@ -424,11 +426,71 @@ public class EmpleadosController : ControllerBase
     [HttpPost("temporales")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<int>> CreateEmpleadoTemporal([FromBody] CreateEmpleadoTemporalCommand command)
     {
-        var contratacionId = await _mediator.Send(command);
-        return Ok(contratacionId);
+        var correlationId = HttpContext.TraceIdentifier;
+        try
+        {
+            var safeCommand = command with { UserId = GetUserId() };
+            _logger.LogInformation(
+                "CREATE_TEMPORAL_START CorrelationId={CorrelationId} UserId={UserId}",
+                correlationId,
+                safeCommand.UserId);
+
+            var contratacionId = await _mediator.Send(safeCommand);
+
+            _logger.LogInformation(
+                "CREATE_TEMPORAL_SUCCESS CorrelationId={CorrelationId} ContratacionId={ContratacionId}",
+                correlationId,
+                contratacionId);
+
+            return Ok(contratacionId);
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "CREATE_TEMPORAL_FAIL_VALIDATION CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "validation_error",
+                message = "Los datos de la contratación temporal no son válidos.",
+                details = ex.Errors.Select(e => new { field = e.PropertyName, error = e.ErrorMessage }),
+                correlationId
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "CREATE_TEMPORAL_FAIL_ARGUMENT CorrelationId={CorrelationId}", correlationId);
+            return BadRequest(new
+            {
+                code = "business_rule_error",
+                message = ex.Message,
+                details = new[] { ex.Message },
+                correlationId
+            });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "CREATE_TEMPORAL_FAIL_DBUPDATE CorrelationId={CorrelationId}", correlationId);
+            return Conflict(new
+            {
+                code = "persistence_error",
+                message = "No se pudo guardar la contratación temporal por un conflicto de datos.",
+                details = new[] { ex.GetBaseException().Message },
+                correlationId
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "CREATE_TEMPORAL_FAIL_UNAUTHORIZED CorrelationId={CorrelationId}", correlationId);
+            return Unauthorized(new
+            {
+                code = "unauthorized",
+                message = ex.Message,
+                correlationId
+            });
+        }
     }
 
     /// <summary>
