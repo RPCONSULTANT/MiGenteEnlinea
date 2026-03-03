@@ -304,6 +304,10 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
         });
 
         (function() {
+            if (window.hydrateSessionFromUserInfoIfNeeded) {
+                window.hydrateSessionFromUserInfoIfNeeded();
+            }
+
             const loginRedirectFlag = 'mge:redirecting:login:contratista';
             const planRedirectFlag = 'mge:redirecting:plan:contratista';
             const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
@@ -327,7 +331,8 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
             }
 
             const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) {
+            const userId = window.getCurrentUserId ? window.getCurrentUserId() : (localStorage.getItem('userId') || sessionStorage.getItem('userId'));
+            if (!accessToken || !userId) {
                 localStorage.removeItem('planId');
                 localStorage.removeItem('vencimientoPlan');
                 localStorage.removeItem('accessToken');
@@ -375,6 +380,9 @@ FRONT_Publicado/Contratista/ContratistasM.Master Tema: Argon Dashboard 2.0 *@
             }
 
             sessionStorage.removeItem(planRedirectFlag);
+            if (window.clearRedirectFlags) {
+                window.clearRedirectFlags();
+            }
         })();
     </script>
 

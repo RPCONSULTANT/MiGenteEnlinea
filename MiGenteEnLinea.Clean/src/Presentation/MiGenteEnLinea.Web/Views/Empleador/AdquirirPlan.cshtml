@@ -323,6 +323,44 @@
             return localStorage.getItem('accessToken');
         }
 
+        function getCurrentUserIdSafe() {
+            if (window.getCurrentUserId) {
+                return window.getCurrentUserId();
+            }
+            return localStorage.getItem('userId') || sessionStorage.getItem('userId');
+        }
+
+        async function syncPlanStateFromApi(userId, retries = 1) {
+            const activaPath = window.API_ENDPOINTS?.SUSCRIPCIONES?.ACTIVA
+                ? window.API_ENDPOINTS.SUSCRIPCIONES.ACTIVA(userId)
+                : `/suscripciones/activa/${userId}`;
+
+            const response = await authenticatedFetch(activaPath);
+            const payload = window.readApiResponse
+                ? await window.readApiResponse(response)
+                : await response.json();
+
+            if (!response.ok || !payload) {
+                const correlationId = payload?.correlationId || response.headers.get('x-correlation-id') || '';
+                const suffix = correlationId ? ` (Ref: ${correlationId})` : '';
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 700));
+                    return syncPlanStateFromApi(userId, retries - 1);
+                }
+                throw new Error((payload?.message || 'No se pudo sincronizar el plan activo') + suffix);
+            }
+
+            const planId = payload?.planId ?? payload?.PlanId ?? 0;
+            const vencimientoPlan = payload?.vencimiento ?? payload?.Vencimiento ?? payload?.vencimientoPlan ?? payload?.VencimientoPlan ?? '';
+
+            localStorage.setItem('planId', String(planId || 0));
+            localStorage.setItem('vencimientoPlan', vencimientoPlan ? String(vencimientoPlan) : '');
+            if (window.clearRedirectFlags) {
+                window.clearRedirectFlags();
+            }
+            console.log('[PLAN_SYNC_OK]', { userId, planId, source: 'api/suscripciones/activa' });
+        }
+
         function seleccionarPlan(planId, nombre, precio) {
             planSeleccionado = { id: planId, nombre: nombre, precio: precio };
 
@@ -443,7 +481,10 @@
             }
 
             try {
-                const userId = localStorage.getItem('userId');
+                const userId = getCurrentUserIdSafe();
+                if (!userId) {
+                    throw new Error('No se encontró el usuario autenticado para procesar la suscripción.');
+                }
                 
                 let procesarPagoPath;
                 let pagoData;
@@ -502,10 +543,23 @@
                     icon: 'success',
                     confirmButtonText: 'Continuar',
                     confirmButtonColor: '#00176B'
-                }).then((result) => {
-                    // Actualizar planId en localStorage para que el usuario pueda navegar
-                    localStorage.setItem('planId', planSeleccionado.id);
-                    localStorage.setItem('vencimientoPlan', new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString());
+                }).then(async () => {
+                    try {
+                        await syncPlanStateFromApi(userId, 1);
+                    } catch (syncError) {
+                        console.error('[PLAN_SYNC_FAIL]', { userId, error: syncError?.message || syncError });
+                        // Fallback local para no bloquear navegación si la venta ya fue aprobada.
+                        localStorage.setItem('planId', String(planSeleccionado.id || 0));
+                        if (window.clearRedirectFlags) {
+                            window.clearRedirectFlags();
+                        }
+                        await Swal.fire({
+                            title: 'Pago confirmado',
+                            text: `La sincronización del plan tardó más de lo esperado. Continuaremos con los datos locales. ${syncError?.message || ''}`.trim(),
+                            icon: 'info',
+                            confirmButtonColor: '#00176B'
+                        });
+                    }
                     window.location.href = '/Empleador';
                 });
 

@@ -190,30 +190,43 @@
                     }
                     
                     // Store tokens in localStorage
-                    localStorage.setItem('accessToken', loginData.accessToken);
-                    localStorage.setItem('refreshToken', loginData.refreshToken);
-                    localStorage.setItem('accessTokenExpires', loginData.accessTokenExpires);
-                    localStorage.setItem('refreshTokenExpires', loginData.refreshTokenExpires);
-                    localStorage.setItem('userInfo', JSON.stringify(loginData.user));
+                    if (window.persistAuthSession) {
+                        window.persistAuthSession(loginData);
+                    } else {
+                        localStorage.setItem('accessToken', loginData.accessToken);
+                        localStorage.setItem('refreshToken', loginData.refreshToken);
+                        localStorage.setItem('accessTokenExpires', loginData.accessTokenExpires);
+                        localStorage.setItem('refreshTokenExpires', loginData.refreshTokenExpires);
+                        localStorage.setItem('userInfo', JSON.stringify(loginData.user));
+                        localStorage.setItem('userId', loginData.user?.userId || '');
+                        localStorage.setItem('tipo', String(loginData.user?.tipo || '').toLowerCase());
+                        localStorage.setItem('planId', String(loginData.user?.planId ?? '0'));
+                        localStorage.setItem('vencimientoPlan', loginData.user?.vencimientoPlan || '');
+                    }
                     
                     showAlert('activarAlert', '¡Sesión iniciada! Redirigiendo...', 'success');
                     
                     // Determine redirect based on user type and plan status
-                    const userType = loginData.user.tipo;
+                    const userType = String(loginData.user.tipo || '').toLowerCase();
                     const hasPlan = loginData.user.planId > 0;
-                    const planActivo = loginData.user.planActivo;
+                    let planActivo = false;
+                    if (loginData.user.vencimientoPlan) {
+                        planActivo = new Date(loginData.user.vencimientoPlan) > new Date();
+                    } else {
+                        planActivo = hasPlan;
+                    }
                     
                     setTimeout(() => {
                         if (!hasPlan || !planActivo) {
                             // User needs to select a plan
-                            if (userType === '1') {
+                            if (userType === '1' || userType === 'empleador') {
                                 window.location.href = '@Url.Action("AdquirirPlan", "Empleador")';
                             } else {
                                 window.location.href = '@Url.Action("AdquirirPlan", "Contratista")';
                             }
                         } else {
                             // User has active plan - go to dashboard
-                            if (userType === '1') {
+                            if (userType === '1' || userType === 'empleador') {
                                 window.location.href = '@Url.Action("Index", "Empleador")';
                             } else {
                                 window.location.href = '@Url.Action("Index", "Contratista")';

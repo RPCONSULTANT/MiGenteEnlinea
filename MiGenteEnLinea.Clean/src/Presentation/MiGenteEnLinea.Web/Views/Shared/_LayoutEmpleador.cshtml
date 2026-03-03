@@ -347,6 +347,10 @@ Tema: Argon Dashboard 2.0 *@
     <!-- Validación de Plan Activo -->
     <script>
         (function() {
+            if (window.hydrateSessionFromUserInfoIfNeeded) {
+                window.hydrateSessionFromUserInfoIfNeeded();
+            }
+
             const loginRedirectFlag = 'mge:redirecting:login';
             const planRedirectFlag = 'mge:redirecting:plan';
             const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
@@ -374,9 +378,10 @@ Tema: Argon Dashboard 2.0 *@
             const planId = localStorage.getItem('planId');
             const vencimientoPlan = localStorage.getItem('vencimientoPlan');
             const accessToken = localStorage.getItem('accessToken');
+            const userId = window.getCurrentUserId ? window.getCurrentUserId() : (localStorage.getItem('userId') || sessionStorage.getItem('userId'));
             
-            // Si no hay token, redirigir a login
-            if (!accessToken) {
+            // Si no hay token o userId, redirigir a login
+            if (!accessToken || !userId) {
                 localStorage.removeItem('planId');
                 localStorage.removeItem('vencimientoPlan');
                 localStorage.removeItem('accessToken');
@@ -425,6 +430,9 @@ Tema: Argon Dashboard 2.0 *@
             }
 
             sessionStorage.removeItem(planRedirectFlag);
+            if (window.clearRedirectFlags) {
+                window.clearRedirectFlags();
+            }
         })();
     </script>
 

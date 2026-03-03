@@ -120,16 +120,19 @@
                     : null;
                 
                 if (response.ok && data.accessToken) {
-                    // Store tokens and user data in localStorage
-                    localStorage.setItem('accessToken', data.accessToken);
-                    localStorage.setItem('refreshToken', data.refreshToken);
-                    localStorage.setItem('userId', data.user.userId);
-                    localStorage.setItem('email', data.user.email);
-                    localStorage.setItem('nombreCompleto', data.user.nombreCompleto);
-                    localStorage.setItem('tipo', data.user.tipo);
-                    localStorage.setItem('planId', data.user.planId || '0');
-                    localStorage.setItem('vencimientoPlan', data.user.vencimientoPlan || '');
-                    localStorage.setItem('roles', JSON.stringify(data.user.roles || []));
+                    if (window.persistAuthSession) {
+                        window.persistAuthSession(data);
+                    } else {
+                        localStorage.setItem('accessToken', data.accessToken);
+                        localStorage.setItem('refreshToken', data.refreshToken);
+                        localStorage.setItem('userId', data.user.userId);
+                        localStorage.setItem('email', data.user.email);
+                        localStorage.setItem('nombreCompleto', data.user.nombreCompleto);
+                        localStorage.setItem('tipo', String(data.user.tipo || '').toLowerCase());
+                        localStorage.setItem('planId', data.user.planId || '0');
+                        localStorage.setItem('vencimientoPlan', data.user.vencimientoPlan || '');
+                        localStorage.setItem('roles', JSON.stringify(data.user.roles || []));
+                    }
                     
                     // Show success message
                     showAlert('loginAlert', '¡Bienvenido! Redirigiendo...', 'success');
