@@ -127,6 +127,12 @@ public class AuthController : Controller
         {
             // Session not configured, ignore
         }
+
+        // Clear response cookies that may hold UI/session hints.
+        foreach (var cookieKey in HttpContext.Request.Cookies.Keys)
+        {
+            Response.Cookies.Delete(cookieKey);
+        }
         
         return RedirectToAction("Login", new { logout = true });
     }

@@ -118,9 +118,14 @@ public record ContratistaDto
     public string? ImagenUrl { get; init; }
 
     /// <summary>
+    /// Alias canónico para frontend (no-breaking)
+    /// </summary>
+    public string? FotoUrl { get; init; }
+
+    /// <summary>
     /// ¿Tiene imagen de perfil? (calculado)
     /// </summary>
-    public bool TieneImagen => !string.IsNullOrWhiteSpace(ImagenUrl);
+    public bool TieneImagen => !string.IsNullOrWhiteSpace(FotoUrl) || !string.IsNullOrWhiteSpace(ImagenUrl);
 
     /// <summary>
     /// ¿Tiene WhatsApp disponible? (calculado en Query)

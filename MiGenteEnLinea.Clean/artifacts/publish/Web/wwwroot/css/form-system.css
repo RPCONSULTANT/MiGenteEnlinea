@@ -1,0 +1,83 @@
+:root {
+  --mge-form-focus: rgba(26, 115, 232, 0.18);
+  --mge-form-border: #d7dce5;
+  --mge-form-radius: 0.65rem;
+  --mge-form-label: #344767;
+}
+
+.mge-form .form-label,
+form .form-label {
+  color: var(--mge-form-label);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.mge-form .form-control,
+.mge-form .form-select,
+form .form-control,
+form .form-select {
+  border-color: var(--mge-form-border);
+  border-radius: var(--mge-form-radius);
+  min-height: 2.6rem;
+}
+
+.mge-form .form-control:focus,
+.mge-form .form-select:focus,
+form .form-control:focus,
+form .form-select:focus {
+  border-color: #5e72e4;
+  box-shadow: 0 0 0 0.2rem var(--mge-form-focus);
+}
+
+.mge-form .field-error,
+form .field-error {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.mge-form .is-invalid,
+form .is-invalid {
+  border-color: #dc3545;
+}
+
+.mge-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mge-form-card {
+  background: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.07);
+  border-radius: 0.85rem;
+  padding: 1rem;
+}
+
+.mge-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f3f5f9;
+}
+
+@media (max-width: 991px) {
+  .mge-form-card {
+    padding: 0.85rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .mge-form .row > [class*="col-"],
+  form .row > [class*="col-"] {
+    margin-bottom: 0.6rem;
+  }
+
+  .mge-form-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding-top: 0.5rem;
+    z-index: 6;
+  }
+}

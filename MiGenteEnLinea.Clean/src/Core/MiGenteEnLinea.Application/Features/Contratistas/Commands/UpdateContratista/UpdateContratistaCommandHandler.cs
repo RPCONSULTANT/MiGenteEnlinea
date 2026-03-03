@@ -39,7 +39,25 @@ public class UpdateContratistaCommandHandler : IRequestHandler<UpdateContratista
             throw new InvalidOperationException($"No existe un perfil de contratista para el usuario {request.UserId}");
         }
 
-        // 2. ACTUALIZAR PERFIL BÁSICO (si hay cambios)
+        // 2. ACTUALIZAR DATOS BASE (si hay cambios)
+        bool hayCambiosBase = request.Tipo.HasValue ||
+                              request.Identificacion != null ||
+                              request.Nombre != null ||
+                              request.Apellido != null ||
+                              request.NombreComercial != null;
+
+        if (hayCambiosBase)
+        {
+            contratista.ActualizarDatosBasicos(
+                tipo: request.Tipo,
+                identificacion: request.Identificacion,
+                nombre: request.Nombre,
+                apellido: request.Apellido,
+                nombreComercial: request.NombreComercial
+            );
+        }
+
+        // 3. ACTUALIZAR PERFIL BÁSICO (si hay cambios)
         bool hayCambiosPerfil = request.Titulo != null ||
                                 request.Sector != null ||
                                 request.Experiencia.HasValue ||
@@ -59,7 +77,7 @@ public class UpdateContratistaCommandHandler : IRequestHandler<UpdateContratista
             );
         }
 
-        // 3. ACTUALIZAR CONTACTO (si hay cambios)
+        // 4. ACTUALIZAR CONTACTO (si hay cambios)
         bool hayCambiosContacto = request.Telefono1 != null ||
                                   request.Whatsapp1.HasValue ||
                                   request.Telefono2 != null ||
@@ -83,7 +101,7 @@ public class UpdateContratistaCommandHandler : IRequestHandler<UpdateContratista
             );
         }
 
-        // 4. GUARDAR CAMBIOS usando UnitOfWork
+        // 5. GUARDAR CAMBIOS usando UnitOfWork
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(

@@ -231,6 +231,33 @@
     </div>
 </div>
 
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fa fa-key"></i> Cambiar Contraseña</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="txtPasswordActual" class="form-label">Contraseña Actual</label>
+                    <input type="password" class="form-control" id="txtPasswordActual" autocomplete="current-password">
+                </div>
+                <div class="mb-3">
+                    <label for="txtPasswordNueva" class="form-label">Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="txtPasswordNueva" minlength="8" autocomplete="new-password">
+                </div>
+                <div class="mb-3">
+                    <label for="txtPasswordConfirmar" class="form-label">Confirmar Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="txtPasswordConfirmar" minlength="8" autocomplete="new-password">
+                </div>
+                <button type="button" class="btn btn-warning" id="btnCambiarPassword">
+                    <i class="fa fa-key"></i> Cambiar Contraseña
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -241,6 +268,38 @@
         let userId = null; // Se obtiene del token JWT o sesión
         let perfilActivo = false;
         let perfilInicializando = false;
+
+        function resolvePerfilImage(entity, withVersion = false) {
+            let source = '/images/circular1.png';
+            if (window.resolveContratistaImageSource) {
+                source = window.resolveContratistaImageSource(entity, {
+                    fallbackBuilder: () => {
+                        const id = Number(contratistaId || entity?.contratistaId || entity?.ContratistaId || 0);
+                        if (id > 0 && window.API_ENDPOINTS?.CONTRATISTAS?.FOTO) {
+                            return `${API_BASE}${window.API_ENDPOINTS.CONTRATISTAS.FOTO(id)}`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
+            }
+
+            if (withVersion && window.appendImageVersion) {
+                return window.appendImageVersion(source);
+            }
+
+            return source;
+        }
+
+        function setProfileImage(entity, withVersion = false) {
+            const imageElement = document.getElementById('profileImage');
+            if (!imageElement) return;
+            imageElement.onerror = function () {
+                this.onerror = null;
+                this.src = '/images/circular1.png';
+            };
+            imageElement.src = resolvePerfilImage(entity, withVersion);
+        }
         
         $(document).ready(function () {
             // Obtener userId del localStorage (asumiendo login previo)
@@ -338,12 +397,15 @@
                     if (response.ok) {
                         const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                         Swal.fire('Éxito', 'Foto actualizada correctamente', 'success');
-                        
-                        // Recargar la imagen para mostrar la nueva
-                        if (result.fotoBase64) {
-                            $('#profileImage').attr('src', `data:image/jpeg;base64,${result.fotoBase64}`);
-                        }
-                        
+
+                        // Refrescar con cache-busting para evitar placeholder por caché stale
+                        setProfileImage({
+                            contratistaId: contratistaId,
+                            fotoUrl: result?.fotoUrl || result?.imageUrl || null,
+                            imagenUrl: result?.imageUrl || result?.fotoUrl || null,
+                            fotoBase64: result?.fotoBase64 || null
+                        }, true);
+
                         console.log('Upload result:', result);
                     } else {
                         // Intentar leer error como JSON, si falla usar texto genérico
@@ -471,16 +533,9 @@
                     $('#chkWhatsapp1').prop('checked', perfil.whatsapp1 || false);
                     $('#txtTelefono2').val(perfil.telefono2 || '');
                     $('#chkWhatsapp2').prop('checked', perfil.whatsapp2 || false);
-                    
-                    // Imagen de perfil
-                    if (perfil.imagenUrl) {
-                        // Si la URL es relativa, usar STATIC_FILES_BASE (sin /api)
-                        const imageUrl = perfil.imagenUrl.startsWith('http') 
-                            ? perfil.imagenUrl 
-                            : `${STATIC_FILES_BASE}${perfil.imagenUrl}`;
-                        $('#profileImage').attr('src', imageUrl);
-                        console.log('Image URL constructed:', imageUrl);
-                    }
+
+                    // Imagen de perfil (contrato canónico + fallback + placeholder)
+                    setProfileImage(perfil);
                     
                     // Mostrar/ocultar botones según estado
                     updateButtonState();
@@ -529,7 +584,17 @@
                 return;
             }
             
+            const tipoPerfil = parseInt($('#ddlTipoPerfil').val()) || 1;
+            const nombre = $('#txtNombre').val().trim();
+            const apellido = $('#txtApellido').val().trim();
+            const nombreComercial = $('#txtRazonSocial').val().trim();
+
             const perfilData = {
+                tipo: tipoPerfil,
+                identificacion: $('#txtIdentificacion').val().trim(),
+                nombre: tipoPerfil === 1 ? nombre : null,
+                apellido: tipoPerfil === 1 ? apellido : null,
+                nombreComercial: tipoPerfil === 2 ? nombreComercial : null,
                 titulo: $('#txtTitulo').val().trim(),
                 sector: $('#ddlSector').val(),
                 experiencia: parseInt($('#txtExperiencia').val()) || null,
@@ -565,24 +630,43 @@
                 console.log('Response text:', responseText);
                 
                 if (response.ok) {
-                    let result = null;
-                    if (responseText) {
-                        try {
-                            result = JSON.parse(responseText);
-                            console.log('Response JSON:', result);
-                        } catch (e) {
-                            console.warn('Could not parse response as JSON:', e);
-                        }
+                    // Validar persistencia real: reconsultar perfil y comparar campos claves
+                    const verifyPath = window.API_ENDPOINTS?.CONTRATISTAS?.BY_USER
+                        ? window.API_ENDPOINTS.CONTRATISTAS.BY_USER(userId)
+                        : `/contratistas/by-user/${userId}`;
+                    const verifyResponse = await authenticatedFetch(verifyPath);
+                    if (!verifyResponse.ok) {
+                        throw new Error('No se pudo verificar la actualización del perfil');
                     }
-                    
+
+                    const refreshed = window.readApiResponse ? await window.readApiResponse(verifyResponse) : await verifyResponse.json();
+                    const sameTipo = Number(refreshed?.tipo || 0) === tipoPerfil;
+                    const sameIdentificacion = (refreshed?.identificacion || '') === (perfilData.identificacion || '');
+                    const sameTitulo = (refreshed?.titulo || '') === (perfilData.titulo || '');
+                    const sameProvincia = (refreshed?.provincia || '') === (perfilData.provincia || '');
+                    const sameNombre = tipoPerfil === 1 ? (refreshed?.nombre || '') === (nombre || '') : true;
+                    const sameApellido = tipoPerfil === 1 ? (refreshed?.apellido || '') === (apellido || '') : true;
+                    const sameNombreComercial = tipoPerfil === 2 ? (refreshed?.nombre || '') === (nombreComercial || '') : true;
+
+                    const persisted = sameTipo && sameIdentificacion && sameTitulo && sameProvincia && sameNombre && sameApellido && sameNombreComercial;
+                    if (!persisted) {
+                        Swal.fire({
+                            title: 'Actualización incompleta',
+                            text: 'La API respondió OK pero no todos los cambios se reflejaron. Intente nuevamente.',
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                        await loadPerfil();
+                        return;
+                    }
+
+                    await loadPerfil();
                     Swal.fire({
                         title: 'Perfil Actualizado',
                         text: 'Tu perfil ha sido actualizado correctamente.',
                         icon: 'success',
                         confirmButtonText: 'OK'
                     });
-
-                    await loadPerfil();
                 } else {
                     let errorMessage = 'No se pudo guardar el perfil';
                     try {

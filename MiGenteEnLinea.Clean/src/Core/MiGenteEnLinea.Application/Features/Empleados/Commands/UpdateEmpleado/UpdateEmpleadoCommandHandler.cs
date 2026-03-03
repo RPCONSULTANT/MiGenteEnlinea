@@ -102,7 +102,7 @@ public class UpdateEmpleadoCommandHandler : IRequestHandler<UpdateEmpleadoComman
         // PASO 8: Actualizar foto (si se proporciona)
         if (request.Foto != null)
         {
-            // empleado.Foto = request.Foto;
+            empleado.ActualizarFoto(request.Foto);
         }
 
         // PASO 9: Guardar cambios

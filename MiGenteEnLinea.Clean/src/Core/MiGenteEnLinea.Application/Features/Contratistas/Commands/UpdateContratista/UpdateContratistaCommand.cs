@@ -24,6 +24,11 @@ namespace MiGenteEnLinea.Application.Features.Contratistas.Commands.UpdateContra
 /// <param name="Email">Email de contacto (opcional, max 50 caracteres)</param>
 public record UpdateContratistaCommand(
     string UserId,
+    int? Tipo = null,
+    string? Identificacion = null,
+    string? Nombre = null,
+    string? Apellido = null,
+    string? NombreComercial = null,
     string? Titulo = null,
     string? Sector = null,
     int? Experiencia = null,

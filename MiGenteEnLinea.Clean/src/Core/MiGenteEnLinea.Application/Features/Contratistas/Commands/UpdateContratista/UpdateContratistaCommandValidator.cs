@@ -17,6 +17,26 @@ public class UpdateContratistaCommandValidator : AbstractValidator<UpdateContrat
             .MaximumLength(70).WithMessage("Titulo no puede exceder 70 caracteres")
             .When(x => !string.IsNullOrEmpty(x.Titulo));
 
+        RuleFor(x => x.Tipo)
+            .InclusiveBetween(1, 2).WithMessage("Tipo debe ser 1 (Persona Física) o 2 (Empresa)")
+            .When(x => x.Tipo.HasValue);
+
+        RuleFor(x => x.Identificacion)
+            .MaximumLength(20).WithMessage("Identificacion no puede exceder 20 caracteres")
+            .When(x => !string.IsNullOrEmpty(x.Identificacion));
+
+        RuleFor(x => x.Nombre)
+            .MaximumLength(20).WithMessage("Nombre no puede exceder 20 caracteres")
+            .When(x => !string.IsNullOrEmpty(x.Nombre));
+
+        RuleFor(x => x.Apellido)
+            .MaximumLength(50).WithMessage("Apellido no puede exceder 50 caracteres")
+            .When(x => !string.IsNullOrEmpty(x.Apellido));
+
+        RuleFor(x => x.NombreComercial)
+            .MaximumLength(20).WithMessage("NombreComercial no puede exceder 20 caracteres")
+            .When(x => !string.IsNullOrEmpty(x.NombreComercial));
+
         RuleFor(x => x.Sector)
             .MaximumLength(40).WithMessage("Sector no puede exceder 40 caracteres")
             .When(x => !string.IsNullOrEmpty(x.Sector));
@@ -50,6 +70,11 @@ public class UpdateContratistaCommandValidator : AbstractValidator<UpdateContrat
         RuleFor(x => x)
             .Must(command => 
                 command.Titulo != null ||
+                command.Tipo.HasValue ||
+                command.Identificacion != null ||
+                command.Nombre != null ||
+                command.Apellido != null ||
+                command.NombreComercial != null ||
                 command.Sector != null ||
                 command.Experiencia.HasValue ||
                 command.Presentacion != null ||

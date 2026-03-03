@@ -23,6 +23,7 @@
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
+    <link href="~/css/form-system.css" rel="stylesheet" />
     
     <style>
         @@import url('https://fonts.googleapis.com/css2?family=Maven+Pro&display=swap');
@@ -426,6 +427,8 @@
     
     <!-- Custom.js con funciones compartidas (renderStars, API_BASE, etc.) -->
     <script src="~/js/Custom.js"></script>
+    <script src="~/js/image-resolver.js"></script>
+    <script src="~/js/form-system.js"></script>
     
     <script>
         // Configuración de la aplicación
@@ -460,27 +463,50 @@
             const ciudad = document.getElementById('ddlCiudad').value;
             
             try {
-                // Construir URL del API
-                let url = `${API_BASE}/contratistas?soloActivos=true`;
-                if (busqueda) url += `&searchTerm=${encodeURIComponent(busqueda)}`;
-                if (ciudad && ciudad !== 'Cualquier Ubicacion') {
-                    url += `&provincia=${encodeURIComponent(ciudad)}`;
+                // Construir URL del API usando contrato oficial: SearchContratistasResult.contratistas
+                const buildUrl = (soloActivos) => {
+                    let queryUrl = `${API_BASE}/contratistas?soloActivos=${soloActivos}`;
+                    if (busqueda) queryUrl += `&searchTerm=${encodeURIComponent(busqueda)}`;
+                    if (ciudad && ciudad !== 'Cualquier Ubicacion') {
+                        queryUrl += `&provincia=${encodeURIComponent(ciudad)}`;
+                    }
+                    return queryUrl;
+                };
+
+                const parseResult = (result) => {
+                    if (Array.isArray(result?.contratistas)) return result.contratistas;
+                    if (Array.isArray(result?.Contratistas)) return result.Contratistas;
+                    if (Array.isArray(result?.items)) return result.items;
+                    return [];
+                };
+
+                let response = await authenticatedFetch(buildUrl(true));
+                if (!response.ok) {
+                    const errorPayload = await (window.readApiResponse ? window.readApiResponse(response) : response.json().catch(() => ({})));
+                    const correlationId = errorPayload?.correlationId || response.headers.get('x-correlation-id');
+                    console.error('[BUSCADOR][CONTRATISTAS][HTTP_ERROR]', {
+                        status: response.status,
+                        message: errorPayload?.message || errorPayload?.error || 'Error al cargar contratistas',
+                        correlationId
+                    });
+                    throw new Error(errorPayload?.message || errorPayload?.error || 'Error al cargar contratistas');
                 }
 
-                const response = await authenticatedFetch(url);
-                
-                if (response.ok) {
-                    const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
-                    console.log('Search result:', result);
-                    
-                    // El API devuelve un objeto SearchContratistasResult con { items, totalCount, pageIndex, pageSize }
-                    // Extraer el array de contratistas del resultado
-                    window.contratistas = result.items || result.contratistas || result || [];
+                let result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                let contratistas = parseResult(result);
 
-                    renderContratistas(window.contratistas);
-                } else {
-                    throw new Error('Error al cargar contratistas');
+                // Fallback operativo: si no hay activos, intentar traer todos para no dejar el directorio vacío.
+                if (contratistas.length === 0) {
+                    response = await authenticatedFetch(buildUrl(false));
+                    if (response.ok) {
+                        result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                        contratistas = parseResult(result);
+                    }
                 }
+
+                console.log('Search result:', result);
+                window.contratistas = contratistas;
+                renderContratistas(window.contratistas);
             } catch (error) {
                 console.error('Error:', error);
                 const container = document.getElementById('contratistasContainer');
@@ -744,13 +770,17 @@
         function getContratistaImageUrl(contratista) {
             if (!contratista) return '/images/circular1.png';
 
-            const rawUrl = contratista.imagenUrl || contratista.ImagenUrl || contratista.fotoUrl || contratista.FotoUrl;
-            if (rawUrl && typeof rawUrl === 'string' && rawUrl.trim().length > 0) {
-                return rawUrl.startsWith('/') ? `${STATIC_FILES_BASE}${rawUrl}` : rawUrl;
+            if (window.resolveContratistaImageSource) {
+                return window.resolveContratistaImageSource(contratista, {
+                    placeholder: '/images/circular1.png'
+                });
             }
 
-            if (contratista.contratistaId) {
-                return `${STATIC_FILES_BASE}/api/contratistas/${contratista.contratistaId}/foto`;
+            if (window.resolveEntityImageSource) {
+                return window.resolveEntityImageSource(contratista, {
+                    keys: ['fotoUrl', 'FotoUrl', 'imagenUrl', 'ImagenUrl', 'foto', 'fotoBase64'],
+                    placeholder: '/images/circular1.png'
+                });
             }
 
             return '/images/circular1.png';

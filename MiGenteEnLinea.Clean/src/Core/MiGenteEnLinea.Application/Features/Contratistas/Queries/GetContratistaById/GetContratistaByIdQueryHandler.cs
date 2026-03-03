@@ -55,6 +55,7 @@ public class GetContratistaByIdQueryHandler : IRequestHandler<GetContratistaById
                 Provincia = c.Provincia,
                 NivelNacional = c.NivelNacional,
                 ImagenUrl = c.ImagenUrl,
+                FotoUrl = c.ImagenUrl,
                 // Campos calculados
                 TieneWhatsApp = (c.Telefono1 != null && c.Whatsapp1) || (c.Telefono2 != null && c.Whatsapp2),
                 PerfilCompleto = !string.IsNullOrWhiteSpace(c.UserId) &&

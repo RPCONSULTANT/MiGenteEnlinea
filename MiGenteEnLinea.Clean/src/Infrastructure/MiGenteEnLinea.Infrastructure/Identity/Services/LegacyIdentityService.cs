@@ -167,6 +167,12 @@ public class LegacyIdentityService : IIdentityService
             new NotImplementedException("Revoke token no implementado aún en sistema Legacy"));
     }
 
+    public Task<int> RevokeAllRefreshTokensAsync(string userId, string? reason = null)
+    {
+        _logger.LogWarning("RevokeAllRefreshTokensAsync called on LegacyIdentityService - no-op in legacy mode");
+        return Task.FromResult(0);
+    }
+
     public Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
     {
         // Este método NO se usa - el registro se hace a través de RegisterCommandHandler

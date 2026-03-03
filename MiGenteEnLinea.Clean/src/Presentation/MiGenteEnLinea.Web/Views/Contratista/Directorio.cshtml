@@ -347,15 +347,18 @@
         }
 
         function getEmpleadorImageUrl(empleador) {
-            const rawUrl = empleador.imagenUrl || empleador.fotoUrl || empleador.foto || empleador.logoUrl;
-            if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('/'))) {
-                return rawUrl;
+            if (window.resolveEntityImageSource) {
+                return window.resolveEntityImageSource(empleador, {
+                    keys: ['imagenUrl', 'fotoUrl', 'foto', 'logoUrl', 'fotoBase64'],
+                    fallbackBuilder: (item) => {
+                        if (item?.tieneFoto && item?.empleadorId) {
+                            return `${API_BASE}/empleadores/${item.empleadorId}/foto`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
             }
-
-            if (empleador.tieneFoto && empleador.empleadorId) {
-                return `${API_BASE}/empleadores/${empleador.empleadorId}/foto`;
-            }
-
             return '/images/circular1.png';
         }
 

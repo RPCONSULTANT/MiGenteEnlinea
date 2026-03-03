@@ -95,6 +95,7 @@ public class ContratistasControllerTests : IntegrationTestBase
         contratistaDto.UserId.Should().Be(userId.ToString());
         contratistaDto.Nombre.Should().Be("María");
         contratistaDto.Apellido.Should().Be("López");
+        contratistaDto.FotoUrl.Should().Be(contratistaDto.ImagenUrl);
     }
 
     #endregion
@@ -141,6 +142,10 @@ public class ContratistasControllerTests : IntegrationTestBase
         // Update contratista - Note: API uses userId in the route, not contratistaId
         var updateCommand = new UpdateContratistaCommand(
             UserId: userId.ToString(),
+            Tipo: 1,
+            Identificacion: "00122334455",
+            Nombre: "Ana Paula",
+            Apellido: "Rodríguez Gómez",
             Titulo: "Carpintera profesional certificada",
             Sector: "Carpintería y Ebanistería",
             Experiencia: 7,
@@ -169,6 +174,10 @@ public class ContratistasControllerTests : IntegrationTestBase
         updatedContratista.Provincia.Should().Be("Santo Domingo");
         updatedContratista.Telefono1.Should().Be("8092222222");
         updatedContratista.Email.Should().Be("ana.carpintera@test.com");
+        updatedContratista.Tipo.Should().Be(1);
+        updatedContratista.Identificacion.Should().Be("00122334455");
+        updatedContratista.Nombre.Should().Be("Ana Paula");
+        updatedContratista.Apellido.Should().Be("Rodríguez Gómez");
     }
 
     [Fact]

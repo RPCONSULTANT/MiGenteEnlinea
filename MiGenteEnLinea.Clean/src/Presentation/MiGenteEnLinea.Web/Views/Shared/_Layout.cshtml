@@ -22,6 +22,7 @@
     <!-- Custom CSS -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/custom.css" rel="stylesheet" />
+    <link href="~/css/form-system.css" rel="stylesheet" />
 
     @RenderSection("Styles", required: false)
   </head>
@@ -37,12 +38,15 @@
     <!-- API Configuration (injected from server) -->
     <script>
       window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.STATIC_FILES_BASE = '@ApiOptions.Value.StaticFilesBaseUrl';
       window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
     </script>
     
     <script src="~/js/api-endpoints.js"></script>
+    <script src="~/js/image-resolver.js"></script>
     <!-- Custom JS -->
     <script src="~/js/custom.js"></script>
+    <script src="~/js/form-system.js"></script>
 
     @RenderSection("Scripts", required: false)
   </body>

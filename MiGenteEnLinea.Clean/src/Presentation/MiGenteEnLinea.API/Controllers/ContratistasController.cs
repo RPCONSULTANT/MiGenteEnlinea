@@ -17,6 +17,7 @@ using MiGenteEnLinea.Application.Features.Contratistas.Queries.GetServiciosContr
 using MiGenteEnLinea.Application.Features.Contratistas.Queries.SearchContratistas;
 
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MiGenteEnLinea.API.Controllers;
 
@@ -30,7 +31,7 @@ namespace MiGenteEnLinea.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ContratistasController : ControllerBase
+public partial class ContratistasController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ContratistasController> _logger;
@@ -113,6 +114,8 @@ public class ContratistasController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetContratistaFotoById(int contratistaId)
     {
+        Response.Headers.CacheControl = "private, max-age=60";
+
         var contratista = await _mediator.Send(new GetContratistaByIdQuery(contratistaId));
 
         if (contratista is not null && !string.IsNullOrWhiteSpace(contratista.ImagenUrl))
@@ -222,6 +225,9 @@ public class ContratistasController : ControllerBase
             soloActivos, pageIndex, pageSize);
 
         var result = await _mediator.Send(query);
+        _logger.LogInformation(
+            "SearchContratistas completed. SoloActivos={SoloActivos}, SearchTerm={SearchTerm}, Provincia={Provincia}, Returned={Returned}, TotalRecords={TotalRecords}",
+            soloActivos, searchTerm, provincia, result.Contratistas.Count, result.TotalRecords);
         return Ok(result);
     }
 
@@ -255,14 +261,26 @@ public class ContratistasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateContratista(string userId, [FromBody] UpdateContratistaRequest request)
     {
+        var correlationId = HttpContext.TraceIdentifier;
         try
         {
+            var tokenUserId = GetUserId();
+            if (!string.Equals(tokenUserId, userId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             _logger.LogInformation(
                 "UpdateContratista called. UserId: {UserId}, Request: {@Request}",
                 userId, request);
             
             var command = new UpdateContratistaCommand(
                 userId,
+                request.Tipo,
+                request.Identificacion,
+                request.Nombre,
+                request.Apellido,
+                request.NombreComercial,
                 request.Titulo,
                 request.Sector,
                 request.Experiencia,
@@ -282,15 +300,36 @@ public class ContratistasController : ControllerBase
 
             return Ok(new { message = "Perfil actualizado exitosamente" });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized UpdateContratista attempt. UserId: {UserId}, CorrelationId={CorrelationId}", userId, correlationId);
+            return Unauthorized(new
+            {
+                code = "UNAUTHORIZED",
+                message = ex.Message,
+                correlationId
+            });
+        }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Contratista not found. UserId: {UserId}", userId);
-            return NotFound(new { error = ex.Message });
+            _logger.LogWarning(ex, "Contratista not found. UserId: {UserId}, CorrelationId={CorrelationId}", userId, correlationId);
+            return NotFound(new
+            {
+                code = "CONTRATISTA_NOT_FOUND",
+                message = ex.Message,
+                correlationId
+            });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating contratista. UserId: {UserId}", userId);
-            return BadRequest(new { error = $"Error al actualizar perfil: {ex.Message}" });
+            _logger.LogError(ex, "Error updating contratista. UserId: {UserId}, CorrelationId={CorrelationId}", userId, correlationId);
+            return BadRequest(new
+            {
+                code = "UPDATE_CONTRATISTA_FAILED",
+                message = "Error al actualizar perfil",
+                details = ex.Message,
+                correlationId
+            });
         }
     }
 
@@ -622,6 +661,11 @@ public record CreateContratistaResponse
 /// </summary>
 public record UpdateContratistaRequest
 {
+    public int? Tipo { get; init; }
+    public string? Identificacion { get; init; }
+    public string? Nombre { get; init; }
+    public string? Apellido { get; init; }
+    public string? NombreComercial { get; init; }
     public string? Titulo { get; init; }
     public string? Sector { get; init; }
     public int? Experiencia { get; init; }
@@ -633,6 +677,20 @@ public record UpdateContratistaRequest
     public string? Telefono2 { get; init; }
     public bool? Whatsapp2 { get; init; }
     public string? Email { get; init; }
+}
+
+public partial class ContratistasController
+{
+    private string GetUserId()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new UnauthorizedAccessException("Usuario no autenticado o token inválido");
+        }
+
+        return userId;
+    }
 }
 
 /// <summary>

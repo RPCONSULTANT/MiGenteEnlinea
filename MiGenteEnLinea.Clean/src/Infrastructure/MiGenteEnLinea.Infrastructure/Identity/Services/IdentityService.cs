@@ -302,6 +302,33 @@ public class IdentityService : IIdentityService
         _logger.LogInformation("Refresh token revoked for user {UserId}", tokenEntity.UserId);
     }
 
+    public async Task<int> RevokeAllRefreshTokensAsync(string userId, string? reason = null)
+    {
+        var activeTokens = await _context.Set<RefreshToken>()
+            .Where(rt => rt.UserId == userId && rt.Revoked == null && rt.Expires > DateTime.UtcNow)
+            .ToListAsync();
+
+        if (activeTokens.Count == 0)
+        {
+            _logger.LogInformation("No active refresh tokens found to revoke for user {UserId}", userId);
+            return 0;
+        }
+
+        var now = DateTime.UtcNow;
+        var revokeReason = reason ?? "Security policy";
+
+        foreach (var token in activeTokens)
+        {
+            token.Revoked = now;
+            token.ReasonRevoked = revokeReason;
+            token.RevokedByIp ??= "system";
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Revoked {Count} active refresh tokens for user {UserId}", activeTokens.Count, userId);
+        return activeTokens.Count;
+    }
+
     public async Task<string> RegisterAsync(string email, string? password, string nombreCompleto, string tipo)
     {
         var existingUser = await _userManager.FindByEmailAsync(email);

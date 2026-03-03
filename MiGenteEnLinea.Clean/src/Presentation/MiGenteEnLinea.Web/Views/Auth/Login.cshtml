@@ -313,7 +313,12 @@
             // Only clear if there's a message indicating logout or session expired
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('logout') === 'true') {
-                localStorage.clear();
+                if (window.clearClientSession) {
+                    window.clearClientSession();
+                } else {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                }
                 showAlert('loginAlert', 'Ha cerrado sesión correctamente.', 'success');
             }
         });

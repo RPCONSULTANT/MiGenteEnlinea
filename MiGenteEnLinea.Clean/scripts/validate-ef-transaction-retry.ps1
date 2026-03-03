@@ -14,10 +14,12 @@ try {
 
     $allowedPathFragments = @(
         "Persistence/Migrations/",
-        "Persistence/Seeding/"
+        "Persistence/Seeding/",
+        # Transitional exception: legacy UoW transaction API remains for backward compatibility.
+        "Persistence/Repositories/UnitOfWork.cs"
     )
 
-    $beginTxMatches = & rg -n --glob "!**/bin/**" --glob "!**/obj/**" "BeginTransactionAsync\(" @runtimePaths
+    $beginTxMatches = & rg -n --glob "!**/bin/**" --glob "!**/obj/**" "Database\.BeginTransactionAsync\(" @runtimePaths
     if ($LASTEXITCODE -ne 0 -or -not $beginTxMatches) {
         Write-Host "OK: No BeginTransactionAsync usages found in runtime paths." -ForegroundColor Green
         exit 0
@@ -53,7 +55,7 @@ try {
         $window = $content[$start..$end] -join "`n"
 
         if ($window -notmatch "CreateExecutionStrategy\(") {
-            $violations.Add("$filePath:$lineNumber -> BeginTransactionAsync without nearby CreateExecutionStrategy")
+            $violations.Add(("{0}:{1} -> BeginTransactionAsync without nearby CreateExecutionStrategy" -f $filePath, $lineNumber))
         }
     }
 

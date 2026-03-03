@@ -334,6 +334,49 @@ public sealed class Contratista : AggregateRoot
     }
 
     /// <summary>
+    /// DOMAIN METHOD: Actualiza datos de identidad/base del contratista.
+    /// </summary>
+    public void ActualizarDatosBasicos(
+        int? tipo = null,
+        string? identificacion = null,
+        string? nombre = null,
+        string? apellido = null,
+        string? nombreComercial = null)
+    {
+        if (tipo.HasValue && (tipo.Value < 1 || tipo.Value > 2))
+            throw new ArgumentException("Tipo debe ser 1 (Persona Física) o 2 (Empresa)", nameof(tipo));
+
+        if (identificacion?.Length > 20)
+            throw new ArgumentException("Identificacion no puede exceder 20 caracteres", nameof(identificacion));
+
+        if (nombre?.Length > 20)
+            throw new ArgumentException("Nombre no puede exceder 20 caracteres", nameof(nombre));
+
+        if (apellido?.Length > 50)
+            throw new ArgumentException("Apellido no puede exceder 50 caracteres", nameof(apellido));
+
+        if (nombreComercial?.Length > 20)
+            throw new ArgumentException("NombreComercial no puede exceder 20 caracteres", nameof(nombreComercial));
+
+        if (tipo.HasValue)
+            Tipo = tipo.Value;
+
+        if (identificacion != null)
+            Identificacion = identificacion.Trim();
+
+        if (nombre != null)
+            Nombre = nombre.Trim();
+
+        if (apellido != null)
+            Apellido = apellido.Trim();
+
+        if (nombreComercial != null)
+            Nombre = nombreComercial.Trim();
+
+        RaiseDomainEvent(new PerfilContratistaActualizadoEvent(Id));
+    }
+
+    /// <summary>
     /// DOMAIN METHOD: Actualiza información de contacto
     /// </summary>
     public void ActualizarContacto(

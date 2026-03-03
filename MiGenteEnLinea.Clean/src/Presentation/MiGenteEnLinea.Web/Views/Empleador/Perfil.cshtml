@@ -301,11 +301,13 @@
                 }, 1000);
             });
             
-            // Cambiar contraseña
-            $('#btnCambiarPassword').on('click', function() {
+            // Cambiar contraseña (API real)
+            $('#btnCambiarPassword').on('click', async function() {
                 var actual = $('#txtPasswordActual').val();
                 var nueva = $('#txtPasswordNueva').val();
                 var confirmar = $('#txtPasswordConfirmar').val();
+                var userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+                var email = localStorage.getItem('email') || $('#txtEmail').val();
                 
                 if (!actual || !nueva || !confirmar) {
                     Swal.fire('Error', 'Por favor complete todos los campos.', 'error');
@@ -321,9 +323,57 @@
                     Swal.fire('Error', 'La contraseña debe tener al menos 8 caracteres.', 'error');
                     return;
                 }
-                
-                // TODO: Llamar API para cambiar contraseña
-                Swal.fire('Éxito', 'La contraseña ha sido cambiada correctamente.', 'success');
+
+                if (!userId || !email) {
+                    Swal.fire('Error', 'No se encontró la sesión del usuario. Inicie sesión nuevamente.', 'error');
+                    return;
+                }
+
+                try {
+                    $('#btnCambiarPassword').prop('disabled', true);
+                    const changePath = window.API_ENDPOINTS?.AUTH?.CHANGE_PASSWORD || '/auth/change-password';
+                    const response = await authenticatedFetch(changePath, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            email: String(email),
+                            userId: String(userId),
+                            currentPassword: String(actual),
+                            newPassword: String(nueva)
+                        })
+                    });
+
+                    const payload = window.readApiResponse ? await window.readApiResponse(response) : null;
+
+                    if (!response.ok) {
+                        const message = window.getApiErrorMessage
+                            ? window.getApiErrorMessage(payload, 'No se pudo cambiar la contraseña.')
+                            : 'No se pudo cambiar la contraseña.';
+                        const details = payload?.details && typeof payload.details === 'object'
+                            ? Object.values(payload.details).flat().join(' ')
+                            : '';
+                        const correlation = payload?.correlationId ? `\nRef: ${payload.correlationId}` : '';
+                        Swal.fire('Error', `${message}${details ? `\n${details}` : ''}${correlation}`, 'error');
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'La contraseña fue actualizada. Debe iniciar sesión nuevamente.',
+                        icon: 'success',
+                        confirmButtonText: 'Continuar'
+                    }).then(async () => {
+                        if (window.performLogout) {
+                            await window.performLogout({ redirectTo: '/Auth/Login?logout=true' });
+                        } else {
+                            window.location.href = '/Auth/Logout';
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error al cambiar contraseña:', error);
+                    Swal.fire('Error', 'Error de conexión al cambiar la contraseña.', 'error');
+                } finally {
+                    $('#btnCambiarPassword').prop('disabled', false);
+                }
             });
             
             // Crear nuevo usuario

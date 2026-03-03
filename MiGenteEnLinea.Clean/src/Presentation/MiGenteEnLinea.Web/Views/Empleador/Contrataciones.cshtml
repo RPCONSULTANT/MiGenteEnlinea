@@ -423,7 +423,7 @@
                 <!-- Alert para mensajes -->
                 <div id="contratacionAlert" class="alert d-none" role="alert"></div>
 
-                <form id="formNuevaContratacion">
+                <form id="formNuevaContratacion" class="mge-form">
                     <!-- Sección: Contratista -->
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-header bg-light py-2">
@@ -704,7 +704,7 @@
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                            <img src="${resolveContratistaFoto(c)}" 
                                  alt="${c.contratistaCompleteName}" 
                                  class="rounded-circle me-2" 
                                  width="40" 
@@ -764,7 +764,7 @@
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                            <img src="${resolveContratistaFoto(c)}" 
                                  alt="${c.contratistaCompleteName}" 
                                  class="rounded-circle me-2" 
                                  width="40" 
@@ -827,7 +827,7 @@
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                            <img src="${resolveContratistaFoto(c)}" 
                                  alt="${c.contratistaCompleteName}" 
                                  class="rounded-circle me-2" 
                                  width="40" 
@@ -894,7 +894,7 @@
                     <td><span class="badge bg-light text-dark">#${c.detalleId}</span></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img src="${c.contratistaFotoUrl || '/images/circular1.png'}" 
+                            <img src="${resolveContratistaFoto(c)}" 
                                  alt="${c.contratistaCompleteName}" 
                                  class="rounded-circle me-2" 
                                  width="40" 
@@ -1201,7 +1201,9 @@
 
             try {
                 if (!serviciosByContratista[contratistaId]) {
-                    const serviciosPath = `/contratistas/${contratistaId}/servicios`;
+                    const serviciosPath = window.API_ENDPOINTS?.CONTRATISTAS?.SERVICIOS
+                        ? window.API_ENDPOINTS.CONTRATISTAS.SERVICIOS(contratistaId)
+                        : `/contratistas/${contratistaId}/servicios`;
                     const response = await authenticatedFetch(serviciosPath);
                     if (response.ok) {
                         const payload = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
@@ -1240,7 +1242,8 @@
 
         async function loadCatalogServiciosFallback() {
             try {
-                const response = await authenticatedFetch('/catalogos/servicios');
+                const serviciosPath = window.API_ENDPOINTS?.CATALOGOS?.SERVICIOS || '/catalogos/servicios';
+                const response = await authenticatedFetch(serviciosPath);
                 if (!response.ok) {
                     return [];
                 }
@@ -1325,6 +1328,38 @@
             if (typeof payload === 'number') return payload;
             if (!payload || typeof payload !== 'object') return 0;
             return Number(payload.id || payload.detalleId || payload.contratacionId || payload.result || 0);
+        }
+
+        function resolveContratistaFoto(item) {
+            if (window.resolveContratistaImageSource) {
+                return window.resolveContratistaImageSource(item, {
+                    keys: ['contratistaFotoUrl', 'fotoUrl', 'FotoUrl', 'imagenUrl', 'ImagenUrl', 'foto', 'fotoBase64'],
+                    fallbackBuilder: (entity) => {
+                        const contratistaId = Number(entity?.contratistaId || entity?.contratistaID || 0);
+                        if (contratistaId > 0 && window.API_ENDPOINTS?.CONTRATISTAS?.FOTO) {
+                            return `${API_BASE}${window.API_ENDPOINTS.CONTRATISTAS.FOTO(contratistaId)}`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
+            }
+
+            if (window.resolveEntityImageSource) {
+                return window.resolveEntityImageSource(item, {
+                    keys: ['contratistaFotoUrl', 'fotoUrl', 'foto', 'imagenUrl'],
+                    fallbackBuilder: (entity) => {
+                        const contratistaId = Number(entity?.contratistaId || entity?.contratistaID || 0);
+                        if (contratistaId > 0 && window.API_ENDPOINTS?.CONTRATISTAS?.FOTO) {
+                            return `${API_BASE}${window.API_ENDPOINTS.CONTRATISTAS.FOTO(contratistaId)}`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
+            }
+
+            return item?.contratistaFotoUrl || '/images/circular1.png';
         }
 
         function buildCreateTemporalPayload(contratista, formState) {
@@ -1989,7 +2024,6 @@
         
         async function cargarFoto() {
             const fileInput = document.getElementById('fotoInput');
-            const loginCookie = document.cookie.split('; ').find(row => row.startsWith('login='));
             
             if (!fileInput.files || !fileInput.files[0]) {
                 Swal.fire({
@@ -2009,11 +2043,21 @@
             try {
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                
-                const token = getTokenFromStorage();
+
+                const contratistaId = Number(document.getElementById('contratistaSelect')?.value || 0);
+                if (!contratistaId) {
+                    throw new Error('Selecciona un contratista antes de cargar la foto.');
+                }
+
+                const contratista = modalContratistas.find(c => Number(c.contratistaId) === contratistaId);
+                const contratistaUserId = contratista?.userId || contratista?.userID || contratista?.usuarioId || null;
+                if (!contratistaUserId) {
+                    throw new Error('No se pudo determinar el usuario del contratista seleccionado.');
+                }
+
                 const fotoPath = window.API_ENDPOINTS?.CONTRATISTAS?.FOTO_UPLOAD
-                    ? window.API_ENDPOINTS.CONTRATISTAS.FOTO_UPLOAD(token.userId)
-                    : `/contratistas/${token.userId}/foto`;
+                    ? window.API_ENDPOINTS.CONTRATISTAS.FOTO_UPLOAD(contratistaUserId)
+                    : `/contratistas/${contratistaUserId}/foto`;
                 const response = await authenticatedFetch(fotoPath, {
                     method: 'POST',
                     body: formData
@@ -2064,17 +2108,6 @@
             }
         }
         
-        function getTokenFromStorage() {
-            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-            if (!token) throw new Error('No hay token de autenticación');
-            
-            const userId = localStorage.getItem('userId');
-            if (!userId) throw new Error('No hay userId de autenticación');
-            return {
-                accessToken: token,
-                userId: userId
-            };
-        }
     </script>
 }
 
@@ -2089,7 +2122,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formCargarFoto" enctype="multipart/form-data">
+                <form id="formCargarFoto" class="mge-form" enctype="multipart/form-data">
                     <!-- File Input -->
                     <div class="mb-3">
                         <label for="fotoInput" class="form-label">
@@ -2138,6 +2171,7 @@
         </div>
     </div>
 </div>
+
 
 
 

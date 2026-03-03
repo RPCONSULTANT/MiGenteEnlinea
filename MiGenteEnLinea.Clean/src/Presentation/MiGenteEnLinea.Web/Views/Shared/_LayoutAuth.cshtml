@@ -22,6 +22,7 @@ ForgotPassword) Design simple y limpio basado en el estilo de la landing page *@
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
+    <link href="~/css/form-system.css" rel="stylesheet" />
     <!-- SweetAlert2 -->
     <link
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
@@ -197,11 +198,15 @@ ForgotPassword) Design simple y limpio basado en el estilo de la landing page *@
     <!-- API Configuration (injected from server) -->
     <script>
       window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.STATIC_FILES_BASE = '@ApiOptions.Value.StaticFilesBaseUrl';
       window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
     </script>
     <script src="~/js/api-endpoints.js"></script>
+    <script src="~/js/image-resolver.js"></script>
+    <script src="~/js/auth-session.js"></script>
     <!-- Global Custom Scripts (debe cargar ANTES que los scripts de las páginas) -->
     <script src="~/js/custom.js"></script>
+    <script src="~/js/form-system.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
   </body>

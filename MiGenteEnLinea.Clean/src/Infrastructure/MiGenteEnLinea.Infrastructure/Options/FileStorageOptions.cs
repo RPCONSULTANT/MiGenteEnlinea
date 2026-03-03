@@ -40,5 +40,5 @@ public sealed class FileStorageOptions
     /// <summary>
     /// Carpetas lógicas permitidas para uploads.
     /// </summary>
-    public string[] AllowedFolders { get; set; } = ["contratistas-fotos", "empleadores-fotos"];
+    public string[] AllowedFolders { get; set; } = ["contratistas-fotos", "empleadores-fotos", "empleados-fotos"];
 }

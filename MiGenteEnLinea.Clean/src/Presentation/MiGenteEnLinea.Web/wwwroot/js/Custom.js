@@ -212,9 +212,15 @@ async function authenticatedFetch(url, options = {}) {
       icon: 'warning',
       confirmButtonText: 'Ir a Login'
     });
-    
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('token');
+
+    if (window.clearClientSession) {
+      await window.clearClientSession();
+    } else {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('token');
+      sessionStorage.clear();
+    }
+
     window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
     throw new Error('Unauthorized - Session expired');
   }

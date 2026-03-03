@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Application.Features.Authentication.DTOs;
 using MiGenteEnLinea.Domain.Interfaces.Repositories;
@@ -39,6 +40,13 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
 
     public async Task<ChangePasswordResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
+        var correlationId = Guid.NewGuid().ToString("N");
+        _logger.LogInformation(
+            "CHANGE_PASSWORD_START CorrelationId={CorrelationId} UserId={UserId} Email={Email}",
+            correlationId,
+            request.UserId,
+            request.Email);
+
         // ================================================================================
         // PASO 1: CAMBIAR PASSWORD EN IDENTITY (PRIMARIO) ✅
         // ================================================================================
@@ -51,7 +59,8 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         if (!identitySuccess)
         {
             _logger.LogWarning(
-                "Cambio de contraseña fallido en Identity. UserId: {UserId}",
+                "CHANGE_PASSWORD_FAIL CorrelationId={CorrelationId} UserId={UserId}",
+                correlationId,
                 request.UserId);
             
             return new ChangePasswordResult
@@ -62,8 +71,30 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         }
 
         _logger.LogInformation(
-            "Contraseña actualizada en Identity. UserId: {UserId}",
+            "CHANGE_PASSWORD_IDENTITY_SUCCESS CorrelationId={CorrelationId} UserId={UserId}",
+            correlationId,
             request.UserId);
+
+        try
+        {
+            var revokedCount = await _identityService.RevokeAllRefreshTokensAsync(
+                request.UserId,
+                "Password changed");
+
+            _logger.LogInformation(
+                "CHANGE_PASSWORD_REVOKE_TOKENS CorrelationId={CorrelationId} UserId={UserId} Revoked={RevokedCount}",
+                correlationId,
+                request.UserId,
+                revokedCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "CHANGE_PASSWORD_REVOKE_FAIL CorrelationId={CorrelationId} UserId={UserId}",
+                correlationId,
+                request.UserId);
+        }
 
         // ================================================================================
         // PASO 2: SINCRONIZAR CON TABLA LEGACY (SECUNDARIO) ✅
@@ -106,7 +137,8 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
-                "Tabla Legacy Credenciales sincronizada. UserId: {UserId}",
+                "CHANGE_PASSWORD_LEGACY_SYNC_SUCCESS CorrelationId={CorrelationId} UserId={UserId}",
+                correlationId,
                 request.UserId);
         }
         catch (Exception ex)
@@ -114,9 +146,15 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             // NO fallar la operación si Legacy sync falla
             _logger.LogError(
                 ex,
-                "Error al sincronizar password con Legacy Credenciales. UserId: {UserId}. Password actualizado en Identity correctamente.",
+                "CHANGE_PASSWORD_LEGACY_SYNC_FAIL CorrelationId={CorrelationId} UserId={UserId}",
+                correlationId,
                 request.UserId);
         }
+
+        _logger.LogInformation(
+            "CHANGE_PASSWORD_SUCCESS CorrelationId={CorrelationId} UserId={UserId}",
+            correlationId,
+            request.UserId);
 
         return new ChangePasswordResult
         {

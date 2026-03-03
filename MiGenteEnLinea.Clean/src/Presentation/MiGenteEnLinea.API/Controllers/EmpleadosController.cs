@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentValidation;
@@ -62,15 +63,21 @@ public class EmpleadosController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<EmpleadosController> _logger;
     private readonly IPdfService _pdfService;
+    private readonly IApplicationDbContext _context;
+    private readonly IFileStorageService _fileStorageService;
 
     public EmpleadosController(
         IMediator mediator, 
         ILogger<EmpleadosController> logger,
-        IPdfService pdfService)
+        IPdfService pdfService,
+        IApplicationDbContext context,
+        IFileStorageService fileStorageService)
     {
         _mediator = mediator;
         _logger = logger;
         _pdfService = pdfService;
+        _context = context;
+        _fileStorageService = fileStorageService;
     }
 
     // ========================================
@@ -180,6 +187,155 @@ public class EmpleadosController : ControllerBase
         var empleado = await _mediator.Send(query);
 
         return Ok(empleado);
+    }
+
+    /// <summary>
+    /// Obtiene la foto de un colaborador fijo.
+    /// </summary>
+    [HttpGet("{id:int}/foto")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetEmpleadoFotoById(int id)
+    {
+        var empleado = await _context.Empleados
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.EmpleadoId == id, HttpContext.RequestAborted);
+
+        if (empleado is null)
+        {
+            return NotFound(new { error = "Colaborador no encontrado" });
+        }
+
+        if (string.IsNullOrWhiteSpace(empleado.Foto))
+        {
+            return NotFound(new { error = "Foto no encontrada" });
+        }
+
+        var foto = empleado.Foto.Trim();
+        if (foto.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+        {
+            var commaIndex = foto.IndexOf(',');
+            if (commaIndex > -1 && commaIndex + 1 < foto.Length)
+            {
+                var meta = foto.Substring(0, commaIndex);
+                var base64 = foto[(commaIndex + 1)..];
+                if (TryDecodeBase64(base64, out var dataBytes))
+                {
+                    return File(dataBytes, meta.Contains("png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg");
+                }
+            }
+        }
+
+        if (foto.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            var stream = await _fileStorageService.GetFileAsync(foto, HttpContext.RequestAborted);
+            if (stream is not null)
+            {
+                return File(stream, ResolveImageContentType(foto));
+            }
+        }
+
+        if (foto.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            foto.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return Redirect(foto);
+        }
+
+        if (TryDecodeBase64(foto, out var fallbackBytes))
+        {
+            return File(fallbackBytes, "image/jpeg");
+        }
+
+        return NotFound(new { error = "Foto no encontrada" });
+    }
+
+    /// <summary>
+    /// Carga/actualiza la foto de un colaborador fijo.
+    /// </summary>
+    [HttpPost("{id:int}/foto")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadEmpleadoFoto(int id, IFormFile? file)
+    {
+        var correlationId = HttpContext.TraceIdentifier;
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new
+            {
+                code = "validation_error",
+                message = "Debe seleccionar una imagen válida.",
+                details = new[] { "El archivo de imagen es requerido." },
+                correlationId
+            });
+        }
+
+        var empleado = await _context.Empleados
+            .FirstOrDefaultAsync(e => e.EmpleadoId == id, HttpContext.RequestAborted);
+
+        if (empleado is null)
+        {
+            return NotFound(new { error = "Colaborador no encontrado" });
+        }
+
+        var userId = GetUserId();
+        if (!IsAdminUser() && !string.Equals(empleado.UserId, userId, StringComparison.Ordinal))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var fotoUrl = await _fileStorageService.SaveFileAsync(
+                stream,
+                file.FileName,
+                "empleados-fotos",
+                file.ContentType,
+                HttpContext.RequestAborted);
+
+            var fotoAnterior = empleado.Foto;
+            empleado.ActualizarFoto(fotoUrl);
+            await _context.SaveChangesAsync(HttpContext.RequestAborted);
+
+            if (!string.IsNullOrWhiteSpace(fotoAnterior) &&
+                fotoAnterior.StartsWith("/uploads/empleados-fotos/", StringComparison.OrdinalIgnoreCase))
+            {
+                await _fileStorageService.DeleteFileAsync(fotoAnterior, HttpContext.RequestAborted);
+            }
+
+            return Ok(new
+            {
+                empleadoId = id,
+                fotoUrl,
+                imageUrl = fotoUrl,
+                correlationId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "UPLOAD_EMPLEADO_FOTO_VALIDATION_FAIL CorrelationId={CorrelationId} EmpleadoId={EmpleadoId}", correlationId, id);
+            return BadRequest(new
+            {
+                code = "validation_error",
+                message = "No se pudo cargar la imagen.",
+                details = new[] { ex.Message },
+                correlationId
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UPLOAD_EMPLEADO_FOTO_FAIL CorrelationId={CorrelationId} EmpleadoId={EmpleadoId}", correlationId, id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                code = "internal_error",
+                message = "Error inesperado al cargar la foto.",
+                correlationId
+            });
+        }
     }
 
     /// <summary>
@@ -1629,6 +1785,32 @@ public class EmpleadosController : ControllerBase
     {
         return User.FindAll(ClaimTypes.Role)
             .Any(r => string.Equals(r.Value, "Admin", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ResolveImageContentType(string pathOrFileName)
+    {
+        var ext = Path.GetExtension(pathOrFileName)?.ToLowerInvariant();
+        return ext switch
+        {
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
+    }
+
+    private static bool TryDecodeBase64(string value, out byte[] bytes)
+    {
+        try
+        {
+            bytes = Convert.FromBase64String(value);
+            return bytes.Length > 0;
+        }
+        catch
+        {
+            bytes = Array.Empty<byte>();
+            return false;
+        }
     }
 }
 

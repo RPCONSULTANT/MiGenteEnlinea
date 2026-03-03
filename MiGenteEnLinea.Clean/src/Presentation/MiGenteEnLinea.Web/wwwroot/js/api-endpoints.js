@@ -4,6 +4,8 @@
   const ENDPOINTS = {
     AUTH: {
       LOGIN: "/auth/login",
+      CHANGE_PASSWORD: "/auth/change-password",
+      REVOKE: "/auth/revoke",
       REGISTER: "/auth/register",
       ACTIVATE: "/auth/activate",
       FORGOT_PASSWORD: "/auth/forgot-password",
@@ -42,6 +44,8 @@
       PAGOS_CONTRATACIONES: (contratacionId, detalleId) => `/empleados/pagos-contrataciones?contratacionId=${encodeURIComponent(contratacionId)}&detalleId=${encodeURIComponent(detalleId)}`,
       PADRON: (cedula) => `/empleados/padron/${cedula}`,
       DETALLE: (empleadoId) => `/empleados/${empleadoId}`,
+      FOTO: (empleadoId) => `/empleados/${empleadoId}/foto`,
+      FOTO_UPLOAD: (empleadoId) => `/empleados/${empleadoId}/foto`,
       NOMINA: (empleadoId) => `/empleados/${empleadoId}/nomina`,
       RECIBOS: (empleadoId) => `/empleados/${empleadoId}/recibos?pageSize=50`,
       DAR_DE_BAJA: (empleadoId) => `/empleados/${empleadoId}/dar-de-baja`,

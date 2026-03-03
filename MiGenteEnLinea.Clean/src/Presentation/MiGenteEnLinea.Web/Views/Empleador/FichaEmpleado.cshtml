@@ -195,7 +195,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
                 
-                <form id="formEditarEmpleado">
+                <form id="formEditarEmpleado" class="mge-form">
                     <div class="row">
                         <!-- Columna Izquierda -->
                         <div class="col-md-6">
@@ -1294,17 +1294,22 @@
         }
 
         function resolveEmpleadoImageSource(emp) {
-            const raw = emp?.foto || emp?.fotoUrl || emp?.imagenUrl || emp?.fotoBase64 || null;
-            if (!raw) return null;
-            const value = String(raw).trim();
-            if (!value) return null;
-            if (value.startsWith('data:image')) return value;
-            if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) return value;
-            if (/^[A-Za-z0-9+/=]+$/.test(value) && value.length > 80) {
-                return `data:image/jpeg;base64,${value}`;
+            if (window.resolveEntityImageSource) {
+                return window.resolveEntityImageSource(emp, {
+                    keys: ['fotoUrl', 'foto', 'imagenUrl', 'fotoBase64'],
+                    fallbackBuilder: (item) => {
+                        const empleadoId = Number(item?.empleadoId || getEmpleadoIdFromUrl() || 0);
+                        if (empleadoId > 0 && window.API_ENDPOINTS?.EMPLEADOS?.FOTO) {
+                            return `${API_BASE}${window.API_ENDPOINTS.EMPLEADOS.FOTO(empleadoId)}`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
             }
 
-            return value;
+            const raw = emp?.foto || emp?.fotoUrl || emp?.imagenUrl || emp?.fotoBase64 || null;
+            return window.normalizeImageSource ? window.normalizeImageSource(raw) : raw;
         }
 
         function formatDate(dateStr) {

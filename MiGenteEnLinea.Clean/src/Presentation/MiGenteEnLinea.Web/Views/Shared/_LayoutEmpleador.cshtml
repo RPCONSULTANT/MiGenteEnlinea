@@ -33,6 +33,7 @@ Tema: Argon Dashboard 2.0 *@
     <!-- Custom Styles -->
     <link href="~/css/animated.css" rel="stylesheet" />
     <link href="~/css/Custom.css" rel="stylesheet" />
+    <link href="~/css/form-system.css" rel="stylesheet" />
     
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -226,7 +227,7 @@ Tema: Argon Dashboard 2.0 *@
                 </li>
                 <!-- Cerrar Sesion -->
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Auth" asp-action="Logout">
+                    <a class="nav-link js-logout" asp-controller="Auth" asp-action="Logout">
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                             <i class="ni ni-collection text-info text-sm opacity-10"></i>
                         </div>
@@ -309,16 +310,33 @@ Tema: Argon Dashboard 2.0 *@
     <!-- API Configuration (injected from server) -->
     <script>
       window.API_BASE = '@ApiOptions.Value.BaseUrl';
+      window.STATIC_FILES_BASE = '@ApiOptions.Value.StaticFilesBaseUrl';
       window.API_TIMEOUT = @ApiOptions.Value.TimeoutSeconds * 1000;
       window.PAYMENT_MODE = '@PaymentOptions.Value.Mode'.toLowerCase();
     </script>
     
     <script src="~/js/api-endpoints.js"></script>
+    <script src="~/js/image-resolver.js"></script>
+    <script src="~/js/auth-session.js"></script>
     <!-- Custom JS -->
     <script src="~/js/custom.js"></script>
+    <script src="~/js/form-system.js"></script>
     
     <!-- Initialize scrollbar for sidenav -->
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.js-logout').forEach(function (link) {
+                link.addEventListener('click', async function (event) {
+                    event.preventDefault();
+                    if (window.performLogout) {
+                        await window.performLogout({ redirectTo: '/Auth/Login?logout=true' });
+                    } else {
+                        window.location.href = link.getAttribute('href') || '/Auth/Logout';
+                    }
+                });
+            });
+        });
+
         var win = navigator.platform.indexOf('Win') > -1;
         if (win && document.querySelector('#sidenav-scrollbar')) {
             var options = { damping: '0.5' }

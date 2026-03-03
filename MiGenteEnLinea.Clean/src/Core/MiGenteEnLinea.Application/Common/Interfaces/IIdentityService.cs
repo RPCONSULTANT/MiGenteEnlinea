@@ -37,6 +37,15 @@ public interface IIdentityService
     Task RevokeTokenAsync(string refreshToken, string ipAddress, string? reason = null);
 
     /// <summary>
+    /// Revoca todos los refresh tokens activos de un usuario.
+    /// Útil tras cambio de contraseña o cierre de sesión global.
+    /// </summary>
+    /// <param name="userId">ID del usuario</param>
+    /// <param name="reason">Razón de revocación</param>
+    /// <returns>Cantidad de tokens revocados</returns>
+    Task<int> RevokeAllRefreshTokensAsync(string userId, string? reason = null);
+
+    /// <summary>
     /// Registra un nuevo usuario en el sistema
     /// </summary>
     /// <param name="email">Email del usuario</param>

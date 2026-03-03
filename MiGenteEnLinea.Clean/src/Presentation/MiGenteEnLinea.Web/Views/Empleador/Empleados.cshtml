@@ -272,7 +272,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body mge-form">
                 <!-- Alert para mensajes -->
                 <div id="empleadoAlert" class="alert d-none" role="alert"></div>
                 
@@ -400,6 +400,18 @@
                                         </label>
                                         <input type="tel" class="form-control" id="telefono2" 
                                                placeholder="809-000-0000" maxlength="12" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fotoEmpleadoInput" class="form-label fw-bold">
+                                            <i class="fas fa-camera me-1 text-muted"></i>Foto del colaborador
+                                        </label>
+                                        <input type="file" class="form-control" id="fotoEmpleadoInput" accept=".jpg,.jpeg,.png,.webp" />
+                                        <small class="text-muted">Opcional. Máximo 5MB.</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                                        <img id="fotoEmpleadoPreview" src="/images/circular1.png" alt="Vista previa foto colaborador" class="mge-avatar border d-none" style="width: 72px; height: 72px;">
                                     </div>
                                 </div>
                             </div>
@@ -573,6 +585,51 @@
         function parseCurrency(value) {
             return parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
         }
+
+        function previewEmpleadoFoto(input) {
+            const preview = document.getElementById('fotoEmpleadoPreview');
+            const file = input?.files?.[0];
+            if (!file) {
+                preview.classList.add('d-none');
+                return;
+            }
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                showAlert('empleadoAlert', 'La foto debe estar en formato JPG, PNG o WEBP', 'warning');
+                input.value = '';
+                preview.classList.add('d-none');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('empleadoAlert', 'La foto no puede exceder 5MB', 'warning');
+                input.value = '';
+                preview.classList.add('d-none');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = String(e.target?.result || '/images/circular1.png');
+                preview.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function getEmpleadoFotoBase64() {
+            const fileInput = document.getElementById('fotoEmpleadoInput');
+            const file = fileInput?.files?.[0];
+            if (!file) return null;
+
+            return await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    resolve(String(e.target?.result || ''));
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
         
         function maskPhoneInput(input) {
             if (window.formatPhoneInput) {
@@ -623,6 +680,13 @@
             document.getElementById('txtIdentificacion').addEventListener('input', function() {
                 maskCedulaInput(this);
             });
+
+            const fotoInput = document.getElementById('fotoEmpleadoInput');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function() {
+                    previewEmpleadoFoto(this);
+                });
+            }
             
             // Character counter for direccion
             document.getElementById('direccion').addEventListener('input', function() {
@@ -794,6 +858,8 @@
             });
             
             // Construir objeto empleado - nombres deben coincidir con CreateEmpleadoCommand
+            const foto = await getEmpleadoFotoBase64();
+
             const empleado = {
                 identificacion: cedula,  // Backend espera 'identificacion', no 'cedula'
                 nombre: truncateText(nombre, 100),
@@ -812,7 +878,8 @@
                 tss: document.getElementById('chkDeducciones').checked,  // Backend: 'tss', no 'aplicaTss'
                 fechaInicio: fechaIngreso,  // Backend: 'fechaInicio', no 'fechaIngreso'
                 contactoEmergencia: truncateText(document.getElementById('nombreContacto').value.trim(), 100) || null,  // Backend: 'contactoEmergencia'
-                telefonoEmergencia: document.getElementById('telefonoContacto').value.replace(/\D/g, '') || null  // Backend: 'telefonoEmergencia'
+                telefonoEmergencia: document.getElementById('telefonoContacto').value.replace(/\D/g, '') || null,  // Backend: 'telefonoEmergencia'
+                foto: foto || null
                 // Nota: remuneraciones se manejan por separado después de crear el empleado
             };
             
@@ -890,6 +957,9 @@
             document.getElementById('salario').value = '0.00';
             document.getElementById('nombreContacto').value = '';
             document.getElementById('telefonoContacto').value = '';
+            document.getElementById('fotoEmpleadoInput').value = '';
+            document.getElementById('fotoEmpleadoPreview').src = '/images/circular1.png';
+            document.getElementById('fotoEmpleadoPreview').classList.add('d-none');
             document.getElementById('fechaDeIngreso').value = new Date().toISOString().split('T')[0];
             document.getElementById('ddlEstadoCivil').value = '1';
             document.getElementById('periodos').value = '2';
@@ -1028,9 +1098,7 @@
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <div class="avatar avatar-sm bg-gradient-primary rounded-circle me-2">
-                                <span class="text-white text-xs">${(emp.nombre || 'X')[0]}${(emp.apellido || 'X')[0]}</span>
-                            </div>
+                            <img src="${resolveEmpleadoImage(emp)}" alt="Foto ${emp.nombre || ''}" class="avatar avatar-sm rounded-circle me-2 mge-avatar" onerror="this.onerror=null; this.src='/images/circular1.png';">
                             <span>${emp.nombre || '-'}</span>
                         </div>
                     </td>
@@ -1064,6 +1132,23 @@
         function formatCedula(cedula) {
             if (!cedula || cedula.length !== 11) return cedula;
             return `${cedula.substr(0, 3)}-${cedula.substr(3, 7)}-${cedula.substr(10, 1)}`;
+        }
+
+        function resolveEmpleadoImage(emp) {
+            if (window.resolveEntityImageSource) {
+                return window.resolveEntityImageSource(emp, {
+                    keys: ['fotoUrl', 'foto', 'imagenUrl', 'fotoBase64'],
+                    fallbackBuilder: (item) => {
+                        const id = Number(item?.empleadoId || 0);
+                        if (id > 0 && window.API_ENDPOINTS?.EMPLEADOS?.FOTO) {
+                            return `${API_BASE}${window.API_ENDPOINTS.EMPLEADOS.FOTO(id)}`;
+                        }
+                        return null;
+                    },
+                    placeholder: '/images/circular1.png'
+                });
+            }
+            return emp?.foto || '/images/circular1.png';
         }
         
         // ============================================

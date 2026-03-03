@@ -154,10 +154,10 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
         // PASO 12: Asignar foto si se proporciona
         if (!string.IsNullOrEmpty(request.Foto))
         {
-            // empleado.Foto = request.Foto;
+            empleado.ActualizarFoto(request.Foto);
         }
 
-        // PASO 12: Guardar en base de datos
+        // PASO 13: Guardar en base de datos
         await _context.Empleados.AddAsync(empleado, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 
