@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MiGenteEnLinea.Application.Common.Interfaces;
 using MiGenteEnLinea.Domain.Entities.Empleados;
 using MiGenteEnLinea.Domain.Entities.Nominas;
 using MiGenteEnLinea.Domain.Interfaces.Repositories;
@@ -19,13 +20,19 @@ namespace MiGenteEnLinea.Application.Features.Nominas.Commands.ProcesarNominaLot
 public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLoteCommand, ProcesarNominaLoteResult>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IIdentityService _identityService;
+    private readonly INominaCalculatorService _nominaCalculatorService;
     private readonly ILogger<ProcesarNominaLoteCommandHandler> _logger;
 
     public ProcesarNominaLoteCommandHandler(
         IUnitOfWork unitOfWork,
+        IIdentityService identityService,
+        INominaCalculatorService nominaCalculatorService,
         ILogger<ProcesarNominaLoteCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _identityService = identityService;
+        _nominaCalculatorService = nominaCalculatorService;
         _logger = logger;
     }
 
@@ -37,7 +44,7 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
             "Procesando nómina en lote - Empleador: {EmpleadorId}, Período: {Periodo}, Empleados: {Count}",
             request.EmpleadorId,
             request.Periodo,
-            request.Empleados.Count);
+            request.Empleados.Count > 0 ? request.Empleados.Count : request.EmpleadoIds.Count);
 
         var result = new ProcesarNominaLoteResult
         {
@@ -52,11 +59,36 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
         var reciboIds = new List<int>();
         var errores = new List<string>();
 
+        var command = request;
+        if (command.Empleados.Count == 0 && command.EmpleadoIds.Count > 0)
+        {
+            var userId = await ResolveUserIdAsync(command.EmpleadorId, cancellationToken);
+            var empleados = new List<EmpleadoNominaItem>();
+            foreach (var empleadoId in command.EmpleadoIds.Distinct())
+            {
+                var empleado = await _unitOfWork.Empleados.GetByIdAsync(empleadoId);
+                if (empleado == null || !empleado.Activo || empleado.UserId != userId)
+                {
+                    errores.Add($"Empleado {empleadoId} no encontrado o no pertenece al empleador");
+                    continue;
+                }
+
+                empleados.Add(new EmpleadoNominaItem
+                {
+                    EmpleadoId = empleadoId,
+                    Salario = empleado.Salario,
+                    AplicarTss = command.AplicarTss && empleado.InscritoTss
+                });
+            }
+
+            command = command with { Empleados = empleados };
+        }
+
         // Validar que empleador existe
-        var empleador = await _unitOfWork.Empleadores.GetByIdAsync(request.EmpleadorId);
+        var empleador = await _unitOfWork.Empleadores.GetByIdAsync(command.EmpleadorId);
         if (empleador == null)
         {
-            errores.Add($"Empleador {request.EmpleadorId} no encontrado");
+            errores.Add($"Empleador {command.EmpleadorId} no encontrado");
             return new ProcesarNominaLoteResult
             {
                 RecibosCreados = 0,
@@ -69,7 +101,7 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
         }
 
         // Procesar cada empleado individualmente
-        foreach (var empleadoItem in request.Empleados)
+        foreach (var empleadoItem in command.Empleados)
         {
             try
             {
@@ -87,39 +119,31 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
                     continue;
                 }
 
-                // Calcular totales para este empleado
-                decimal ingresos = empleadoItem.Salario;
-                decimal deducciones = 0;
-
-                foreach (var concepto in empleadoItem.Conceptos)
-                {
-                    if (concepto.EsDeduccion)
-                    {
-                        deducciones += concepto.Monto;
-                    }
-                    else
-                    {
-                        ingresos += concepto.Monto;
-                    }
-                }
-
-                decimal neto = ingresos - deducciones;
+                var calculoNomina = await _nominaCalculatorService.CalcularNominaAsync(
+                    empleadoItem.EmpleadoId,
+                    command.FechaPago,
+                    command.TipoConcepto,
+                    command.EsFraccion,
+                    empleadoItem.AplicarTss,
+                    cancellationToken);
 
                 // Crear ReciboHeader usando factory method con firmas correctas
                 var reciboHeader = ReciboHeader.Create(
                     userId: empleador.UserId,
                     empleadoId: empleadoItem.EmpleadoId,
-                    conceptoPago: $"Nómina {request.Periodo}",
+                    conceptoPago: string.IsNullOrWhiteSpace(command.Periodo)
+                        ? $"Nómina {command.TipoConcepto}"
+                        : $"Nómina {command.Periodo}",
                     tipo: 1, // Tipo 1 = Nómina Regular
-                    periodoInicio: DateOnly.FromDateTime(request.FechaPago.AddDays(-14)), // Aproximado
-                    periodoFin: DateOnly.FromDateTime(request.FechaPago)
+                    periodoInicio: DateOnly.FromDateTime(command.FechaPago.AddDays(-14)),
+                    periodoFin: DateOnly.FromDateTime(command.FechaPago)
                 );
 
-                // Agregar ingresos y deducciones al recibo usando métodos del aggregate
-                // Salario base
-                reciboHeader.AgregarIngreso("Salario Base", empleadoItem.Salario);
+                foreach (var percepcion in calculoNomina.Percepciones)
+                {
+                    reciboHeader.AgregarIngreso(percepcion.Descripcion, percepcion.Monto);
+                }
 
-                // Conceptos adicionales
                 foreach (var concepto in empleadoItem.Conceptos)
                 {
                     if (concepto.EsDeduccion)
@@ -132,8 +156,10 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
                     }
                 }
 
-                // Recalcular totales
-                reciboHeader.RecalcularTotales();
+                foreach (var deduccion in calculoNomina.Deducciones)
+                {
+                    reciboHeader.AgregarDeduccion(deduccion.Descripcion, Math.Abs(deduccion.Monto));
+                }
 
                 // Guardar en base de datos
                 await _unitOfWork.RecibosHeader.AddAsync(reciboHeader);
@@ -142,15 +168,15 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
                 // Actualizar contadores
                 recibosCreados++;
                 empleadosProcesados++;
-                totalPagado += neto;
-                totalDeducciones += deducciones;
+                totalPagado += reciboHeader.NetoPagar;
+                totalDeducciones += reciboHeader.TotalDeducciones;
                 reciboIds.Add(reciboHeader.PagoId);
 
                 _logger.LogInformation(
                     "Recibo creado - ID: {PagoId}, Empleado: {EmpleadoId}, Neto: {Monto}",
                     reciboHeader.PagoId,
                     empleadoItem.EmpleadoId,
-                    neto);
+                    reciboHeader.NetoPagar);
             }
             catch (Exception ex)
             {
@@ -178,5 +204,16 @@ public class ProcesarNominaLoteCommandHandler : IRequestHandler<ProcesarNominaLo
             ReciboIds = reciboIds,
             Errores = errores
         };
+    }
+
+    private async Task<string> ResolveUserIdAsync(int empleadorId, CancellationToken cancellationToken)
+    {
+        var empleador = await _unitOfWork.Empleadores.GetByIdAsync(empleadorId);
+        if (empleador != null)
+        {
+            return empleador.UserId;
+        }
+
+        return empleadorId.ToString();
     }
 }

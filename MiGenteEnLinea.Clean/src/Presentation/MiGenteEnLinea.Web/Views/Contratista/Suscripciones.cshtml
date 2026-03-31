@@ -125,14 +125,20 @@
                     const data = window.readApiResponse
                         ? await window.readApiResponse(response)
                         : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
-                    
-                    $('#txtPlanActual').val(data.planNombre || 'Sin plan activo');
-                    $('#txtFechaInicio').val(data.fechaInicio ? new Date(data.fechaInicio).toLocaleDateString('es-DO') : '-');
-                    $('#txtProximoPago').val(data.fechaVencimiento ? new Date(data.fechaVencimiento).toLocaleDateString('es-DO') : '-');
-                    
-                    // Ocultar próximo pago si no tiene suscripción activa
-                    if (!data.activa) {
+
+                    const planNombre = data.planNombre || `Plan #${data.planId || '-'}`;
+                    const activa = data.estaActiva === true && data.cancelada !== true;
+                    const fechaInicio = data.fechaInicio || data.inicio;
+                    const vencimiento = data.vencimiento || data.fechaVencimiento;
+
+                    $('#txtPlanActual').val(activa ? planNombre : 'Sin plan activo');
+                    $('#txtFechaInicio').val(fechaInicio ? new Date(fechaInicio).toLocaleDateString('es-DO') : '-');
+                    $('#txtProximoPago').val(vencimiento ? new Date(vencimiento).toLocaleDateString('es-DO') : '-');
+
+                    if (!activa) {
                         $('#proxPago').hide();
+                    } else {
+                        $('#proxPago').show();
                     }
                 } else if (response.status === 404) {
                     $('#txtPlanActual').val('Sin suscripción');

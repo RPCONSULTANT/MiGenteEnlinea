@@ -46,4 +46,17 @@ public record ProcesarPagoCommand : IRequest<int>
     /// Comentarios opcionales del pago
     /// </summary>
     public string? Comentarios { get; init; }
+
+    /// <summary>
+    /// Conceptos manuales adicionales a aplicar al recibo.
+    /// Permite enviar ingresos o deducciones definidos desde la UI.
+    /// </summary>
+    public List<ConceptoPagoManual> ConceptosAdicionales { get; init; } = new();
+}
+
+public record ConceptoPagoManual
+{
+    public string Concepto { get; init; } = string.Empty;
+    public decimal Monto { get; init; }
+    public bool EsDeduccion { get; init; }
 }

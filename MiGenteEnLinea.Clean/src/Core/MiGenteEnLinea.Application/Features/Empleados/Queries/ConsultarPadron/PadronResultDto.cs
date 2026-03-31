@@ -34,6 +34,12 @@ public record PadronResultDto
     public string? SegundoApellido { get; init; }
 
     /// <summary>
+    /// Foto devuelta por el padrón.
+    /// Puede venir como data URL lista para previsualizar.
+    /// </summary>
+    public string? Photo { get; init; }
+
+    /// <summary>
     /// Fecha de nacimiento (opcional).
     /// </summary>
     public DateTime? FechaNacimiento { get; init; }

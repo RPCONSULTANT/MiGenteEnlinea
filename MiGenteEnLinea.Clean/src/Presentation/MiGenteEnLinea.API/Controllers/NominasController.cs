@@ -363,7 +363,8 @@ public class NominasController : ControllerBase
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] DateTime? fechaDesde = null,
-        [FromQuery] DateTime? fechaHasta = null)
+        [FromQuery] DateTime? fechaHasta = null,
+        [FromQuery] int? empleadoId = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(userId))
@@ -377,7 +378,8 @@ public class NominasController : ControllerBase
             PageIndex = pageIndex,
             PageSize = pageSize,
             FechaDesde = fechaDesde,
-            FechaHasta = fechaHasta
+            FechaHasta = fechaHasta,
+            EmpleadoId = empleadoId
         };
 
         var result = await _mediator.Send(query);

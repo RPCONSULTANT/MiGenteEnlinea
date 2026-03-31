@@ -95,6 +95,7 @@
     },
     CATALOGOS: {
       PROVINCIAS: "/catalogos/provincias",
+      MUNICIPIOS: (provincia) => `/catalogos/municipios${provincia ? `?provincia=${encodeURIComponent(provincia)}` : ""}`,
       SECTORES: "/catalogos/sectores",
       SERVICIOS: "/catalogos/servicios",
     },

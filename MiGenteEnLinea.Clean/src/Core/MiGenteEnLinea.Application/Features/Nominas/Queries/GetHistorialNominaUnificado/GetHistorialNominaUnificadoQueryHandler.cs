@@ -129,6 +129,11 @@ public class GetHistorialNominaUnificadoQueryHandler : IRequestHandler<GetHistor
             query = query.Where(x => x.FechaPago <= request.FechaHasta.Value);
         }
 
+        if (request.EmpleadoId.HasValue)
+        {
+            query = query.Where(x => x.TipoRegistro == "Fijo" && x.ReferenciaId == request.EmpleadoId.Value);
+        }
+
         var result = query
             .OrderByDescending(x => x.FechaPago)
             .Skip((pageIndex - 1) * pageSize)

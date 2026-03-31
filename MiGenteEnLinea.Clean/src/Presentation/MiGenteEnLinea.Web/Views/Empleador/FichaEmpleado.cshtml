@@ -131,7 +131,7 @@
                                 <i class="fas fa-dollar-sign me-1"></i>Realizar Pago
                             </button>
                             <button type="button" class="btn btn-info text-white" id="btnContrato">
-                                <i class="fas fa-file-contract me-1"></i>Ver Contrato
+                                <i class="fas fa-file-contract me-1"></i>Generar Contrato PDF
                             </button>
                             <button type="button" class="btn btn-danger" id="btnBaja">
                                 <i class="fas fa-user-minus me-1"></i>Dar de Baja
@@ -203,7 +203,12 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="modalIdentificacion" class="form-label">Identificación (Cédula)</label>
-                                    <input type="text" class="form-control" id="modalIdentificacion" readonly>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="modalIdentificacion" readonly>
+                                        <button type="button" class="btn btn-outline-primary" id="btnVerificarCedulaModal">
+                                            <i class="fas fa-id-badge me-1"></i>Verificar
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="modalNacimiento" class="form-label">Fecha de Nacimiento</label>
@@ -245,11 +250,15 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="modalProvincia" class="form-label">Provincia</label>
-                                    <input type="text" class="form-control" id="modalProvincia">
+                                    <select class="form-select" id="modalProvincia">
+                                        <option value="">Seleccione una provincia</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="modalMunicipio" class="form-label">Municipio</label>
-                                    <input type="text" class="form-control" id="modalMunicipio">
+                                    <select class="form-select" id="modalMunicipio">
+                                        <option value="">Seleccione un municipio</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="row">
@@ -470,12 +479,17 @@
             }
             
             loadEmpleado();
+
+            if (window.loadProvincias) {
+                window.loadProvincias('modalProvincia', 'Seleccione una provincia');
+            }
             
             // Set default date to today
             document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
             
             // Event listeners
             document.getElementById('btnEditarPerfil').addEventListener('click', openEditModal);
+            document.getElementById('btnVerificarCedulaModal').addEventListener('click', verificarCedulaPadronModal);
             document.getElementById('btnGuardarEdicion').addEventListener('click', saveEmpleado);
             document.getElementById('btnBaja').addEventListener('click', darDeBaja);
             document.getElementById('btnPago').addEventListener('click', () => {
@@ -486,7 +500,70 @@
             document.getElementById('btnProcesarPago').addEventListener('click', procesarPago);
             document.getElementById('btnAgregarDescuento').addEventListener('click', agregarDescuento);
             document.getElementById('btnContrato').addEventListener('click', verContrato);
+            document.getElementById('modalProvincia').addEventListener('change', function() {
+                loadMunicipiosForProvincia(this.value, 'modalMunicipio');
+            });
         });
+
+        const municipiosPorProvincia = {
+            'Azua': ['Azua de Compostela', 'Estebanía', 'Guayabal', 'Las Charcas', 'Las Yayas de Viajama', 'Padre Las Casas', 'Peralta', 'Pueblo Viejo', 'Sabana Yegua', 'Tabara Arriba'],
+            'Bahoruco': ['Neiba', 'Galván', 'Los Ríos', 'Tamayo', 'Villa Jaragua'],
+            'Barahona': ['Barahona', 'Cabral', 'Enriquillo', 'Fundación', 'Jaquimeyes', 'La Ciénaga', 'Las Salinas', 'Paraíso', 'Polo', 'Vicente Noble'],
+            'Dajabón': ['Dajabón', 'El Pino', 'Loma de Cabrera', 'Partido', 'Restauración'],
+            'Distrito Nacional': ['Santo Domingo de Guzmán'],
+            'Duarte': ['San Francisco de Macorís', 'Arenoso', 'Castillo', 'Eugenio María de Hostos', 'Las Guáranas', 'Pimentel', 'Villa Riva'],
+            'Elías Piña': ['Comendador', 'Bánica', 'El Llano', 'Hondo Valle', 'Juan Santiago', 'Pedro Santana'],
+            'El Seibo': ['Santa Cruz de El Seibo', 'Miches'],
+            'Espaillat': ['Moca', 'Cayetano Germosén', 'Gaspar Hernández', 'Jamao al Norte'],
+            'Hato Mayor': ['Hato Mayor del Rey', 'El Valle', 'Sabana de la Mar'],
+            'Hermanas Mirabal': ['Salcedo', 'Tenares', 'Villa Tapia'],
+            'Independencia': ['Jimaní', 'Cristóbal', 'Duvergé', 'La Descubierta', 'Mella', 'Postrer Río'],
+            'La Altagracia': ['Salvaleón de Higüey', 'San Rafael del Yuma'],
+            'La Romana': ['La Romana', 'Guaymate', 'Villa Hermosa'],
+            'La Vega': ['Concepción de La Vega', 'Constanza', 'Jarabacoa', 'Jima Abajo'],
+            'María Trinidad Sánchez': ['Nagua', 'Cabrera', 'El Factor', 'Río San Juan'],
+            'Monseñor Nouel': ['Bonao', 'Maimón', 'Piedra Blanca'],
+            'Monte Cristi': ['San Fernando de Monte Cristi', 'Castañuelas', 'Guayubín', 'Las Matas de Santa Cruz', 'Pepillo Salcedo', 'Villa Vásquez'],
+            'Monte Plata': ['Monte Plata', 'Bayaguana', 'Peralvillo', 'Sabana Grande de Boyá', 'Yamasá'],
+            'Pedernales': ['Pedernales', 'Oviedo'],
+            'Peravia': ['Baní', 'Matanzas', 'Nizao'],
+            'Puerto Plata': ['San Felipe de Puerto Plata', 'Altamira', 'Guananico', 'Imbert', 'Los Hidalgos', 'Luperón', 'Sosúa', 'Villa Isabela', 'Villa Montellano'],
+            'Samaná': ['Santa Bárbara de Samaná', 'Las Terrenas', 'Sánchez'],
+            'San Cristóbal': ['San Cristóbal', 'Bajos de Haina', 'Cambita Garabitos', 'Los Cacaos', 'Sabana Grande de Palenque', 'San Gregorio de Nigua', 'Villa Altagracia', 'Yaguate'],
+            'San José de Ocoa': ['San José de Ocoa', 'Rancho Arriba', 'Sabana Larga'],
+            'San Juan': ['San Juan de la Maguana', 'Bohechío', 'El Cercado', 'Juan de Herrera', 'Las Matas de Farfán', 'Vallejuelo'],
+            'San Pedro de Macorís': ['San Pedro de Macorís', 'Consuelo', 'Guayacanes', 'Quisqueya', 'Ramón Santana', 'San José de los Llanos'],
+            'Sánchez Ramírez': ['Cotuí', 'Cevicos', 'Fantino', 'La Mata'],
+            'Santiago': ['Santiago de los Caballeros', 'Bisonó', 'Jánico', 'Licey al Medio', 'Puñal', 'Sabana Iglesia', 'San José de las Matas', 'Tamboril', 'Villa González'],
+            'Santiago Rodríguez': ['San Ignacio de Sabaneta', 'Monción', 'Villa Los Almácigos'],
+            'Santo Domingo': ['Santo Domingo Este', 'Santo Domingo Norte', 'Santo Domingo Oeste', 'Boca Chica', 'Los Alcarrizos', 'Pedro Brand', 'San Antonio de Guerra'],
+            'Valverde': ['Santa Cruz de Mao', 'Esperanza', 'Laguna Salada']
+        };
+
+        function loadMunicipiosForProvincia(provincia, targetId, selectedValue = '') {
+            const select = document.getElementById(targetId);
+            if (!select) return;
+
+            const municipios = municipiosPorProvincia[String(provincia || '').trim()] || [];
+            select.innerHTML = '<option value="">Seleccione un municipio</option>';
+
+            municipios.forEach(nombre => {
+                const option = document.createElement('option');
+                option.value = nombre;
+                option.textContent = nombre;
+                select.appendChild(option);
+            });
+
+            if (selectedValue) {
+                if (!municipios.includes(selectedValue)) {
+                    const option = document.createElement('option');
+                    option.value = selectedValue;
+                    option.textContent = selectedValue;
+                    select.appendChild(option);
+                }
+                select.value = selectedValue;
+            }
+        }
         
         // ============================================
         // LOAD EMPLEADO DATA
@@ -683,7 +760,7 @@
             document.getElementById('modalEstadoCivil').value = emp.estadoCivil || 1;
             document.getElementById('modalDireccion').value = emp.direccion || '';
             document.getElementById('modalProvincia').value = emp.provincia || '';
-            document.getElementById('modalMunicipio').value = emp.municipio || '';
+            loadMunicipiosForProvincia(emp.provincia || '', 'modalMunicipio', emp.municipio || '');
             document.getElementById('modalTelefono1').value = emp.telefono1 || '';
             document.getElementById('modalTelefono2').value = emp.telefono2 || '';
             document.getElementById('modalFechaInicio').value = emp.fechaInicio || '';
@@ -705,7 +782,45 @@
             const modal = new bootstrap.Modal(document.getElementById('registroEmpleadoModal'));
             modal.show();
         }
-        
+
+        async function verificarCedulaPadronModal() {
+            const cedula = String(document.getElementById('modalIdentificacion').value || '').replace(/\D/g, '');
+            if (cedula.length !== 11) {
+                Swal.fire('Error', 'La cédula del colaborador no es válida para consultar el padrón.', 'error');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADOS?.PADRON
+                    ? window.API_ENDPOINTS.EMPLEADOS.PADRON(cedula)
+                    : `/empleados/padron/${cedula}`);
+                const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data?.message || 'No se pudo consultar la cédula en el padrón.');
+                }
+
+                document.getElementById('modalNombre').value = data.nombres || document.getElementById('modalNombre').value;
+                document.getElementById('modalApellido').value = [data.primerApellido, data.segundoApellido].filter(Boolean).join(' ').trim() || document.getElementById('modalApellido').value;
+                document.getElementById('modalNacimiento').value = data.fechaNacimiento
+                    ? String(data.fechaNacimiento).split('T')[0]
+                    : document.getElementById('modalNacimiento').value;
+
+                if (data.photo) {
+                    currentEmpleado = { ...(currentEmpleado || {}), foto: data.photo };
+                    applyEmpleadoPhoto(currentEmpleado);
+                }
+
+                Swal.fire({
+                    title: 'Cédula verificada',
+                    html: `<strong>${data.nombreCompleto || 'Registro encontrado'}</strong><br><small>${data.cedula || cedula}</small>`,
+                    icon: 'success'
+                });
+            } catch (error) {
+                Swal.fire('Validación no disponible', error.message || 'No se pudo consultar el padrón.', 'warning');
+            }
+        }
+
         async function saveEmpleado() {
             const empleadoId = getEmpleadoIdFromUrl();
             const token = getAuthToken();
@@ -810,10 +925,29 @@
                 confirmButtonText: '<i class="fas fa-user-minus me-1"></i>Dar de baja',
                 cancelButtonText: 'Cancelar',
                 preConfirm: () => {
+                    const fechaBaja = document.getElementById('swal-fecha-salida').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const prestaciones = parseFloat(document.getElementById('swal-prestaciones').value) || 0;
+
+                    if (!fechaBaja) {
+                        Swal.showValidationMessage('La fecha de salida es requerida.');
+                        return false;
+                    }
+
+                    if (!motivo || !motivo.trim()) {
+                        Swal.showValidationMessage('Debe indicar el motivo de la baja.');
+                        return false;
+                    }
+
+                    if (prestaciones <= 0) {
+                        Swal.showValidationMessage('Debe calcular y registrar un monto de prestaciones mayor que cero.');
+                        return false;
+                    }
+
                     return {
-                        fechaBaja: document.getElementById('swal-fecha-salida').value,
-                        motivo: document.getElementById('swal-motivo').value,
-                        prestaciones: parseFloat(document.getElementById('swal-prestaciones').value) || 0
+                        fechaBaja,
+                        motivo,
+                        prestaciones
                     };
                 }
             });
@@ -859,7 +993,7 @@
             document.getElementById('btnProcesarPago').classList.remove('d-none');
             
             // Calculate payment details
-            const salario = currentEmpleado.salario || 0;
+            const salario = calcularMontoBasePeriodo();
             const extras = [
                 { desc: currentEmpleado.descripcionExtra1, monto: currentEmpleado.montoExtra1 },
                 { desc: currentEmpleado.descripcionExtra2, monto: currentEmpleado.montoExtra2 },
@@ -883,10 +1017,22 @@
                 html += `<tr><td class="text-danger">Deducción SFS (3.04%)</td><td class="text-end text-danger">-RD$ ${sfs.toLocaleString('en-US', {minimumFractionDigits: 2})}</td><td></td></tr>`;
                 total -= (afp + sfs);
             }
+
+            descuentosAdicionales.forEach((descuento, index) => {
+                html += `
+                    <tr>
+                        <td class="text-danger">${descuento.descripcion}</td>
+                        <td class="text-end text-danger">-RD$ ${descuento.monto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-danger" type="button" onclick="removeDescuento(${index})">×</button>
+                        </td>
+                    </tr>
+                `;
+                total -= descuento.monto;
+            });
             
             document.getElementById('tbodyDetallePago').innerHTML = html;
             document.getElementById('totalPagar').textContent = `RD$ ${total.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            descuentosAdicionales = [];
         }
         
         function agregarDescuento() {
@@ -900,16 +1046,6 @@
             
             descuentosAdicionales.push({ descripcion: desc, monto: monto });
             
-            // Add row to table
-            const tbody = document.getElementById('tbodyDetallePago');
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td class="text-danger">${desc}</td>
-                <td class="text-end text-danger">-RD$ ${monto.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); updateTotal();">×</button></td>
-            `;
-            tbody.appendChild(newRow);
-            
             // Clear inputs
             document.getElementById('descripcionDescuento').value = '';
             document.getElementById('montoDescuento').value = '';
@@ -918,8 +1054,31 @@
         }
         
         function updateTotal() {
-            // Recalculate total (simplified)
             calcularPago();
+        }
+
+        function removeDescuento(index) {
+            descuentosAdicionales.splice(index, 1);
+            calcularPago();
+        }
+
+        function calcularMontoBasePeriodo() {
+            const salarioMensual = parseFloat(currentEmpleado?.salario || 0);
+            const esFraccion = document.getElementById('ddlTipoPago').value === 'true';
+            const periodo = parseInt(currentEmpleado?.periodoPago || 3, 10);
+
+            if (esFraccion) {
+                return salarioMensual;
+            }
+
+            switch (periodo) {
+                case 1:
+                    return salarioMensual / 4;
+                case 2:
+                    return salarioMensual / 2;
+                default:
+                    return salarioMensual;
+            }
         }
         
         async function procesarPago() {
@@ -939,7 +1098,12 @@
                 tipoConcepto: tipoConcepto,
                 fechaPago: fechaPago,
                 esFraccion: document.getElementById('ddlTipoPago').value === 'true',
-                aplicarTss: true // Siempre aplicar TSS por defecto
+                aplicarTss: currentEmpleado?.inscritoTss === true,
+                conceptosAdicionales: descuentosAdicionales.map(descuento => ({
+                    concepto: descuento.descripcion,
+                    monto: descuento.monto,
+                    esDeduccion: true
+                }))
             };
             
             // DEBUG: Log request payload
@@ -1017,18 +1181,30 @@
                 return;
             }
             
-            // Mostrar loading mientras obtenemos el tipo de empleador
-            Swal.fire({
-                title: 'Preparando Contrato...',
-                text: 'Por favor espere',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
             try {
+                const seleccion = await Swal.fire({
+                    title: 'Contrato de trabajo',
+                    text: 'Se generará el PDF del contrato para revisión y descarga.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Generar PDF',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (!seleccion.isConfirmed) {
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Preparando Contrato...',
+                    text: 'Por favor espere',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 // Obtener el perfil del empleador para determinar el tipo de contrato
                 const userId = localStorage.getItem('userId');
                 const perfilResponse = await authenticatedFetch(window.API_ENDPOINTS?.EMPLEADORES?.BY_USER

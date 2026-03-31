@@ -171,8 +171,10 @@ public class EmailService : IEmailService
                 // CONSTRUIR MENSAJE
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromEmail));
+                message.ReplyTo.Add(new MailboxAddress(_settings.FromName, _settings.FromEmail));
                 message.To.Add(new MailboxAddress(toName ?? toEmail, toEmail));
                 message.Subject = subject;
+                message.MessageId = MimeKit.Utils.MimeUtils.GenerateMessageId("migenteenlinea.com");
 
                 // CUERPO: HTML + Plain Text (fallback)
                 var bodyBuilder = new BodyBuilder
@@ -189,8 +191,8 @@ public class EmailService : IEmailService
                 // Configurar timeout más largo para conexiones lentas
                 smtpClient.Timeout = 120000; // 2 minutos
 
-                // Ignorar validación de certificado SSL (como Legacy)
-                smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                // Mantener validación SSL por defecto. Solo relajarla si la config lo exige explícitamente.
+                smtpClient.CheckCertificateRevocation = true;
 
                 // Usar Auto para que MailKit detecte el tipo correcto de SSL
                 _logger.LogDebug(
@@ -217,9 +219,11 @@ public class EmailService : IEmailService
                 await smtpClient.DisconnectAsync(true);
 
                 _logger.LogInformation(
-                    "Email enviado exitosamente a: {Email} en intento {Attempt}",
+                    "Email enviado exitosamente a: {Email} en intento {Attempt}. Subject={Subject}, MessageId={MessageId}",
                     toEmail,
-                    attempt);
+                    attempt,
+                    subject,
+                    message.MessageId);
 
                 return; // ÉXITO
             }

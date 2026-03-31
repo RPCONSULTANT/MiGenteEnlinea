@@ -30,4 +30,16 @@ public class RegisterResult
     /// </summary>
     [JsonPropertyName("email")]
     public string? Email { get; set; }
+
+    /// <summary>
+    /// Indica si el correo de activación fue enviado exitosamente.
+    /// </summary>
+    [JsonPropertyName("activationEmailSent")]
+    public bool ActivationEmailSent { get; set; }
+
+    /// <summary>
+    /// Mensaje de diagnóstico del correo de activación cuando falle.
+    /// </summary>
+    [JsonPropertyName("activationEmailMessage")]
+    public string? ActivationEmailMessage { get; set; }
 }

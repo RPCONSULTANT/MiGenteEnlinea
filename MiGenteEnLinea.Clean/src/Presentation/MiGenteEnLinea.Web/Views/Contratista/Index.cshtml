@@ -178,6 +178,9 @@
                                 </div>
                             </div>
                             <div class="card-footer bg-secondary">
+                                <button type="button" class="btn btn-outline-light" id="btnEditarPerfil">
+                                    <i class="fa fa-edit"></i> Editar
+                                </button>
                                 <button type="button" class="btn btn-primary" id="btnGuardar">
                                     <i class="fa fa-save"></i> Guardar Información
                                 </button>
@@ -268,6 +271,7 @@
         let userId = null; // Se obtiene del token JWT o sesión
         let perfilActivo = false;
         let perfilInicializando = false;
+        let editMode = false;
 
         function resolvePerfilImage(entity, withVersion = false) {
             let source = '/images/circular1.png';
@@ -318,6 +322,8 @@
             if (window.loadProvincias) {
                 window.loadProvincias('comboProvincias', '-- Seleccione Provincia --');
             }
+
+            setGeneralDataEditable(false);
             
             // Cargar perfil al iniciar
             loadPerfil();
@@ -472,6 +478,10 @@
                 savePerfil();
             });
 
+            $('#btnEditarPerfil').on('click', function () {
+                setGeneralDataEditable(true);
+            });
+
             // Activar perfil
             $('#btnActivar').on('click', function () {
                 activarPerfil();
@@ -552,13 +562,16 @@
                     
                     // Cargar servicios
                     loadServicios();
+                    setGeneralDataEditable(false);
                     
                 } else if (response.status === 404) {
                     console.log('Perfil de contratista no encontrado. Es un nuevo registro.');
+                    await ensureContratistaProfile();
                     perfilInicializando = true;
                     contratistaId = null;
                     perfilActivo = false;
                     togglePerfilDisponibilidad(false);
+                    setGeneralDataEditable(true);
                     Swal.fire({
                         title: 'Perfil Pendiente',
                         text: 'Adquirió su plan correctamente. Complete y guarde su información para activar su perfil.',
@@ -575,6 +588,11 @@
         
         // Guardar perfil del contratista
         async function savePerfil() {
+            if (!editMode && !perfilInicializando) {
+                Swal.fire('Edición bloqueada', 'Pulse "Editar" antes de modificar los datos generales.', 'info');
+                return;
+            }
+
             const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
             
             // Validar que tenemos userId
@@ -661,6 +679,7 @@
                     }
 
                     await loadPerfil();
+                    setGeneralDataEditable(false);
                     Swal.fire({
                         title: 'Perfil Actualizado',
                         text: 'Tu perfil ha sido actualizado correctamente.',
@@ -867,6 +886,39 @@
             }
         }
 
+        async function ensureContratistaProfile() {
+            if (!userId) return;
+
+            try {
+                const perfilResponse = await authenticatedFetch(`/auth/perfil/${userId}`);
+                if (!perfilResponse.ok) {
+                    return;
+                }
+
+                const perfil = window.readApiResponse ? await window.readApiResponse(perfilResponse) : await perfilResponse.json();
+                const createPayload = {
+                    userId: userId,
+                    nombre: (perfil.nombre || 'Usuario').substring(0, 20),
+                    apellido: (perfil.apellido || 'Mi Gente').substring(0, 50),
+                    tipo: Number(perfil.tipoIdentificacion === 3 ? 2 : 1),
+                    identificacion: perfil.identificacion || null,
+                    telefono1: perfil.telefono1 || null,
+                    provincia: perfil.provinciaStr || perfil.provincia || null
+                };
+
+                const createResponse = await authenticatedFetch('/contratistas', {
+                    method: 'POST',
+                    body: JSON.stringify(createPayload)
+                });
+
+                if (createResponse.ok || createResponse.status === 201 || createResponse.status === 400) {
+                    return;
+                }
+            } catch (error) {
+                console.warn('No se pudo auto-crear el perfil contratista:', error);
+            }
+        }
+
         function togglePerfilDisponibilidad(disponible) {
             $('#fileUpload').prop('disabled', !disponible);
             $('#btnAgregar').prop('disabled', !disponible);
@@ -875,6 +927,22 @@
                 $('#btnDesactivar').hide();
             } else {
                 updateButtonState();
+            }
+        }
+
+        function setGeneralDataEditable(enabled) {
+            editMode = enabled;
+            $('#datosGenerales')
+                .find('input, textarea, select')
+                .not('#btnGuardar, #btnEditarPerfil, #btnActivar, #btnDesactivar')
+                .prop('disabled', !enabled);
+
+            $('#btnGuardar').toggle(enabled);
+            $('#btnEditarPerfil').toggle(!enabled || perfilInicializando);
+
+            if (perfilInicializando) {
+                $('#btnEditarPerfil').hide();
+                $('#btnGuardar').show();
             }
         }
     </script>

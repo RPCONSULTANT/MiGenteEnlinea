@@ -1,4 +1,5 @@
 using MediatR;
+using MiGenteEnLinea.Application.Common.Helpers;
 using Microsoft.EntityFrameworkCore;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Common.Interfaces;
@@ -17,10 +18,12 @@ namespace MiGenteEnLinea.Application.Features.Empleados.Commands.CreateEmpleado;
 public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoCommand, int>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPadronService _padronService;
 
-    public CreateEmpleadoCommandHandler(IApplicationDbContext context)
+    public CreateEmpleadoCommandHandler(IApplicationDbContext context, IPadronService padronService)
     {
         _context = context;
+        _padronService = padronService;
     }
 
     public async Task<int> Handle(CreateEmpleadoCommand request, CancellationToken cancellationToken)
@@ -74,7 +77,20 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
                 $"Ya existe un empleado con la identificación {request.Identificacion}");
         }
 
-        // PASO 4: Crear empleado usando factory method del dominio
+        // PASO 4: Validar cédula contra padrón nacional
+        var padronData = await _padronService.ConsultarCedulaAsync(request.Identificacion, cancellationToken);
+        if (padronData == null)
+        {
+            throw new ValidationException(
+                "No se pudo validar la cédula en el padrón nacional. Verifique el número ingresado antes de registrar el colaborador.");
+        }
+
+        if (!PadronIdentityValidator.Matches(request.Nombre, request.Apellido, request.Nacimiento, padronData, out var padronMessage))
+        {
+            throw new ValidationException(padronMessage);
+        }
+
+        // PASO 5: Crear empleado usando factory method del dominio
         var empleado = Empleado.Create(
             userId: request.UserId,
             identificacion: request.Identificacion,
@@ -84,11 +100,11 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             periodoPago: request.PeriodoPago
         );
 
-        // PASO 5: Actualizar fecha de inicio
+        // PASO 6: Actualizar fecha de inicio
         var fechaInicioDateOnly = DateOnly.FromDateTime(request.FechaInicio);
         empleado.ActualizarFechaInicio(fechaInicioDateOnly);
 
-        // PASO 6: Actualizar información personal si se proporciona
+        // PASO 7: Actualizar información personal si se proporciona
         if (request.EstadoCivil.HasValue || request.Nacimiento.HasValue || !string.IsNullOrEmpty(request.Alias))
         {
             var nacimientoDateOnly = request.Nacimiento.HasValue 
@@ -104,7 +120,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 7: Actualizar información de contacto
+        // PASO 8: Actualizar información de contacto
         if (!string.IsNullOrEmpty(request.Telefono1) || 
             !string.IsNullOrEmpty(request.Telefono2))
         {
@@ -116,7 +132,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 8: Actualizar dirección
+        // PASO 9: Actualizar dirección
         if (!string.IsNullOrEmpty(request.Direccion) ||
             !string.IsNullOrEmpty(request.Provincia) ||
             !string.IsNullOrEmpty(request.Municipio))
@@ -128,7 +144,7 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 9: Actualizar posición si se proporciona
+        // PASO 10: Actualizar posición si se proporciona
         if (!string.IsNullOrEmpty(request.Posicion))
         {
             empleado.ActualizarPosicion(
@@ -138,26 +154,27 @@ public class CreateEmpleadoCommandHandler : IRequestHandler<CreateEmpleadoComman
             );
         }
 
-        // PASO 10: Configurar TSS
+        // PASO 11: Configurar TSS
         if (request.Tss)
         {
             empleado.ActualizarInscripcionTss(true);
         }
 
-        // PASO 11: Configurar días de pago si se proporciona
+        // PASO 12: Configurar días de pago si se proporciona
         if (request.DiasPago.HasValue)
         {
             // Acceso directo a propiedad por ahora
             // empleado.DiasPago = request.DiasPago.Value;
         }
 
-        // PASO 12: Asignar foto si se proporciona
-        if (!string.IsNullOrEmpty(request.Foto))
+        // PASO 13: Asignar foto manual o la foto validada del padrón
+        var fotoFinal = !string.IsNullOrWhiteSpace(request.Foto) ? request.Foto : padronData.Photo;
+        if (!string.IsNullOrWhiteSpace(fotoFinal))
         {
-            empleado.ActualizarFoto(request.Foto);
+            empleado.ActualizarFoto(fotoFinal);
         }
 
-        // PASO 13: Guardar en base de datos
+        // PASO 14: Guardar en base de datos
         await _context.Empleados.AddAsync(empleado, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
 

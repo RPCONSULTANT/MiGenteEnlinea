@@ -132,13 +132,20 @@ public class NominaCalculatorService : INominaCalculatorService
     {
         if (esFraccion)
         {
-            // Fracción: retornar el salario tal como está (el usuario ya lo ajustó)
-            return salario;
+            return periodoPago switch
+            {
+                1 => Math.Round(salario / 4m, 2),
+                2 => Math.Round(salario / 2m, 2),
+                _ => salario
+            };
         }
 
-        // Período completo: no se ajusta, se paga el salario tal cual está registrado
-        // Nota: El salario ya está guardado en el período correcto (semanal/quincenal/mensual)
-        return salario;
+        return periodoPago switch
+        {
+            1 => Math.Round(salario / 4m, 2),
+            2 => Math.Round(salario / 2m, 2),
+            _ => salario
+        };
     }
 
     /// <summary>

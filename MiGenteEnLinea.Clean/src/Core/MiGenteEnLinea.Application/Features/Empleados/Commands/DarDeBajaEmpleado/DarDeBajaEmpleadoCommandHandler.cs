@@ -43,6 +43,16 @@ public class DarDeBajaEmpleadoCommandHandler : IRequestHandler<DarDeBajaEmpleado
             throw new InvalidOperationException($"Empleado {request.EmpleadoId} ya está dado de baja");
         }
 
+        if (request.Prestaciones <= 0)
+        {
+            throw new InvalidOperationException("Debe calcular y registrar el monto de prestaciones antes de dar de baja al colaborador");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Motivo))
+        {
+            throw new InvalidOperationException("Debe indicar el motivo de la baja del colaborador");
+        }
+
         var rowsAffected = await _context.Empleados
             .Where(e => e.EmpleadoId == request.EmpleadoId && e.UserId == request.UserId && e.Activo)
             .ExecuteUpdateAsync(setters => setters

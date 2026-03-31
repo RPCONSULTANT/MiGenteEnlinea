@@ -49,6 +49,12 @@ public class PadronModel
     public string? Apellido2 { get; set; }
 
     /// <summary>
+    /// Foto del ciudadano devuelta por el padrón.
+    /// Puede venir como data URL base64.
+    /// </summary>
+    public string? Photo { get; set; }
+
+    /// <summary>
     /// Fecha de nacimiento del ciudadano (opcional, puede no estar disponible).
     /// </summary>
     public DateTime? FechaNacimiento { get; set; }

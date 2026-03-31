@@ -233,6 +233,16 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             // NO fallar el registro si el email falla
             // El usuario ya está creado, solo el email falló
             _logger.LogError(ex, "Error al enviar email de activación a {Email}", request.Email);
+
+            return new RegisterResult
+            {
+                Success = true,
+                UserId = userId,
+                Email = request.Email,
+                ActivationEmailSent = false,
+                ActivationEmailMessage = "La cuenta fue creada, pero no se pudo enviar el correo de activación. Use reenviar activación.",
+                Message = "Registro exitoso. La cuenta fue creada, pero el correo de activación no pudo enviarse automáticamente."
+            };
         }
 
         // ================================================================================
@@ -243,6 +253,8 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Re
             Success = true,
             UserId = userId,
             Email = request.Email,
+            ActivationEmailSent = true,
+            ActivationEmailMessage = "Correo de activación enviado correctamente.",
             Message = "Registro exitoso. Por favor revisa tu correo electrónico para activar tu cuenta."
         };
     }

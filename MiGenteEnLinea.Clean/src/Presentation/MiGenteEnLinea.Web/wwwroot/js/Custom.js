@@ -479,6 +479,44 @@ function applyMaskedInput(input, formatter, maxDigits) {
   }
 }
 
+async function loadMunicipios(
+  selectId,
+  provincia,
+  defaultOption = "-- Seleccione Municipio --",
+) {
+  try {
+    const path = window.API_ENDPOINTS?.CATALOGOS?.MUNICIPIOS
+      ? window.API_ENDPOINTS.CATALOGOS.MUNICIPIOS(provincia)
+      : `/catalogos/municipios${provincia ? `?provincia=${encodeURIComponent(provincia)}` : ""}`;
+
+    const { response, payload } = await requestApi(path, {}, { auth: false });
+
+    if (!response.ok) {
+      throw new Error(getApiErrorMessage(payload, "No se pudieron cargar los municipios"));
+    }
+
+    const municipios = Array.isArray(payload) ? payload : [];
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.innerHTML = "";
+
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = defaultOption;
+    select.appendChild(defaultOpt);
+
+    municipios.forEach((m) => {
+      const option = document.createElement("option");
+      option.value = m.nombre;
+      option.textContent = m.nombre;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error cargando municipios:", error);
+  }
+}
+
 function formatPhoneInput(input) {
   applyMaskedInput(input, formatPhoneDigits, 10);
 }
@@ -490,6 +528,7 @@ function formatCedulaInput(input) {
 // Exponer funciones globalmente
 window.renderStars = renderStars;
 window.loadProvincias = loadProvincias;
+window.loadMunicipios = loadMunicipios;
 window.loadSectores = loadSectores;
 window.loadServicios = loadServicios;
 window.formatCurrency = formatCurrency;

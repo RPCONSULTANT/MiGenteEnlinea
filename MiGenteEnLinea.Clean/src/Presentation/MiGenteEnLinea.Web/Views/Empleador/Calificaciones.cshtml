@@ -250,410 +250,282 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Variables globales
-        var perfilesCalificables = [];
-        var perfilSeleccionado = null;
-        
-        $(document).ready(function() {
-            // Cargar historial de calificaciones
-            cargarMisCalificaciones();
-            
-            // Cargar perfiles disponibles para calificar
-            cargarPerfilesCalificables();
-            
-            // Configurar sistema de estrellas
+        let perfilesCalificables = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
             configurarRatings();
+            cargarMisCalificaciones();
+            cargarPerfilesCalificables();
         });
-        
+
         function configurarRatings() {
-            // Click en estrella
-            $('.rating-input .star').on('click', function() {
-                var container = $(this).parent();
-                var value = $(this).data('value');
-                var inputId = container.attr('id').replace('rating', 'valor');
-                
-                container.find('.star').removeClass('filled');
-                container.find('.star').each(function() {
-                    if ($(this).data('value') <= value) {
-                        $(this).addClass('filled');
-                    }
+            document.querySelectorAll('.rating-input .star').forEach(star => {
+                star.addEventListener('click', function () {
+                    const container = this.parentElement;
+                    const value = parseInt(this.dataset.value, 10);
+                    const inputId = container.id.replace('rating', 'valor');
+                    document.getElementById(inputId).value = value;
+                    pintarRating(container, value);
+                    verificarFormulario();
                 });
-                
-                $('#' + inputId).val(value);
-                verificarFormulario();
-            });
-            
-            // Hover en estrellas
-            $('.rating-input .star').on('mouseenter', function() {
-                var container = $(this).parent();
-                var value = $(this).data('value');
-                
-                container.find('.star').removeClass('hover');
-                container.find('.star').each(function() {
-                    if ($(this).data('value') <= value) {
-                        $(this).addClass('hover');
-                    }
+
+                star.addEventListener('mouseenter', function () {
+                    pintarRating(this.parentElement, parseInt(this.dataset.value, 10), true);
                 });
             });
-            
-            $('.rating-input').on('mouseleave', function() {
-                $(this).find('.star').removeClass('hover');
+
+            document.querySelectorAll('.rating-input').forEach(container => {
+                container.addEventListener('mouseleave', function () {
+                    const inputId = this.id.replace('rating', 'valor');
+                    pintarRating(this, parseInt(document.getElementById(inputId).value || '0', 10));
+                });
             });
         }
-        
-        function cargarMisCalificaciones() {
-            // ✅ Cargar mis calificaciones históricas
+
+        function pintarRating(container, value, hover = false) {
+            container.querySelectorAll('.star').forEach(star => {
+                const shouldFill = parseInt(star.dataset.value, 10) <= value;
+                star.classList.toggle('filled', !hover && shouldFill);
+                star.classList.toggle('hover', hover && shouldFill);
+                if (!shouldFill) {
+                    star.classList.remove('hover');
+                }
+            });
+        }
+
+        async function cargarMisCalificaciones() {
             const userId = getUserIdFromToken();
-            if (!userId) {
-                console.warn('No userId available for loading calificaciones');
-                return;
+            if (!userId) return;
+
+            try {
+                const path = window.API_ENDPOINTS?.CALIFICACIONES?.POR_EMPLEADOR
+                    ? window.API_ENDPOINTS.CALIFICACIONES.POR_EMPLEADOR(userId)
+                    : `/calificaciones/por-empleador/${userId}`;
+                const response = await authenticatedFetch(path);
+                const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                renderizarTablaCalificaciones(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error('Error cargando calificaciones:', error);
+                renderizarTablaCalificaciones([]);
             }
-            
-            const calificacionesPath = window.API_ENDPOINTS?.CALIFICACIONES?.POR_EMPLEADOR
-                ? window.API_ENDPOINTS.CALIFICACIONES.POR_EMPLEADOR(userId)
-                : '/calificaciones/por-empleador/' + userId;
-            authenticatedFetch(calificacionesPath)
-                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
-                .then(data => {
-                    renderizarTablaCalificaciones(data);
-                })
-                .catch(error => {
-                    console.error('Error cargando calificaciones:', error);
-                    // No mostrar error si no hay calificaciones aún
-                });
         }
-        
-        function renderizarTablaCalificaciones(calificaciones) {
-            var tbody = $('#tbodyCalificaciones');
-            tbody.empty();
-            
-            if (!calificaciones || calificaciones.length === 0) {
-                tbody.html(`
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="fas fa-inbox fa-2x text-muted mb-3 d-block"></i>
-                            <span class="text-muted">No hay calificaciones registradas</span>
-                        </td>
-                    </tr>
-                `);
-                return;
+
+        async function cargarPerfilesCalificables() {
+            try {
+                const path = window.API_ENDPOINTS?.CONTRATACIONES?.NO_CALIFICADAS || '/contrataciones?soloNoCalificadas=true&pageSize=100';
+                const response = await authenticatedFetch(path);
+                const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                const items = Array.isArray(data) ? data : (data?.items || []);
+
+                perfilesCalificables = items.map(item => ({
+                    id: item.detalleId || item.id || item.contratacionId,
+                    identificacion: item.contratistaIdentificacion || item.identificacion || '',
+                    nombre: item.contratistaNombre || item.contratistaCompleteName || item.nombreCompleto || 'Contratista',
+                    descripcion: item.descripcionCorta || item.servicio || item.categoria || 'Perfil disponible para calificar'
+                })).filter(item => item.identificacion);
+
+                llenarDropdownPerfiles();
+            } catch (error) {
+                console.error('Error cargando perfiles calificables:', error);
+                llenarDropdownPerfiles();
             }
-            
-            calificaciones.forEach(function(c) {
-                var row = $(`
-                    <tr>
-                        <td>${c.contratistaIdentificacion || 'N/A'}</td>
-                        <td>${c.contratistaCompleteName || 'Desconocido'}</td>
-                        <td>${convertirANumeroEstrellas(c.puntualidad)}</td>
-                        <td>${convertirANumeroEstrellas(c.cumplimiento)}</td>
-                        <td>${convertirANumeroEstrellas(c.conocimientos)}</td>
-                        <td>${convertirANumeroEstrellas(c.recomendacion)}</td>
-                        <td>${new Date(c.fechaCalificacion).toLocaleDateString('es-DO')}</td>
-                    </tr>
-                `);
-                tbody.append(row);
-            });
         }
-        
-        function cargarPerfilesCalificables() {
-            // ✅ Cargar contrataciones completadas sin calificar
-            const noCalificadasPath = window.API_ENDPOINTS?.CONTRATACIONES?.NO_CALIFICADAS || '/contrataciones?soloNoCalificadas=true&pageSize=100';
-            authenticatedFetch(noCalificadasPath)
-                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        // Mapear contrataciones a formato de perfiles
-                        perfilesCalificables = data.map(function(c) {
-                            return {
-                                id: c.detalleId,
-                                identificacion: c.contratistaIdentificacion || 'SIN_ID',
-                                nombre: c.contratistaCompleteName || 'Contratista Desconocido',
-                                monto: c.montoAcordado,
-                                descripcion: c.descripcionCorta,
-                                fotoUrl: c.contratistaFotoUrl,
-                                fechaInicio: c.fechaInicio,
-                                fechaFinalizacion: c.fechaFinalizacionReal || c.fechaFinal
-                            };
-                        });
-                        
-                        Swal.fire({
-                            title: '✅ Éxito',
-                            text: 'Se cargaron ' + perfilesCalificables.length + ' perfil(es) para calificar',
-                            icon: 'success',
-                            toast: true,
-                            position: 'top-end',
-                            timer: 2000
-                        });
-                        
-                        llenarDropdownPerfiles();
-                    } else {
-                        Swal.fire({
-                            title: '⚠️ Sin resultados',
-                            text: 'No hay trabajos completados pendientes de calificar',
-                            icon: 'info',
-                            toast: true,
-                            position: 'top-end',
-                            timer: 3000
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error cargando perfiles calificables:', error);
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se pudieron cargar los perfiles disponibles para calificar.',
-                        icon: 'error'
-                    });
-                });
-        }
-        
+
         function llenarDropdownPerfiles() {
-            var $ddl = $('#ddlPerfil');
-            $ddl.empty();
-            $ddl.append('<option value="">-- Seleccione un perfil --</option>');
-            
-            perfilesCalificables.forEach(function(p) {
-                var displayText = p.nombre + ' (' + p.descripcion + ')';
-                $ddl.append(`
-                    <option value="${p.id}" 
-                            data-identificacion="${p.identificacion}" 
-                            data-nombre="${p.nombre}"
-                            data-foto="${p.fotoUrl || '/images/circular1.png'}"
-                            data-monto="${p.monto}"
-                            data-fechas="${p.fechaInicio} a ${p.fechaFinalizacion}">
-                        ${displayText}
-                    </option>
-                `);
+            const ddl = document.getElementById('ddlPerfil');
+            ddl.innerHTML = '<option value="">-- Seleccione un perfil --</option>';
+
+            perfilesCalificables.forEach(perfil => {
+                const option = document.createElement('option');
+                option.value = String(perfil.id || perfil.identificacion);
+                option.dataset.identificacion = perfil.identificacion;
+                option.dataset.nombre = perfil.nombre;
+                option.textContent = `${perfil.nombre} (${perfil.descripcion})`;
+                ddl.appendChild(option);
             });
         }
-        
+
         function onPerfilSeleccionado() {
-            var $selected = $('#ddlPerfil option:selected');
-            var id = $selected.val();
-            
-            if (id) {
-                $('#calif_identificacion').val($selected.data('identificacion'));
-                $('#calif_nombre').val($selected.data('nombre'));
-                
-                // ✅ Mostrar foto del contratista
-                var fotoUrl = $selected.data('foto') || '/images/circular1.png';
-                $('#fotoContratista').attr('src', fotoUrl)
-                    .on('error', function() {
-                        $(this).attr('src', '/images/circular1.png');
-                    });
-                
-                perfilSeleccionado = id;
-            } else {
-                $('#calif_identificacion').val('');
-                $('#calif_nombre').val('');
-                $('#fotoContratista').attr('src', '/images/circular1.png');
-                perfilSeleccionado = null;
-            }
+            const selected = document.querySelector('#ddlPerfil option:checked');
+            const hasValue = selected && selected.value;
+
+            document.getElementById('calif_identificacion').value = hasValue ? (selected.dataset.identificacion || '') : '';
+            document.getElementById('calif_nombre').value = hasValue ? (selected.dataset.nombre || '') : '';
             verificarFormulario();
         }
-        
+
         function verificarFormulario() {
-            var puntualidad = parseInt($('#valorPuntualidad').val()) || 0;
-            var cumplimiento = parseInt($('#valorCumplimiento').val()) || 0;
-            var conocimientos = parseInt($('#valorConocimientos').val()) || 0;
-            var recomendacion = parseInt($('#valorRecomendacion').val()) || 0;
-            var perfilId = $('#ddlPerfil').val();
-            
-            if (perfilId && puntualidad > 0 && cumplimiento > 0 && conocimientos > 0 && recomendacion > 0) {
-                $('#btnRealizarCalificacion').prop('disabled', false);
-            } else {
-                $('#btnRealizarCalificacion').prop('disabled', true);
-            }
+            const perfilId = document.getElementById('ddlPerfil').value;
+            const valores = ['valorPuntualidad', 'valorCumplimiento', 'valorConocimientos', 'valorRecomendacion']
+                .map(id => parseInt(document.getElementById(id).value || '0', 10));
+
+            document.getElementById('btnRealizarCalificacion').disabled = !perfilId || valores.some(v => v <= 0);
         }
-        
-        function calificarPerfil() {
-            var identificacion = $('#calif_identificacion').val();
-            
-            if (!identificacion) {
-                Swal.fire({
-                    title: '⚠️ Error',
-                    text: 'No se pudo obtener la identificación del contratista.',
-                    icon: 'error'
-                });
+
+        async function calificarPerfil() {
+            const empleadorUserId = getUserIdFromToken();
+            const contratistaIdentificacion = document.getElementById('calif_identificacion').value.trim();
+
+            if (!empleadorUserId || !contratistaIdentificacion) {
+                Swal.fire('Error', 'No se pudo identificar el perfil a calificar.', 'error');
                 return;
             }
-            
-            var datos = {
-                empleadorUserId: getUserIdFromToken(), // Helper function to extract from JWT
-                contratistaIdentificacion: identificacion,
-                puntualidad: parseInt($('#valorPuntualidad').val()),
-                cumplimiento: parseInt($('#valorCumplimiento').val()),
-                conocimientos: parseInt($('#valorConocimientos').val()),
-                recomendacion: parseInt($('#valorRecomendacion').val())
+
+            const payload = {
+                empleadorUserId,
+                contratistaIdentificacion,
+                puntualidad: parseInt(document.getElementById('valorPuntualidad').value || '0', 10),
+                cumplimiento: parseInt(document.getElementById('valorCumplimiento').value || '0', 10),
+                conocimientos: parseInt(document.getElementById('valorConocimientos').value || '0', 10),
+                recomendacion: parseInt(document.getElementById('valorRecomendacion').value || '0', 10)
             };
-            
-            // ✅ Enviar calificación al API
-            const calificarPath = window.API_ENDPOINTS?.CALIFICACIONES?.CALIFICAR_PERFIL || '/calificaciones/calificar-perfil';
-            authenticatedFetch(calificarPath, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(datos)
-            })
-                .then(response => window.readApiResponse ? window.readApiResponse(response) : response.json())
-                .then(response => {
-                    onSuccess(response);
-                })
-                .catch(error => {
-                    console.error('Error al calificar:', error);
-                    var errorMsg = 'No se pudo guardar la calificación. Intente nuevamente.';
-                    if (error.response && error.response.message) {
-                        errorMsg = error.response.message;
-                    }
-                    Swal.fire({
-                        title: '❌ Error',
-                        text: errorMsg,
-                        icon: 'error'
-                    });
-                });
-        }
-        
-        // ✅ Helper: Extract userId from JWT token
-        function getUserIdFromToken() {
-            var token = localStorage.getItem('accessToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (!token) return null;
-            
+
             try {
-                var base64Url = token.split('.')[1];
-                var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                
-                var payload = JSON.parse(jsonPayload);
-                return payload['nameid'] || payload['sub'] || payload['userId'];
-            } catch (e) {
-                console.error('Error decoding token:', e);
+                const path = window.API_ENDPOINTS?.CALIFICACIONES?.CALIFICAR_PERFIL || '/calificaciones/calificar-perfil';
+                const response = await authenticatedFetch(path, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                const result = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+                if (!response.ok) {
+                    throw new Error(result?.message || 'No se pudo guardar la calificación.');
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('modalCalificar'))?.hide();
+                limpiarFormularioCalificacion();
+                await cargarMisCalificaciones();
+                await cargarPerfilesCalificables();
+                Swal.fire('Éxito', 'La calificación fue registrada correctamente.', 'success');
+            } catch (error) {
+                Swal.fire('Error', error.message || 'No se pudo guardar la calificación.', 'error');
+            }
+        }
+
+        function limpiarFormularioCalificacion() {
+            document.getElementById('ddlPerfil').value = '';
+            document.getElementById('calif_identificacion').value = '';
+            document.getElementById('calif_nombre').value = '';
+            ['valorPuntualidad', 'valorCumplimiento', 'valorConocimientos', 'valorRecomendacion'].forEach(id => {
+                document.getElementById(id).value = '0';
+            });
+            document.querySelectorAll('.rating-input').forEach(container => pintarRating(container, 0));
+            document.getElementById('btnRealizarCalificacion').disabled = true;
+        }
+
+        async function consultarPerfil() {
+            const identificacion = document.getElementById('txtConsultarId').value.trim();
+            if (!identificacion) {
+                Swal.fire('Error', 'Por favor ingrese una identificación.', 'warning');
+                return;
+            }
+
+            try {
+                const [perfilResponse, promedioResponse] = await Promise.all([
+                    authenticatedFetch(`/contratistas?searchTerm=${encodeURIComponent(identificacion)}&pageSize=20`),
+                    authenticatedFetch(`/calificaciones/promedio/${encodeURIComponent(identificacion)}`)
+                ]);
+
+                const perfilData = window.readApiResponse ? await window.readApiResponse(perfilResponse) : await perfilResponse.json();
+                const promedioData = promedioResponse.ok
+                    ? (window.readApiResponse ? await window.readApiResponse(promedioResponse) : await promedioResponse.json())
+                    : null;
+
+                const perfiles = Array.isArray(perfilData) ? perfilData : (perfilData?.items || []);
+                const perfil = perfiles.find(item => (item.identificacion || '').replace(/\D/g, '') === identificacion.replace(/\D/g, ''))
+                    || perfiles[0];
+
+                if (!perfil) {
+                    throw new Error('No se encontró un perfil con esa identificación.');
+                }
+
+                mostrarModalPerfil({
+                    tipo: 'Contratista',
+                    identificacion: perfil.identificacion || identificacion,
+                    nombre: `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim() || perfil.nombreComercial || perfil.titulo || 'Perfil encontrado',
+                    puntualidad: promedioData?.promedioPuntualidad || 0,
+                    cumplimiento: promedioData?.promedioCumplimiento || 0,
+                    conocimientos: promedioData?.promedioConocimientos || 0,
+                    recomendacion: promedioData?.promedioRecomendacion || 0
+                });
+            } catch (error) {
+                Swal.fire('Error', error.message || 'Perfil no encontrado.', 'error');
+            }
+        }
+
+        function mostrarModalPerfil(perfil) {
+            bootstrap.Modal.getInstance(document.getElementById('modalConsultarPerfil'))?.hide();
+
+            document.getElementById('perfil_tipo').textContent = perfil.tipo;
+            document.getElementById('perfil_identificacion').textContent = perfil.identificacion;
+            document.getElementById('perfil_nombre').textContent = perfil.nombre;
+            document.getElementById('display_puntualidad').innerHTML = convertirANumeroEstrellas(Math.round(perfil.puntualidad || 0));
+            document.getElementById('display_cumplimiento').innerHTML = convertirANumeroEstrellas(Math.round(perfil.cumplimiento || 0));
+            document.getElementById('display_conocimientos').innerHTML = convertirANumeroEstrellas(Math.round(perfil.conocimientos || 0));
+            document.getElementById('display_recomendacion').innerHTML = convertirANumeroEstrellas(Math.round(perfil.recomendacion || 0));
+
+            new bootstrap.Modal(document.getElementById('modalPerfilEncontrado')).show();
+        }
+
+        function renderizarTablaCalificaciones(calificaciones) {
+            const tbody = document.getElementById('tbodyCalificaciones');
+            tbody.innerHTML = '';
+
+            if (!calificaciones.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            No hay calificaciones registradas.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            calificaciones.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatearFecha(c.fecha)}</td>
+                        <td>${c.contratistaIdentificacion || '-'}</td>
+                        <td>${c.contratistaNombre || '-'}</td>
+                        <td>${convertirANumeroEstrellas(c.puntualidad || 0)}</td>
+                        <td>${convertirANumeroEstrellas(c.conocimientos || 0)}</td>
+                        <td>${convertirANumeroEstrellas(c.cumplimiento || 0)}</td>
+                        <td>${convertirANumeroEstrellas(c.recomendacion || 0)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function getUserIdFromToken() {
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) return null;
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`).join(''));
+                const payload = JSON.parse(jsonPayload);
+                return payload.nameid || payload.sub || payload.userId || null;
+            } catch (error) {
+                console.error('Error decoding token:', error);
                 return null;
             }
         }
-        
-        function onSuccess(response) {
-            $('#modalCalificar').modal('hide');
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'La calificación ha sido registrada correctamente.',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-            });
-            
-            limpiarFormularioCalificacion();
-            cargarMisCalificaciones();
-        }
-        
-        function onError(error) {
-            Swal.fire({
-                title: 'Error',
-                text: 'No se pudo guardar la calificación. Intente nuevamente.',
-                icon: 'error',
-                confirmButtonText: 'Aceptar'
-            });
-        }
-        
-        function limpiarFormularioCalificacion() {
-            $('#ddlPerfil').val('');
-            $('#calif_identificacion').val('');
-            $('#calif_nombre').val('');
-            $('.rating-input .star').removeClass('filled');
-            $('[id^=valor]').val(0);
-            $('#btnRealizarCalificacion').prop('disabled', true);
-            perfilSeleccionado = null;
-        }
-        
-        function consultarPerfil() {
-            var identificacion = $('#txtConsultarId').val().trim();
-            
-            if (!identificacion) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Por favor ingrese una identificación.',
-                    icon: 'warning',
-                    confirmButtonText: 'Aceptar'
-                });
-                return;
-            }
-            
-            // TODO: Llamar API para buscar perfil
-            // $.get('/api/contratistas/buscar/' + identificacion, function(data) {
-            //     mostrarModalPerfil(data);
-            // }).fail(function() {
-            //     Swal.fire('Error', 'Perfil no encontrado.', 'error');
-            // });
-            
-            // Simulación
-            var perfilEncontrado = {
-                tipo: 'Contratista',
-                identificacion: identificacion,
-                nombre: 'Juan Pérez García',
-                puntualidad: 4,
-                cumplimiento: 5,
-                conocimientos: 4,
-                recomendacion: 5
-            };
-            mostrarModalPerfil(perfilEncontrado);
-        }
-        
-        function mostrarModalPerfil(perfil) {
-            $('#modalConsultarPerfil').modal('hide');
-            
-            $('#perfil_tipo').text(perfil.tipo);
-            $('#perfil_identificacion').text(perfil.identificacion);
-            $('#perfil_nombre').text(perfil.nombre);
-            
-            // Mostrar estrellas
-            $('#display_puntualidad').html(convertirANumeroEstrellas(perfil.puntualidad));
-            $('#display_cumplimiento').html(convertirANumeroEstrellas(perfil.cumplimiento));
-            $('#display_conocimientos').html(convertirANumeroEstrellas(perfil.conocimientos));
-            $('#display_recomendacion').html(convertirANumeroEstrellas(perfil.recomendacion));
-            
-            $('#modalPerfilEncontrado').modal('show');
-        }
-        
+
         function convertirANumeroEstrellas(valor) {
-            var html = '';
-            for (var i = 1; i <= 5; i++) {
-                if (i <= valor) {
-                    html += '<i class="fas fa-star text-warning"></i>';
-                } else {
-                    html += '<i class="far fa-star text-muted"></i>';
-                }
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += i <= valor
+                    ? '<i class="fas fa-star text-warning"></i>'
+                    : '<i class="far fa-star text-muted"></i>';
             }
             return html;
         }
-        
-        function renderizarTablaCalificaciones(data) {
-            var $tbody = $('#tbodyCalificaciones');
-            $tbody.empty();
-            
-            if (!data || data.length === 0) {
-                $tbody.append('<tr class="empty-data-row"><td colspan="7"><div>No data to display</div></td></tr>');
-                return;
-            }
-            
-            data.forEach(function(c) {
-                var row = '<tr>';
-                row += '<td>' + formatearFecha(c.fecha) + '</td>';
-                row += '<td>' + c.identificacion + '</td>';
-                row += '<td>' + c.nombre + '</td>';
-                row += '<td>' + convertirANumeroEstrellas(c.puntualidad) + '</td>';
-                row += '<td>' + convertirANumeroEstrellas(c.conocimientos) + '</td>';
-                row += '<td>' + convertirANumeroEstrellas(c.cumplimiento) + '</td>';
-                row += '<td>' + convertirANumeroEstrellas(c.recomendacion) + '</td>';
-                row += '</tr>';
-                $tbody.append(row);
-            });
-        }
-        
+
         function formatearFecha(fecha) {
             if (!fecha) return '-';
-            var d = new Date(fecha);
-            return d.toLocaleDateString('es-DO');
+            return new Date(fecha).toLocaleDateString('es-DO');
         }
     </script>
 }

@@ -551,11 +551,20 @@
             const salario = parseFloat(selectedOption.dataset.salario) || 0;
             const tss = selectedOption.dataset.tss === 'true';
             let deducciones = 0;
+            const conceptosAdicionales = [];
             
             if (tss) {
                 deducciones = salario * 0.0591; // AFP 2.87% + SFS 3.04%
             }
-            deducciones += descuentoMonto;
+
+            if (descuentoMonto > 0) {
+                deducciones += descuentoMonto;
+                conceptosAdicionales.push({
+                    concepto: descuentoDesc || 'Descuento adicional',
+                    monto: descuentoMonto,
+                    esDeduccion: true
+                });
+            }
             
             const pago = {
                 empleadoId: parseInt(select.value),
@@ -566,7 +575,9 @@
                 salario: salario,
                 descuento: deducciones,
                 descuentoDesc: descuentoDesc,
-                neto: salario - deducciones
+                neto: salario - deducciones,
+                aplicarTss: tss,
+                conceptosAdicionales: conceptosAdicionales
             };
             
             pagosAProcesar.push(pago);
@@ -693,7 +704,8 @@
                                     tipoConcepto: tipoConcepto,
                                     fechaPago: pago.fechaPago,
                                     esFraccion: false,
-                                    aplicarTss: true
+                                    aplicarTss: pago.aplicarTss,
+                                    conceptosAdicionales: pago.conceptosAdicionales || []
                                 })
                             });
                             
@@ -736,7 +748,7 @@
             let totalSalario = 0, totalTss = 0, totalNeto = 0;
             
             tbody.innerHTML = empleadosFiltrados.map(emp => {
-                const salario = emp.salario || 0;
+                const salario = calcularSalarioPeriodo(emp.salario || 0, emp.periodoPago);
                 const tss = emp.inscritoTss ? salario * 0.0591 : 0;
                 const neto = salario - tss;
                 
@@ -772,6 +784,7 @@
         async function procesarLote() {
             const fechaPago = document.getElementById('fechaPagoLote').value;
             const concepto = parseInt(document.getElementById('ddlConceptoLote').value);
+            const periodo = parseInt(document.getElementById('ddlPeriodoLote').value);
             const selectedIds = Array.from(document.querySelectorAll('.empleado-check:checked')).map(cb => parseInt(cb.value));
             
             if (!fechaPago) {
@@ -809,10 +822,13 @@
                 const response = await authenticatedFetch('/nominas/procesar-lote', {
                     method: 'POST',
                     body: JSON.stringify({
+                        empleadorId: Number(localStorage.getItem('empleadorId') || 0),
+                        periodo: getPeriodoText(periodo),
                         empleadoIds: selectedIds,
                         fechaPago: fechaPago,
-                        tipoConcepto: concepto,
-                        esFraccion: false
+                        tipoConcepto: concepto === 1 ? 'Salario' : 'Regalia',
+                        esFraccion: false,
+                        aplicarTss: true
                     })
                 });
                 
@@ -820,7 +836,7 @@
                     const result = window.readApiResponse ? await window.readApiResponse(response) : window.readApiResponse ? await window.readApiResponse(response) : await response.json();
                     Swal.fire({
                         title: '¡Nómina Procesada!',
-                        html: `<p>Se procesaron <strong>${result.procesados || selectedIds.length}</strong> pagos exitosamente</p>`,
+                        html: `<p>Se procesaron <strong>${result.empleadosProcesados || selectedIds.length}</strong> pagos exitosamente</p>`,
                         icon: 'success'
                     }).then(() => {
                         document.getElementById('lotePreview').classList.add('d-none');
@@ -948,6 +964,18 @@
             if (!dateStr) return '-';
             const date = new Date(dateStr);
             return date.toLocaleDateString('es-DO');
+        }
+
+        function calcularSalarioPeriodo(salarioMensual, periodoPago) {
+            const salario = parseFloat(salarioMensual) || 0;
+            switch (parseInt(periodoPago)) {
+                case 1:
+                    return salario / 4;
+                case 2:
+                    return salario / 2;
+                default:
+                    return salario;
+            }
         }
         
         function getPeriodoText(periodo) {

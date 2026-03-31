@@ -91,6 +91,29 @@ public class SearchContratistasQueryHandler : IRequestHandler<SearchContratistas
 
         var contratistasList = contratistas.ToList();
 
+        if (request.SoloActivos && contratistasList.Count > 0)
+        {
+            var userIds = contratistasList
+                .Select(c => c.UserId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .ToList();
+
+            if (userIds.Count > 0)
+            {
+                var credencialesActivas = await _context.Credenciales
+                    .AsNoTracking()
+                    .Where(c => userIds.Contains(c.UserId) && c.Activo)
+                    .Select(c => c.UserId)
+                    .ToListAsync(cancellationToken);
+
+                var activasLookup = credencialesActivas.ToHashSet(StringComparer.Ordinal);
+                contratistasList = contratistasList
+                    .Where(c => !string.IsNullOrWhiteSpace(c.UserId) && activasLookup.Contains(c.UserId))
+                    .ToList();
+            }
+        }
+
         if (contratistasList.Count > 0)
         {
             var identifications = contratistasList

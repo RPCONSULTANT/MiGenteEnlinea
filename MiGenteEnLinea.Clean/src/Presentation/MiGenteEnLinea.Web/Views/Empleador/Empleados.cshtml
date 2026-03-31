@@ -353,8 +353,13 @@
                                         <label for="txtIdentificacion" class="form-label fw-bold">
                                             <i class="fas fa-id-card me-1 text-muted"></i>Cédula de Identidad <span class="text-danger">*</span>
                                         </label>
-                                        <input type="text" class="form-control" id="txtIdentificacion" 
-                                               placeholder="000-0000000-0" maxlength="13" required />
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="txtIdentificacion" 
+                                                   placeholder="000-0000000-0" maxlength="13" required />
+                                            <button type="button" class="btn btn-outline-primary" id="btnVerificarCedula">
+                                                <i class="fas fa-id-badge me-1"></i>Verificar
+                                            </button>
+                                        </div>
                                         <small class="text-muted">Ingrese la cédula (11 dígitos). Se formatea automáticamente.</small>
                                     </div>
                                     <div class="col-md-4 mb-3">
@@ -436,7 +441,9 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="municipio" class="form-label fw-bold">Municipio / Sector</label>
-                                        <input type="text" class="form-control" id="municipio" placeholder="Municipio o sector" />
+                                        <select class="form-select" id="municipio">
+                                            <option value="">Seleccione un municipio</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -616,6 +623,20 @@
             reader.readAsDataURL(file);
         }
 
+        function applyPadronPhotoPreview(photo) {
+            const preview = document.getElementById('fotoEmpleadoPreview');
+            if (!preview) return;
+
+            if (!photo) {
+                preview.src = '/images/circular1.png';
+                preview.classList.add('d-none');
+                return;
+            }
+
+            preview.src = photo;
+            preview.classList.remove('d-none');
+        }
+
         async function getEmpleadoFotoBase64() {
             const fileInput = document.getElementById('fotoEmpleadoInput');
             const file = fileInput?.files?.[0];
@@ -679,6 +700,7 @@
             // Format cedula input
             document.getElementById('txtIdentificacion').addEventListener('input', function() {
                 maskCedulaInput(this);
+                padronVerification = null;
             });
 
             const fotoInput = document.getElementById('fotoEmpleadoInput');
@@ -697,11 +719,127 @@
             if (window.loadProvincias) {
                 loadProvincias('provincia', 'Seleccione...');
             }
+
+            document.getElementById('provincia')?.addEventListener('change', function() {
+                loadMunicipiosForProvincia(this.value, 'municipio');
+            });
+
+            document.getElementById('btnVerificarCedula')?.addEventListener('click', verificarCedulaPadron);
             
             // Load empleados on page load
             loadEmpleados();
             consumeHireIntentFija();
         });
+
+        const municipiosPorProvincia = {
+            'Azua': ['Azua de Compostela', 'Estebanía', 'Guayabal', 'Las Charcas', 'Las Yayas de Viajama', 'Padre Las Casas', 'Peralta', 'Pueblo Viejo', 'Sabana Yegua', 'Tabara Arriba'],
+            'Bahoruco': ['Neiba', 'Galván', 'Los Ríos', 'Tamayo', 'Villa Jaragua'],
+            'Barahona': ['Barahona', 'Cabral', 'Enriquillo', 'Fundación', 'Jaquimeyes', 'La Ciénaga', 'Las Salinas', 'Paraíso', 'Polo', 'Vicente Noble'],
+            'Dajabón': ['Dajabón', 'El Pino', 'Loma de Cabrera', 'Partido', 'Restauración'],
+            'Distrito Nacional': ['Santo Domingo de Guzmán'],
+            'Duarte': ['San Francisco de Macorís', 'Arenoso', 'Castillo', 'Eugenio María de Hostos', 'Las Guáranas', 'Pimentel', 'Villa Riva'],
+            'Elías Piña': ['Comendador', 'Bánica', 'El Llano', 'Hondo Valle', 'Juan Santiago', 'Pedro Santana'],
+            'El Seibo': ['Santa Cruz de El Seibo', 'Miches'],
+            'Espaillat': ['Moca', 'Cayetano Germosén', 'Gaspar Hernández', 'Jamao al Norte'],
+            'Hato Mayor': ['Hato Mayor del Rey', 'El Valle', 'Sabana de la Mar'],
+            'Hermanas Mirabal': ['Salcedo', 'Tenares', 'Villa Tapia'],
+            'Independencia': ['Jimaní', 'Cristóbal', 'Duvergé', 'La Descubierta', 'Mella', 'Postrer Río'],
+            'La Altagracia': ['Salvaleón de Higüey', 'San Rafael del Yuma'],
+            'La Romana': ['La Romana', 'Guaymate', 'Villa Hermosa'],
+            'La Vega': ['Concepción de La Vega', 'Constanza', 'Jarabacoa', 'Jima Abajo'],
+            'María Trinidad Sánchez': ['Nagua', 'Cabrera', 'El Factor', 'Río San Juan'],
+            'Monseñor Nouel': ['Bonao', 'Maimón', 'Piedra Blanca'],
+            'Monte Cristi': ['San Fernando de Monte Cristi', 'Castañuelas', 'Guayubín', 'Las Matas de Santa Cruz', 'Pepillo Salcedo', 'Villa Vásquez'],
+            'Monte Plata': ['Monte Plata', 'Bayaguana', 'Peralvillo', 'Sabana Grande de Boyá', 'Yamasá'],
+            'Pedernales': ['Pedernales', 'Oviedo'],
+            'Peravia': ['Baní', 'Matanzas', 'Nizao'],
+            'Puerto Plata': ['San Felipe de Puerto Plata', 'Altamira', 'Guananico', 'Imbert', 'Los Hidalgos', 'Luperón', 'Sosúa', 'Villa Isabela', 'Villa Montellano'],
+            'Samaná': ['Santa Bárbara de Samaná', 'Las Terrenas', 'Sánchez'],
+            'San Cristóbal': ['San Cristóbal', 'Bajos de Haina', 'Cambita Garabitos', 'Los Cacaos', 'Sabana Grande de Palenque', 'San Gregorio de Nigua', 'Villa Altagracia', 'Yaguate'],
+            'San José de Ocoa': ['San José de Ocoa', 'Rancho Arriba', 'Sabana Larga'],
+            'San Juan': ['San Juan de la Maguana', 'Bohechío', 'El Cercado', 'Juan de Herrera', 'Las Matas de Farfán', 'Vallejuelo'],
+            'San Pedro de Macorís': ['San Pedro de Macorís', 'Consuelo', 'Guayacanes', 'Quisqueya', 'Ramón Santana', 'San José de los Llanos'],
+            'Sánchez Ramírez': ['Cotuí', 'Cevicos', 'Fantino', 'La Mata'],
+            'Santiago': ['Santiago de los Caballeros', 'Bisonó', 'Jánico', 'Licey al Medio', 'Puñal', 'Sabana Iglesia', 'San José de las Matas', 'Tamboril', 'Villa González'],
+            'Santiago Rodríguez': ['San Ignacio de Sabaneta', 'Monción', 'Villa Los Almácigos'],
+            'Santo Domingo': ['Santo Domingo Este', 'Santo Domingo Norte', 'Santo Domingo Oeste', 'Boca Chica', 'Los Alcarrizos', 'Pedro Brand', 'San Antonio de Guerra'],
+            'Valverde': ['Santa Cruz de Mao', 'Esperanza', 'Laguna Salada']
+        };
+
+        function loadMunicipiosForProvincia(provincia, targetId, selectedValue = '') {
+            const select = document.getElementById(targetId);
+            if (!select) return;
+
+            const municipios = municipiosPorProvincia[String(provincia || '').trim()] || [];
+            select.innerHTML = '<option value="">Seleccione un municipio</option>';
+
+            municipios.forEach(nombre => {
+                const option = document.createElement('option');
+                option.value = nombre;
+                option.textContent = nombre;
+                select.appendChild(option);
+            });
+
+            if (selectedValue) {
+                if (!municipios.includes(selectedValue)) {
+                    const option = document.createElement('option');
+                    option.value = selectedValue;
+                    option.textContent = selectedValue;
+                    select.appendChild(option);
+                }
+                select.value = selectedValue;
+            }
+        }
+
+        async function verificarCedulaPadron() {
+            const cedula = document.getElementById('txtIdentificacion').value.replace(/\D/g, '');
+            if (cedula.length !== 11) {
+                Swal.fire('Error', 'Ingrese una cédula válida de 11 dígitos.', 'error');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`/empleados/padron/${cedula}`);
+                const data = window.readApiResponse ? await window.readApiResponse(response) : await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data?.message || 'No se encontró la cédula en el padrón.');
+                }
+
+                const apellidoCompleto = [data.primerApellido, data.segundoApellido]
+                    .filter(Boolean)
+                    .join(' ')
+                    .trim();
+
+                document.getElementById('nombre').value = data.nombres || '';
+                document.getElementById('apellido').value = apellidoCompleto;
+                document.getElementById('nacimiento').value = data.fechaNacimiento
+                    ? String(data.fechaNacimiento).split('T')[0]
+                    : '';
+
+                padronVerification = {
+                    cedula: data.cedula || cedula,
+                    nombres: data.nombres || '',
+                    primerApellido: data.primerApellido || '',
+                    segundoApellido: data.segundoApellido || '',
+                    fechaNacimiento: data.fechaNacimiento ? String(data.fechaNacimiento).split('T')[0] : null,
+                    photo: data.photo || null
+                };
+
+                if (padronVerification.photo) {
+                    applyPadronPhotoPreview(padronVerification.photo);
+                }
+
+                Swal.fire({
+                    title: 'Cédula verificada',
+                    html: `<strong>${data.nombreCompleto || 'Registro encontrado'}</strong><br><small>${data.cedula || cedula}</small><br><small class="text-muted">Los datos y la foto fueron cargados desde el padrón.</small>`,
+                    icon: 'success'
+                });
+            } catch (error) {
+                padronVerification = null;
+                Swal.fire('Validación no disponible', error.message || 'No se pudo consultar el padrón.', 'warning');
+            }
+        }
 
         function consumeHireIntentFija() {
             const raw = sessionStorage.getItem('mge:hireIntent');
@@ -731,8 +869,10 @@
                 if (intent.provincia) {
                     const provinciaSelect = document.getElementById('provincia');
                     provinciaSelect.value = intent.provincia;
+                    loadMunicipiosForProvincia(intent.provincia, 'municipio', intent.municipio || '');
                     setTimeout(() => {
                         provinciaSelect.value = intent.provincia;
+                        loadMunicipiosForProvincia(intent.provincia, 'municipio', intent.municipio || '');
                     }, 500);
                 }
 
@@ -869,7 +1009,7 @@
                 nacimiento: document.getElementById('nacimiento').value || null,  // Backend: 'nacimiento'
                 direccion: truncateText(document.getElementById('direccion').value.trim(), 250) || null,
                 provincia: document.getElementById('provincia').value || null,
-                municipio: truncateText(document.getElementById('municipio').value.trim(), 100) || null,
+                municipio: truncateText((document.getElementById('municipio').value || '').trim(), 100) || null,
                 telefono1: document.getElementById('telefono1').value.replace(/\D/g, '') || null,
                 telefono2: document.getElementById('telefono2').value.replace(/\D/g, '') || null,
                 posicion: truncateText(posicion, 100),
@@ -879,7 +1019,7 @@
                 fechaInicio: fechaIngreso,  // Backend: 'fechaInicio', no 'fechaIngreso'
                 contactoEmergencia: truncateText(document.getElementById('nombreContacto').value.trim(), 100) || null,  // Backend: 'contactoEmergencia'
                 telefonoEmergencia: document.getElementById('telefonoContacto').value.replace(/\D/g, '') || null,  // Backend: 'telefonoEmergencia'
-                foto: foto || null
+                foto: foto || padronVerification?.photo || null
                 // Nota: remuneraciones se manejan por separado después de crear el empleado
             };
             
@@ -943,6 +1083,7 @@
         // RESET FORM
         // ============================================
         function resetForm() {
+            padronVerification = null;
             document.getElementById('txtIdentificacion').value = '';
             document.getElementById('nombre').value = '';
             document.getElementById('apellido').value = '';
@@ -950,7 +1091,7 @@
             document.getElementById('nacimiento').value = '';
             document.getElementById('direccion').value = '';
             document.getElementById('provincia').value = '';
-            document.getElementById('municipio').value = '';
+            loadMunicipiosForProvincia('', 'municipio');
             document.getElementById('telefono1').value = '';
             document.getElementById('telefono2').value = '';
             document.getElementById('posicion').value = '';
@@ -987,6 +1128,7 @@
         // Variables globales para la búsqueda
         let allEmpleadosActivos = [];
         let allEmpleadosInactivos = [];
+        let padronVerification = null;
         
         async function loadEmpleados() {
             const token = getAuthToken();
@@ -1163,6 +1305,21 @@
                         <label class="form-label">Fecha de salida:</label>
                         <input type="date" id="swal-fecha-salida" class="form-control" value="${new Date().toISOString().split('T')[0]}">
                     </div>
+                    <div class="mt-3">
+                        <label class="form-label">Motivo:</label>
+                        <select id="swal-motivo" class="form-select">
+                            <option value="">Seleccione un motivo</option>
+                            <option value="Renuncia voluntaria">Renuncia voluntaria</option>
+                            <option value="Despido justificado">Despido justificado</option>
+                            <option value="Despido injustificado">Despido injustificado</option>
+                            <option value="Fin de contrato">Fin de contrato</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Prestaciones laborales (RD$):</label>
+                        <input type="number" id="swal-prestaciones" class="form-control" value="0" step="0.01" min="0.01">
+                    </div>
                 `,
                 icon: 'warning',
                 showCancelButton: true,
@@ -1170,16 +1327,38 @@
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: '<i class="fas fa-user-minus me-1"></i>Sí, dar de baja',
                 cancelButtonText: 'Cancelar',
-                reverseButtons: true
+                reverseButtons: true,
+                preConfirm: () => {
+                    const fechaBaja = document.getElementById('swal-fecha-salida').value;
+                    const motivo = document.getElementById('swal-motivo').value;
+                    const prestaciones = parseFloat(document.getElementById('swal-prestaciones').value) || 0;
+
+                    if (!fechaBaja) {
+                        Swal.showValidationMessage('La fecha de salida es obligatoria.');
+                        return false;
+                    }
+
+                    if (!motivo) {
+                        Swal.showValidationMessage('Debe seleccionar un motivo.');
+                        return false;
+                    }
+
+                    if (prestaciones <= 0) {
+                        Swal.showValidationMessage('Debe indicar un monto de prestaciones mayor que cero.');
+                        return false;
+                    }
+
+                    return { fechaBaja, motivo, prestaciones };
+                }
             });
             
             if (result.isConfirmed) {
-                const fechaSalida = document.getElementById('swal-fecha-salida').value;
+                const { fechaBaja, motivo, prestaciones } = result.value;
                 
                 try {
                     const response = await authenticatedFetch(`/empleados/${id}/dar-de-baja`, {
                         method: 'PUT',
-                        body: JSON.stringify({ fechaBaja: fechaSalida })
+                        body: JSON.stringify({ fechaBaja, motivo, prestaciones })
                     });
                     
                     if (response.ok) {
@@ -1215,7 +1394,10 @@
         async function reactivarEmpleado(id, nombre) {
             const result = await Swal.fire({
                 title: '¿Reactivar a este colaborador?',
-                html: `<p>Estás a punto de reactivar a: <strong>${nombre}</strong></p>`,
+                html: `
+                    <p>Estás a punto de reactivar a: <strong>${nombre}</strong></p>
+                    <small class="text-muted">Solo se permiten reintegros para bajas hechas en el mismo día.</small>
+                `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#28a745',

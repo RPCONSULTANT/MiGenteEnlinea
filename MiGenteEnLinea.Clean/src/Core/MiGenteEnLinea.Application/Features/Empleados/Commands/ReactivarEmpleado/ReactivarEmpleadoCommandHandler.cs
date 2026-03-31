@@ -35,6 +35,22 @@ public class ReactivarEmpleadoCommandHandler : IRequestHandler<ReactivarEmpleado
             throw new Exception($"Empleado con ID {request.EmpleadoId} no encontrado");
         }
 
+        if (!string.Equals(empleado.UserId, request.UserId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("El colaborador no pertenece al usuario autenticado");
+        }
+
+        if (empleado.Activo)
+        {
+            throw new InvalidOperationException("El colaborador ya se encuentra activo");
+        }
+
+        var hoy = DateOnly.FromDateTime(DateTime.Now);
+        if (!empleado.FechaSalida.HasValue || DateOnly.FromDateTime(empleado.FechaSalida.Value) != hoy)
+        {
+            throw new InvalidOperationException("Solo se permite reintegrar al colaborador el mismo día en que fue dado de baja");
+        }
+
         // Usar el método de dominio para reactivar
         empleado.Reactivar();
 

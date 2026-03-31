@@ -24,6 +24,26 @@ public record ProcesarNominaLoteCommand : IRequest<ProcesarNominaLoteResult>
     public DateTime FechaPago { get; init; }
 
     /// <summary>
+    /// Concepto general de los pagos del lote.
+    /// </summary>
+    public string TipoConcepto { get; init; } = "Salario";
+
+    /// <summary>
+    /// Indica si el lote debe calcular pago fraccionado del período.
+    /// </summary>
+    public bool EsFraccion { get; init; }
+
+    /// <summary>
+    /// Aplicar TSS automáticamente a empleados que lo permitan.
+    /// </summary>
+    public bool AplicarTss { get; init; } = true;
+
+    /// <summary>
+    /// Compatibilidad con el frontend actual: IDs simples de empleados a procesar.
+    /// </summary>
+    public List<int> EmpleadoIds { get; init; } = new();
+
+    /// <summary>
     /// Lista de empleados a procesar con sus detalles de pago
     /// </summary>
     public List<EmpleadoNominaItem> Empleados { get; init; } = new();
@@ -51,6 +71,7 @@ public record EmpleadoNominaItem
 {
     public int EmpleadoId { get; init; }
     public decimal Salario { get; init; }
+    public bool AplicarTss { get; init; } = true;
     public List<ConceptoNominaItem> Conceptos { get; init; } = new();
 }
 

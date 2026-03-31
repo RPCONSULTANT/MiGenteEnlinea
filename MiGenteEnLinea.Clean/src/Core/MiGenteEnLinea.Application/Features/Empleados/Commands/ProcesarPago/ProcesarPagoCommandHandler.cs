@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MiGenteEnLinea.Application.Common.Exceptions;
 using MiGenteEnLinea.Application.Common.Interfaces;
+using MiGenteEnLinea.Application.Features.Empleados.DTOs;
 using MiGenteEnLinea.Domain.Entities.Empleados;
 using MiGenteEnLinea.Domain.Entities.Nominas;
 
@@ -115,15 +116,29 @@ public class ProcesarPagoCommandHandler : IRequestHandler<ProcesarPagoCommand, i
             header.AgregarDeduccion(deduccion.Descripcion, Math.Abs(deduccion.Monto)); // AgregarDeduccion espera valor positivo
         }
 
+        foreach (var concepto in request.ConceptosAdicionales
+                     .Where(c => !string.IsNullOrWhiteSpace(c.Concepto) && c.Monto != 0))
+        {
+            if (concepto.EsDeduccion)
+            {
+                header.AgregarDeduccion(concepto.Concepto.Trim(), Math.Abs(concepto.Monto));
+            }
+            else
+            {
+                header.AgregarIngreso(concepto.Concepto.Trim(), concepto.Monto);
+            }
+        }
+
         // ⚠️ CRÍTICO: SaveChanges #2 - Guardar detalles con PagoId ya asignado
         // Los detalles fueron agregados al Aggregate Root y se guardarán por EF tracking
         await _context.SaveChangesAsync(cancellationToken); // ← SaveChanges #2
 
         _logger.LogInformation(
-            "Recibo completado: PagoId={PagoId}, Percepciones={CountPercepciones}, Deducciones={CountDeducciones}",
+            "Recibo completado: PagoId={PagoId}, Percepciones={CountPercepciones}, Deducciones={CountDeducciones}, ConceptosManual={CountManuales}",
             header.PagoId,
             calculoNomina.Percepciones.Count,
-            calculoNomina.Deducciones.Count);
+            calculoNomina.Deducciones.Count,
+            request.ConceptosAdicionales.Count);
 
         // PASO 6: Retornar PagoId generado
         return header.PagoId;

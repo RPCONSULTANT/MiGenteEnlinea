@@ -10,4 +10,5 @@ public record GetHistorialNominaUnificadoQuery : IRequest<List<NominaHistorialUn
     public int PageSize { get; init; } = 20;
     public DateTime? FechaDesde { get; init; }
     public DateTime? FechaHasta { get; init; }
+    public int? EmpleadoId { get; init; }
 }

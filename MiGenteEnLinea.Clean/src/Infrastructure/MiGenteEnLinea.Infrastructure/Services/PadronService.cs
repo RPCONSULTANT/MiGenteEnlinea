@@ -88,22 +88,9 @@ public class PadronService : IPadronService
             }
 
             // PASO 4: Consultar individuo con token
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new AuthenticationHeaderValue("Bearer", token);
-
-            var response = await _httpClient.GetAsync($"individuo/{cedulaLimpia}", cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+            var response = await ConsultarIndividuoAsync(cedulaLimpia, token, cancellationToken);
+            if (response == null)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    _logger.LogWarning("Cédula NO encontrada en Padrón Nacional: {Cedula}", cedulaLimpia);
-                }
-                else
-                {
-                    _logger.LogError("Error al consultar Padrón. Status: {Status}, Cédula: {Cedula}", 
-                        response.StatusCode, cedulaLimpia);
-                }
                 return null;
             }
 
@@ -112,7 +99,7 @@ public class PadronService : IPadronService
             
             _logger.LogDebug("Respuesta Padrón API: {Content}", content);
 
-            var padronData = DeserializarRespuestaPadron(content);
+            var padronData = DeserializarRespuestaPadron(content, cedulaLimpia);
             if (padronData == null)
             {
                 _logger.LogError("No se pudo deserializar la respuesta del Padrón para cédula: {Cedula}", cedulaLimpia);
@@ -150,6 +137,52 @@ public class PadronService : IPadronService
             _logger.LogError(ex, "Error inesperado al consultar Padrón Nacional: {Cedula}", cedula);
             return null;
         }
+    }
+
+    private async Task<HttpResponseMessage?> ConsultarIndividuoAsync(
+        string cedulaLimpia,
+        string token,
+        CancellationToken cancellationToken)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.GetAsync($"individuo/{cedulaLimpia}", cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            _logger.LogWarning("Token del padrón expirado o inválido. Refrescando token para {Cedula}", cedulaLimpia);
+            _cache.Remove(TokenCacheKey);
+
+            var refreshedToken = await ObtenerTokenAutenticacionAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(refreshedToken))
+            {
+                _logger.LogError("No se pudo refrescar el token del padrón para {Cedula}", cedulaLimpia);
+                return null;
+            }
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", refreshedToken);
+            response = await _httpClient.GetAsync($"individuo/{cedulaLimpia}", cancellationToken);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Cédula NO encontrada en Padrón Nacional: {Cedula}", cedulaLimpia);
+            }
+            else
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError(
+                    "Error al consultar Padrón. Status: {Status}, Cédula: {Cedula}, Body: {Body}",
+                    response.StatusCode,
+                    cedulaLimpia,
+                    errorBody);
+            }
+
+            return null;
+        }
+
+        return response;
     }
 
     /// <summary>
@@ -204,10 +237,19 @@ public class PadronService : IPadronService
             {
                 token = accessTokenElement.GetString();
             }
+            else if (jsonDoc.RootElement.TryGetProperty("accessToken", out var accessTokenCamelElement))
+            {
+                token = accessTokenCamelElement.GetString();
+            }
             else if (jsonDoc.RootElement.TryGetProperty("data", out var dataElement) &&
                      dataElement.TryGetProperty("token", out var dataTokenElement))
             {
                 token = dataTokenElement.GetString();
+            }
+            else if (jsonDoc.RootElement.TryGetProperty("data", out var nestedDataElement) &&
+                     nestedDataElement.TryGetProperty("access_token", out var nestedAccessTokenElement))
+            {
+                token = nestedAccessTokenElement.GetString();
             }
 
             if (string.IsNullOrEmpty(token))
@@ -234,7 +276,7 @@ public class PadronService : IPadronService
     /// Deserializa la respuesta JSON del Padrón a PadronModel.
     /// Maneja diferentes formatos de respuesta que puede devolver la API.
     /// </summary>
-    private PadronModel? DeserializarRespuestaPadron(string jsonContent)
+    private PadronModel? DeserializarRespuestaPadron(string jsonContent, string cedulaConsultada)
     {
         try
         {
@@ -249,18 +291,19 @@ public class PadronService : IPadronService
             }
 
             // Extraer campos (nombres pueden variar según versión de API)
-            var cedula = ObtenerValorString(dataElement, "cedula", "Cedula", "CEDULA");
+            var cedula = ObtenerValorString(dataElement, "cedula", "Cedula", "CEDULA") ?? cedulaConsultada;
             var nombres = ObtenerValorString(dataElement, "nombres", "Nombres", "NOMBRES", "nombre", "Nombre");
             var apellido1 = ObtenerValorString(dataElement, "apellido1", "Apellido1", "APELLIDO1", "primer_apellido", "primerApellido");
             var apellido2 = ObtenerValorString(dataElement, "apellido2", "Apellido2", "APELLIDO2", "segundo_apellido", "segundoApellido");
+            var photo = ObtenerValorString(dataElement, "photo", "Photo", "PHOTO", "foto", "Foto");
             var fechaNacimiento = ObtenerFecha(dataElement, "fecha_nacimiento", "fechaNacimiento", "FechaNacimiento", "FECHA_NACIMIENTO");
             var lugarNacimiento = ObtenerValorString(dataElement, "lugar_nacimiento", "lugarNacimiento", "LugarNacimiento");
             var estadoCivil = ObtenerValorString(dataElement, "estado_civil", "estadoCivil", "EstadoCivil");
             var ocupacion = ObtenerValorString(dataElement, "ocupacion", "Ocupacion", "OCUPACION");
 
-            if (string.IsNullOrEmpty(cedula) || string.IsNullOrEmpty(nombres) || string.IsNullOrEmpty(apellido1))
+            if (string.IsNullOrEmpty(nombres) || string.IsNullOrEmpty(apellido1))
             {
-                _logger.LogWarning("Respuesta del Padrón incompleta. Faltan campos requeridos (cedula, nombres, apellido1)");
+                _logger.LogWarning("Respuesta del Padrón incompleta. Faltan campos requeridos (nombres, apellido1)");
                 return null;
             }
 
@@ -270,6 +313,7 @@ public class PadronService : IPadronService
                 Nombres = nombres,
                 Apellido1 = apellido1,
                 Apellido2 = apellido2,
+                Photo = photo,
                 FechaNacimiento = fechaNacimiento,
                 LugarNacimiento = lugarNacimiento,
                 EstadoCivil = estadoCivil,

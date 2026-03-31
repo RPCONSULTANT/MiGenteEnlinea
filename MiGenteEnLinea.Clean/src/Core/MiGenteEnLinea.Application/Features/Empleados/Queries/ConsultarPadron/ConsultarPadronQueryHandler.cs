@@ -49,6 +49,7 @@ public class ConsultarPadronQueryHandler : IRequestHandler<ConsultarPadronQuery,
             Nombres = padronData.Nombres,
             PrimerApellido = padronData.Apellido1,
             SegundoApellido = padronData.Apellido2,
+            Photo = padronData.Photo,
             FechaNacimiento = padronData.FechaNacimiento,
             Edad = padronData.Edad, // Edad calculada en PadronModel
             LugarNacimiento = padronData.LugarNacimiento,
